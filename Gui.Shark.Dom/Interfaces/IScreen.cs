@@ -1,5 +1,5 @@
-﻿using Gui.Shark.Gfx.Interfaces;
-using OpenTK;
+﻿using Gui.Shark.Core.Gfx;
+using Gui.Shark.Gfx.Interfaces;
 
 namespace Gui.Shark.Dom.Interfaces
 {
@@ -9,7 +9,7 @@ namespace Gui.Shark.Dom.Interfaces
         IGfxCanvas Canvas { get; set; }
         IDocument Document { get; set; }
 
-        void Create(int width, int height, Color clearColor, string htmlDocument);
+        void Create(int width, int height, TColor clearColor, string htmlDocument);
         void Paint();
     }
 }

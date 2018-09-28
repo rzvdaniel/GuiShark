@@ -1,4 +1,4 @@
-﻿using OpenTK;
+﻿using Gui.Shark.Core.Gfx;
 
 namespace Gui.Shark.Gfx.Interfaces
 {
@@ -6,9 +6,9 @@ namespace Gui.Shark.Gfx.Interfaces
     {
         int Width { get; set; }
         int Height { get; set; }
-        Color ClearColor { get; set; }
+        TColor ClearColor { get; set; }
 
-        void Initialize(int width, int height, Color clearColor);
+        void Initialize(int width, int height, TColor clearColor);
 
         void Begin();
 	    void End();

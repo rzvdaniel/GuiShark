@@ -5,7 +5,7 @@ namespace Gui.Shark.Console.IO
 {
     public class HtmlReader
     {
-        private const string DefaultPath = "..\\Gui.Shark.Console\\Resources\\Default.html";
+        private const string DefaultPath = "Resources\\Default.html";
 
         public string Read(string filePath)
         {

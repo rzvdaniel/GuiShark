@@ -22,8 +22,8 @@ namespace Gui.Shark.Gfx.OpenGL
         public void Initialize(TColor penColor, TColor brushColor)
         {
             Pen.Style = TPenStyle.psSolid;
-            Pen.Color = Color.FromArgb(penColor.A, penColor.R, penColor.G, penColor.B);
-            Brush.Color = Color.FromArgb(brushColor.A, brushColor.R, brushColor.G, brushColor.B);
+            Pen.Color = penColor;
+            Brush.Color = brushColor;
         }
 
         public void DrawRect(float x, float y, float width, float height, int border)
@@ -45,9 +45,9 @@ namespace Gui.Shark.Gfx.OpenGL
 
         public void FillRect(float x, float y, float width, float height)
         {
-            Color Color = Brush.Color;
+            var color = Brush.Color;
 
-            if (Color.A != default(byte))
+            if (color.A != default(byte))
             {
                 GL.Enable(EnableCap.Blend);
                 GL.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
@@ -58,7 +58,7 @@ namespace Gui.Shark.Gfx.OpenGL
             }
 
             // Set the drawing color
-            GL.Color4(Color.R, Color.G, Color.B, Color.A);
+            GL.Color4(color.R, color.G, color.B, color.A);
 
             // If our brush has any texture
             //if (Brush->GetTexture() != NULL)
@@ -103,10 +103,10 @@ namespace Gui.Shark.Gfx.OpenGL
 
         public void LineTo(float x, float y)
         {
-            Color Color = Pen.Color;
+            var color = Pen.Color;
 
             // Transparency?
-            if (Color.A != default(byte))
+            if (color.A != default(byte))
             {
                 GL.Enable(EnableCap.Blend);
                 GL.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
@@ -120,7 +120,7 @@ namespace Gui.Shark.Gfx.OpenGL
             GL.Disable(EnableCap.Texture2D);
 
             // Set the drawing color
-            GL.Color4(Color.R, Color.G, Color.B, Color.A);
+            GL.Color4(color.R, color.G, color.B, color.A);
 
             bool LineStipple = true;
 

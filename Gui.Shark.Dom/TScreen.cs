@@ -1,8 +1,8 @@
-﻿using Gui.Shark.Dom.Factories;
+﻿using Gui.Shark.Core.Gfx;
+using Gui.Shark.Dom.Factories;
 using Gui.Shark.Dom.Interfaces;
 using Gui.Shark.Gfx.Factories;
 using Gui.Shark.Gfx.Interfaces;
-using OpenTK;
 
 namespace Gui.Shark.Dom
 {
@@ -15,7 +15,7 @@ namespace Gui.Shark.Dom
         public IGfxCanvas Canvas { get; set; }
         public IDocument Document { get; set; }
 
-        public virtual void Create(int width, int height, Color clearColor, string htmlDocument)
+        public virtual void Create(int width, int height, TColor clearColor, string htmlDocument)
         {
             Canvas = GfxFactory.Create<IGfxCanvas>();
             GfxServer = GfxFactory.Create<IGfxServer>();

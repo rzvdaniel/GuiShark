@@ -1,10 +1,10 @@
-﻿using OpenTK;
+﻿using Gui.Shark.Core.Gfx;
 
 namespace Gui.Shark.Gfx.Drawing
 {
     public class TBrush
     {
-        public Color Color;
+        public TColor Color;
         public TBrushStyle Style;
         //TTexture* Texture;
         public float TextureU;

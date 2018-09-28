@@ -2,6 +2,7 @@
   "profiles": {
     "Gui.Shark.Console": {
       "commandName": "Project",
+      "commandLineArgs": "Resources\\Default.html",
       "workingDirectory": "C:\\Work\\GitHub\\GuiShark\\Gui.Shark.Console"
     }
   }

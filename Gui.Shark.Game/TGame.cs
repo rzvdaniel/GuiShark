@@ -1,4 +1,5 @@
-﻿using Gui.Shark.Dom;
+﻿using Gui.Shark.Core.Gfx;
+using Gui.Shark.Dom;
 using Gui.Shark.Dom.Interfaces;
 using Gui.Shark.Gfx.Interfaces;
 using OpenTK;
@@ -29,7 +30,7 @@ namespace Gui.Shark.Gfx.OpenGL
             };
 
             Screen = new TScreen();
-            Screen.Create(width, height, Color.White, html);
+            Screen.Create(width, height, TColor.White, html);
 
             Window.Load += OnLoad;
             Window.Resize += OnResize;
