@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AngleSharp" Version="0.9.10" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Gui.Shark.Core\Gui.Shark.Core.csproj" />
+    <ProjectReference Include="..\Gui.Shark.Gfx\Gui.Shark.Gfx.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Gui.Shark.Console": {
+      "commandName": "Project",
+      "workingDirectory": "C:\\Work\\GitHub\\GuiShark\\Gui.Shark.Console"
+    }
+  }
+}

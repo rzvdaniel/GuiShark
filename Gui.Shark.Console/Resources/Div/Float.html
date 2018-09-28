@@ -1,0 +1,79 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>CSS Floats 101</title>
+    <style>
+        .floatLeft {
+            float: left;
+            width: 200px;
+            height: 200px;
+        }
+
+        .floatRight {
+            float: right;
+            width: 200px;
+            height: 200px;
+            color: blueviolet;
+        }
+
+        .noFloat {
+            width: 300px;
+            height: 200px;
+        }
+
+        .pink {
+            background-color: #ee3e64;
+        }
+
+        .blue {
+            background-color: #44accf;
+        }
+
+        .green {
+            background-color: #b7d84b;
+        }
+
+        .red {
+            background: rgba(255, 0, 0, 0.3);
+        }
+
+        .yellow {
+            background: yellow;
+        }
+
+        .orange {
+            background: orange;
+        }
+
+        .gray {
+            background: gray;
+        }
+
+        .parentDiv {
+            /*width: 500px;
+            height: 300px;*/
+            height: 300px;
+            background: gray;
+            border: solid 1px;
+        }
+    </style>
+</head>
+<body>
+
+    <!--<div class="parentDiv">
+        <div class="floatLeft orange">floatLeft</div>
+        <div class="floatLeft green">floatLeft</div>
+        <div class="floatLeft pink">floatLeft</div>
+    </div>-->
+
+    <div class="noFloat blue">noFloat</div>
+    <div class="floatLeft orange">floatLeft</div>
+    <div class="noFloat green">noFloat</div>
+    <div class="floatLeft pink">floatLeft</div>
+    <div class="floatLeft gray">floatLeft</div>
+    <div class="floatRight red">floatRight</div>
+
+</body>
+</html>
