@@ -4,7 +4,7 @@ namespace Gui.Shark.Dom
 {
     public class TSpan : TElement
     {
-        public TSpan(IElement htmlElement, Interfaces.IElement parent)
+        public TSpan(IElement htmlElement, TElement parent)
           : base(htmlElement, parent)
         {
         }

@@ -8,7 +8,7 @@ namespace Gui.Shark.Dom
 {
     public class TDocument : IDocument
     {
-        public IElement Body { get; set; }
+        public TElement Body { get; set; }
 
         public TDocument()  {}
 

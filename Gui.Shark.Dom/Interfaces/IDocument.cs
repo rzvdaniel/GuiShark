@@ -4,7 +4,7 @@
     {
         #region Properties
 
-        IElement Body { get; set; }
+        TElement Body { get; set; }
 
         #endregion
 

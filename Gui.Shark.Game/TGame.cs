@@ -22,15 +22,13 @@ namespace Gui.Shark.Gfx.OpenGL
 
         public void Create(int width, int height, int windowsFlag, string html)
         {
-            var windowFlag = (GameWindowFlags)windowsFlag;
+            Screen = new TScreen();
+            Screen.Create(width, height, TColor.White, html);
 
-            Window = new GameWindow(width, height, GraphicsMode.Default, "Gui Sharp Samples", windowFlag)
+            Window = new GameWindow(width, height, GraphicsMode.Default, "Gui Sharp Samples", (GameWindowFlags)windowsFlag)
             {
                 VSync = VSyncMode.On
             };
-
-            Screen = new TScreen();
-            Screen.Create(width, height, TColor.White, html);
 
             Window.Load += OnLoad;
             Window.Resize += OnResize;
@@ -40,7 +38,6 @@ namespace Gui.Shark.Gfx.OpenGL
         }
 
         /// <summary>
-        ///  From OpenTK documentation of GameWindow.Run()
         ///  Enters the game loop of the GameWindow updating and rendering at the specified
         ///  frequency.
         /// </summary>
@@ -57,7 +54,6 @@ namespace Gui.Shark.Gfx.OpenGL
         }
 
         /// <summary>
-        ///  From OpenTK documentation of GameWindow.Run()
         ///  Enters the game loop of the GameWindow using the specified update rate.maximum
         /// possible render frequency.
         /// </summary>
@@ -68,7 +64,6 @@ namespace Gui.Shark.Gfx.OpenGL
         }
 
         /// <summary>
-        /// From OpenTK documentation of GameWindow.Run()
         /// Enters the game loop of the GameWindow using the maximum update rate.
         /// </summary>
         public void Run()

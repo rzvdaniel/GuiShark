@@ -1,11 +1,10 @@
 ﻿using Gui.Shark.Dom.Enums.Properties;
-using Gui.Shark.Dom.Interfaces;
 
 namespace Gui.Shark.Dom.Extensions
 {
     public static class HtmlFloatExtension
     {
-        public static string GetFloat(this IElement element)
+        public static string GetFloat(this TElement element)
         {
             string attribute = string.Empty;
 

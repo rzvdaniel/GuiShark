@@ -5,7 +5,7 @@ namespace Gui.Shark.Dom
 {
     public class TBody : TElement
     {
-        public TBody(IElement htmlElement, Interfaces.IElement parent)
+        public TBody(IElement htmlElement, TElement parent)
             : base(htmlElement, parent)
         {
         }

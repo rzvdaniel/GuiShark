@@ -5,7 +5,7 @@ namespace Gui.Shark.Dom
 {
     public class TDiv : TElement
     {
-        public TDiv(IElement htmlElement, Interfaces.IElement parent)
+        public TDiv(IElement htmlElement, TElement parent)
             : base(htmlElement, parent)
         {
         }
@@ -15,7 +15,7 @@ namespace Gui.Shark.Dom
             Canvas.FillRect(BoundingBox);
         }
 
-        protected override void InitCss(AngleSharp.Dom.IElement htmlElement)
+        protected override void InitCss(IElement htmlElement)
         {
             base.InitCss(htmlElement);
 

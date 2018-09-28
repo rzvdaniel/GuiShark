@@ -1,8 +1,6 @@
-﻿using Gui.Shark.Dom.Interfaces;
-
-namespace Gui.Shark.Dom
+﻿namespace Gui.Shark.Dom
 {
-    public class TElementHtml : IElementHtml
+    public class TElementHtml
     {
         public string Text { get; set; }
     }

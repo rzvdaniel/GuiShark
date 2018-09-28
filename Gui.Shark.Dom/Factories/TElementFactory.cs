@@ -1,21 +1,21 @@
-﻿using Gui.Shark.Dom;
+﻿using AngleSharp.Dom;
+using Gui.Shark.Dom;
 using Gui.Shark.Dom.Factories;
 using System;
 using System.Collections.Generic;
-using IElement = Gui.Shark.Dom.Interfaces.IElement;
 
 namespace AngleSharp.Services.Default
 {
     /// <summary>
     /// Provides string to HTMLElement instance creation mappings.
     /// </summary>
-    public class TElementFactory : IElementFactory<Dom.IElement>
+    public class TElementFactory : IElementFactory<IElement>
     {
-        private delegate IElement Creator();
+        private delegate TElement Creator();
 
         private Dictionary<string, Creator> creators;
 
-        public IElement Create(Dom.IElement htmlElement, IElement parent)
+        public TElement Create(IElement htmlElement, TElement parent)
         {
             creators = new Dictionary<string, Creator>(StringComparer.OrdinalIgnoreCase)
             {

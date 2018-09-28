@@ -1,16 +1,17 @@
-﻿using AngleSharp.Extensions;
+﻿using AngleSharp.Css.Values;
+using AngleSharp.Dom;
+using AngleSharp.Extensions;
 using AngleSharp.Services.Default;
-using Gui.Shark.Dom.Extensions;
-using Gui.Shark.Dom.Interfaces;
+using Gui.Shark.Core.Gfx;
 using Gui.Shark.Dom.Enums.Properties;
+using Gui.Shark.Dom.Extensions;
 using Gui.Shark.Gfx.Factories;
 using Gui.Shark.Gfx.Interfaces;
 using System.Collections.Generic;
-using AngleSharp.Css.Values;
 
 namespace Gui.Shark.Dom
 {
-    public abstract class TElement : IElement
+    public abstract class TElement 
     {
         #region Public Properties
 
@@ -19,18 +20,17 @@ namespace Gui.Shark.Dom
         protected Color DefaultForegroundColor { get; set; }
 
         public IGfxCanvas Canvas { get; set; }
-        public IElementCss Css { get; set; }
-        public IElementHtml Html { get; set; }
+        public TElementCss Css { get; set; }
+        public TElementHtml Html { get; set; }
 
         public TRectangle BoundingBox { get; set; }
-
         public TPoint LeftFloatPosition;
         public TPoint RightFloatPosition;
 
         #region Tree Navigation
 
-        public IElement Parent { get; set; }
-        public IList<IElement> Children { get; set; }
+        public TElement Parent { get; set; }
+        public IList<TElement> Children { get; set; }
 
         #endregion
 
@@ -38,35 +38,33 @@ namespace Gui.Shark.Dom
 
         #region Private Properties
 
-        private IList<IElement> normalFlowChildren;
-        private IList<IElement> floatFlowChildren;
-        private IList<IElement> absoluteFlowChildren;
+        private IList<TElement> NormalFlowChildren { get; set; }
+        private IList<TElement> FloatFlowChildren { get; set; }
+        private IList<TElement> AbsoluteFlowChildren { get; set; }
 
         #endregion
 
-        public TElement(AngleSharp.Dom.IElement htmlElement, IElement parent)
+        public TElement(IElement htmlElement, TElement parent)
         {
-            normalFlowChildren = new List<IElement>();
-            floatFlowChildren = new List<IElement>();
-            absoluteFlowChildren = new List<IElement>();
+            NormalFlowChildren = new List<TElement>();
+            FloatFlowChildren = new List<TElement>();
+            AbsoluteFlowChildren = new List<TElement>();
 
             DefaultBackgroundColor = new Color(255, 255, 255, 255);
             DefaultBorderColor = new Color(0, 0, 0, 255);
             DefaultForegroundColor = new Color(0, 0, 0, 255);
 
             Parent = parent;
-
-            Children = new List<IElement>();
+            Children = new List<TElement>();
             Canvas = GfxFactory.Create<IGfxCanvas>();
 
             InitHtml(htmlElement);
             InitCss(htmlElement);
-
             ComputeBoundingBox();
 
             var elementFactory = new TElementFactory();
 
-            foreach (AngleSharp.Dom.IElement htmlChild in htmlElement.Children)
+            foreach (IElement htmlChild in htmlElement.Children)
             {
                 var child = elementFactory.Create(htmlChild, this);
 
@@ -87,17 +85,17 @@ namespace Gui.Shark.Dom
         /// </summary>
         public virtual void PaintChildren()
         {
-            foreach (var child in normalFlowChildren)
+            foreach (var child in NormalFlowChildren)
             {
                 child.Paint();
             }
 
-            foreach (var child in floatFlowChildren)
+            foreach (var child in FloatFlowChildren)
             {
                 child.Paint();
             }
 
-            foreach (var child in absoluteFlowChildren)
+            foreach (var child in AbsoluteFlowChildren)
             {
                 child.Paint();
             }
@@ -134,7 +132,7 @@ namespace Gui.Shark.Dom
 
         #region Protected Methods
 
-        protected virtual void InitCss(AngleSharp.Dom.IElement htmlElement)
+        protected virtual void InitCss(IElement htmlElement)
         {
             var style = htmlElement.ComputeCurrentStyle();
 
@@ -167,12 +165,13 @@ namespace Gui.Shark.Dom
                 FontFamily = style.FontFamily
             };
 
-            var penColor = new Core.Gfx.TColor(Css.Color.R, Css.Color.G, Css.Color.B, Css.Color.A);
-            var brushColor = new Core.Gfx.TColor(Css.BackgroundColor.R, Css.BackgroundColor.G, Css.BackgroundColor.B, Css.BackgroundColor.A);
+            var penColor = new TColor(Css.Color.R, Css.Color.G, Css.Color.B, Css.Color.A);
+            var brushColor = new TColor(Css.BackgroundColor.R, Css.BackgroundColor.G, Css.BackgroundColor.B, Css.BackgroundColor.A);
+
             Canvas.Initialize(penColor, brushColor);
         }
 
-        protected virtual void InitHtml(AngleSharp.Dom.IElement htmlElement)
+        protected virtual void InitHtml(IElement htmlElement)
         {
             Html = new TElementHtml
             {
@@ -184,7 +183,7 @@ namespace Gui.Shark.Dom
 
         #region Private Methods
 
-        private void ComputeBoundingBox(IElement element)
+        private void ComputeBoundingBox(TElement element)
         {
             var box = new TRectangle()
             {
@@ -233,16 +232,16 @@ namespace Gui.Shark.Dom
             element.BoundingBox = box;
         }
 
-        private void AddToFlowList(IElement element)
+        private void AddToFlowList(TElement element)
         {
             switch (element.GetFloat())
             {
                 case Float.None:
-                    normalFlowChildren.Add(element);
+                    NormalFlowChildren.Add(element);
                     break;
                 case Float.Left:
                 case Float.Right:
-                    floatFlowChildren.Add(element);
+                    FloatFlowChildren.Add(element);
                     break;
             }
 

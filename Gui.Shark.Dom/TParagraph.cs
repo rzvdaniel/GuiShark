@@ -4,7 +4,7 @@ namespace Gui.Shark.Dom
 {
     public class TParagraph : TElement
     {
-        public TParagraph(IElement htmlElement, Interfaces.IElement parent)
+        public TParagraph(IElement htmlElement, TElement parent)
            : base(htmlElement, parent)
         {
         }

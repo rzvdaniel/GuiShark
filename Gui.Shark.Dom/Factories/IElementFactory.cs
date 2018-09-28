@@ -1,10 +1,10 @@
-﻿using Gui.Shark.Dom.Interfaces;
+﻿using AngleSharp.Dom;
 
 namespace Gui.Shark.Dom.Factories
 {
     interface IElementFactory<T>
-        where T : AngleSharp.Dom.IElement
+        where T : IElement
     {
-        IElement Create(AngleSharp.Dom.IElement htmlElement, IElement parent);
+        TElement Create(IElement htmlElement, TElement parent);
     }
 }

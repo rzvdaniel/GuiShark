@@ -1,7 +1,6 @@
 ﻿using Gui.Shark.Core.Gfx;
 using Gui.Shark.Gfx.Drawing;
 using Gui.Shark.Gfx.Interfaces;
-using OpenTK;
 using OpenTK.Graphics.OpenGL;
 
 namespace Gui.Shark.Gfx.OpenGL
