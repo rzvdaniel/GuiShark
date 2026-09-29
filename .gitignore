@@ -45,6 +45,9 @@ _ReSharper*/
 [Nn][Dd]epend[Oo]ut*/
 Ankh.NoLoad
 node_modules
+.packages/
+.dotnet/
+artifacts/
 
 #Other
 .svn

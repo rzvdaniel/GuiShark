@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>GuiShark Playground</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="brand">
+        <div class="brand-left">
+            <img src="shark.png" class="logo">
+            <span class="wordmark">GuiShark</span>
+            <span class="brand-caption">THE UI PLAYGROUND</span>
+        </div>
+        <span class="version">01 / INTERACTIVE DEMO</span>
+    </header>
+    <main class="window">
+        <header class="titlebar">
+            <div class="traffic-lights">
+                <div class="dot red"></div>
+                <div class="dot yellow"></div>
+                <div class="dot green"></div>
+            </div>
+            <span class="window-title">Interface Studio</span>
+            <span class="live">LIVE</span>
+        </header>
+        <section class="workspace">
+            <div class="intro">
+                <span class="eyebrow">YOUR INTERFACE, IN PLAY</span>
+                <h1>Small markup. Real interaction.</h1>
+                <p class="subtitle">A native canvas for your next idea. Give the controls a try.</p>
+            </div>
+            <section class="counter-card">
+                <div class="counter-copy">
+                    <span class="section-label">THE CLICK COUNTER</span>
+                    <div class="count-row">
+                        <span id="count">00</span>
+                        <div class="count-description">
+                            <h3>A little action.</h3>
+                            <p class="muted">Every click runs your code.</p>
+                        </div>
+                    </div>
+                </div>
+                <button id="increment" class="primary">+ Add a click</button>
+            </section>
+            <div class="options-row">
+                <section class="option-card">
+                    <span class="section-label">01 / APPEARANCE</span>
+                    <h2>Set the mood</h2>
+                    <p class="muted">Same canvas. A different point of view.</p>
+                    <button id="theme">Switch to dark</button>
+                </section>
+                <section class="option-card">
+                    <span class="section-label">02 / A FRESH START</span>
+                    <h2>Back to the beginning</h2>
+                    <p class="muted">Reset the count and restore the light.</p>
+                    <button id="reset" disabled>Reset playground</button>
+                </section>
+            </div>
+            <footer class="statusbar">
+                <div class="status-dot"></div>
+                <span id="status">Ready when you are. Click a button to get started.</span>
+            </footer>
+        </section>
+    </main>
+    <footer class="page-footer">
+        <span class="footer-label">BUILT FROM HTML &amp; CSS. BROUGHT TO LIFE WITH OPENGL.</span>
+        <span class="keyboard-hint">Tab to explore / Enter to play</span>
+    </footer>
+</body>
+</html>
