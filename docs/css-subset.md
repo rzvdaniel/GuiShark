@@ -34,10 +34,17 @@ All dimensions use **border-box** semantics. Every element is a column container
 | `justify-content` | `flex-start`, `center`, `flex-end`, `space-between` |
 | `flex-grow` | Nonnegative number; distributes remaining width in a row |
 | `box-sizing` | `border-box` only |
+| `position` | `static` (normal flow), `absolute` (anchored to immediate parent content box) |
+| `top`, `right`, `bottom`, `left` | Nonnegative pixels, percentages, or `auto` |
+| `pointer-events` | `auto`, `none`; inherits; children can explicitly restore `auto` |
 
 Auto-width column children stretch with `align-items: stretch`; otherwise they use natural widths. Auto-width row children use natural widths. Auto heights derive from text or children. Percentage lengths resolve against available parent space; use explicit parent heights for predictable percentage heights. The root body always fills the viewport.
 
-Rows do not wrap or shrink. Size children so widths, margins, and gaps fit. Overflow is clipped to ancestor content rectangles. Rounded corners affect paint, but child clipping/hit testing are rectangular. Long unbroken words are clipped rather than split. Scrolling, positioning, floats, grid, z-index, transforms, and margin collapsing are unsupported. Paint and hit-test order follow document order; children paint after parent backgrounds.
+Rows do not wrap or shrink. Size children so widths, margins, and gaps fit. Overflow is clipped to ancestor content rectangles. Rounded corners affect paint, but child clipping/hit testing are rectangular. Long unbroken words are clipped rather than split. Scrolling, relative/fixed positioning, floats, grid, z-index, transforms, and margin collapsing are unsupported. Paint and hit-test order follow document order; children paint after parent backgrounds.
+
+Absolutely positioned children are removed from flow. Each anchors to its immediate parent's content box, regardless of the parent's position (a deliberately simpler rule than browser containing blocks). With auto width and both left/right anchors, width fills the remaining space; the analogous rule applies to height with top/bottom. Absolute margins are not applied. Draw order is still document order, so place overlays last or use separate views for modal layers.
+
+`pointer-events: none` makes decorative HUD regions transparent to hit testing while preserving rendering. Descendants inherit it, but a button can set `pointer-events: auto` to remain interactive. Button navigation skips nodes whose resolved pointer events are disabled. Visual transparency by itself does not change hit testing.
 
 ## Appearance
 

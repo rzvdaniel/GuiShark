@@ -85,7 +85,27 @@ internal sealed class LayoutEngine(ITextMetrics text)
             Arrange(child, new(x, y, size.Width, size.Height), element.Clip.Intersect(content));
             cursor += (row ? size.Width + margin.Horizontal : size.Height + margin.Vertical) + gap;
         }
+        foreach (var child in element.Children.Where(c => !c.Style.Hidden && c.Style.Position == ElementPosition.Absolute))
+            ArrangeAbsolute(child, content, element.Clip.Intersect(content));
     }
 
-    private static UiElement[] VisibleChildren(UiElement element) => element.Children.Where(c => !c.Style.Hidden).ToArray();
+    private void ArrangeAbsolute(UiElement element, UiRect parent, UiRect clip)
+    {
+        var style = element.Style;
+        var left = style.Left.Resolve(parent.Width, 0);
+        var right = style.Right.Resolve(parent.Width, 0);
+        float? width = style.Width.IsAuto && !style.Left.IsAuto && !style.Right.IsAuto
+            ? Math.Max(0, parent.Width - left - right) : null;
+        var size = Measure(element, parent.Width, parent.Height, false, width);
+        var top = style.Top.Resolve(parent.Height, 0);
+        var bottom = style.Bottom.Resolve(parent.Height, 0);
+        if (style.Height.IsAuto && !style.Top.IsAuto && !style.Bottom.IsAuto)
+            size = size with { Height = Math.Max(0, parent.Height - top - bottom) };
+        var x = style.Left.IsAuto && !style.Right.IsAuto ? parent.Right - right - size.Width : parent.X + left;
+        var y = style.Top.IsAuto && !style.Bottom.IsAuto ? parent.Bottom - bottom - size.Height : parent.Y + top;
+        Arrange(element, new(x, y, size.Width, size.Height), clip);
+    }
+
+    private static UiElement[] VisibleChildren(UiElement element) => element.Children
+        .Where(c => !c.Style.Hidden && c.Style.Position == ElementPosition.Flow).ToArray();
 }

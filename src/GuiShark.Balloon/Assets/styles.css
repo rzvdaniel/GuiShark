@@ -1,0 +1,43 @@
+body { color: #f5f0df; font-size: 14px; }
+.modal { padding: 28px; align-items: center; justify-content: center; background: #102f3566; }
+.menu-card { width: 460px; max-width: 100%; padding: 34px; gap: 15px; background: #153b3bed; border: 1px solid #a8c5b04d; border-radius: 18px; }
+.pause-card { width: 460px; max-width: 100%; padding: 34px; gap: 17px; background: #153b3bf5; border: 1px solid #a8c5b060; border-radius: 18px; }
+.eyebrow { font-size: 10px; font-weight: bold; color: #e6c886; }
+h1 { font-size: 42px; font-weight: bold; color: #fff3cf; }
+.lead { font-size: 17px; color: #bed4c8; }
+.description { font-size: 15px; color: #d9e2d3; }
+.rule { height: 1px; background: #a9c4ae33; margin: 5px 0px; }
+.instruction { padding: 15px; gap: 7px; background: #ffffff09; border-radius: 9px; color: #bed4c8; font-size: 12px; }
+.instruction-label { font-size: 9px; font-weight: bold; color: #e6c886; }
+button { height: 43px; padding: 0px 18px; font-size: 13px; font-weight: bold; background: linear-gradient(to bottom, #355653, #284743); color: #e6ecda; border: 1px solid #8cb5a35c; border-radius: 8px; pointer-events: auto; }
+button:hover { background: #416a61; border-color: #a6c8a8; }
+button:active { background: #203d36; }
+button:focus { border: 2px solid #fff3cf; }
+button.primary { background: linear-gradient(to bottom, #f2d795, #dcb975); color: #293e32; border: 1px solid #f8e2ae; }
+button.primary:hover { background: linear-gradient(to bottom, #ffe9b1, #efd18d); }
+button.primary:active { background: #cba969; }
+button.quiet { background: transparent; border-color: #a8c5b033; color: #b9cfc3; }
+button.quiet:hover { background: #ffffff12; }
+.fine-print { text-align: center; font-size: 10px; color: #8faf9f; margin: 3px 0px 0px 0px; }
+.signature { position: absolute; left: 28px; right: 28px; bottom: 23px; flex-direction: row; justify-content: space-between; font-size: 9px; color: #e4edd2; }
+.signature-right { text-align: right; }
+.hud { pointer-events: none; }
+.topbar { position: absolute; left: 26px; right: 26px; top: 24px; flex-direction: row; justify-content: space-between; align-items: center; }
+.brand { gap: 5px; }
+.brand-title { font-size: 26px; font-weight: bold; color: #fff5d8; }
+.brand-caption { font-size: 9px; font-weight: bold; color: #eef5d2; }
+.top-actions { flex-direction: row; gap: 18px; align-items: center; }
+.course { font-size: 10px; color: #fff4d4; }
+button.small { height: 36px; width: 112px; background: #153b3bd9; }
+.glass { background: #153b3bd9; border: 1px solid #aec8af40; border-radius: 12px; }
+.collection { position: absolute; top: 106px; left: 26px; width: 218px; padding: 19px; gap: 7px; }
+.progress { font-size: 36px; font-weight: bold; color: #fff3ce; }
+.muted { font-size: 11px; color: #b4cdbc; }
+.telemetry { flex-direction: row; align-items: center; justify-content: space-between; }
+.altitude { font-size: 16px; font-weight: bold; color: #fff0c9; }
+.bottom-bar { position: absolute; left: 26px; right: 26px; bottom: 24px; flex-direction: row; justify-content: space-between; align-items: flex-end; }
+.objective { width: 440px; padding: 17px 20px; gap: 8px; }
+#message { font-size: 12px; color: #d8e4ce; }
+.navigation { width: 218px; gap: 8px; }
+.hint { text-align: center; font-size: 10px; color: #f4f0d7; }
+.summary { text-align: center; padding: 15px; background: #ffffff0a; border-radius: 8px; color: #f4db9d; }

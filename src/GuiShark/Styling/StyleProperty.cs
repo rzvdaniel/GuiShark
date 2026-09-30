@@ -9,6 +9,12 @@ internal static class StyleProperty
             case "width": style.Width = CssLength.Parse(value); break;
             case "height": style.Height = CssLength.Parse(value); break;
             case "max-width": style.MaxWidth = CssLength.Parse(value); break;
+            case "position": style.Position = value switch { "static" => ElementPosition.Flow, "absolute" => ElementPosition.Absolute, _ => throw Invalid(name, value) }; break;
+            case "top": style.Top = CssLength.Parse(value); break;
+            case "right": style.Right = CssLength.Parse(value); break;
+            case "bottom": style.Bottom = CssLength.Parse(value); break;
+            case "left": style.Left = CssLength.Parse(value); break;
+            case "pointer-events": style.PointerEvents = value switch { "auto" => true, "none" => false, _ => throw Invalid(name, value) }; break;
             case "padding": style.Padding = ParseInsets(value); break;
             case "margin": style.Margin = ParseInsets(value); break;
             case "gap": style.Gap = Nonnegative(value); break;

@@ -27,13 +27,26 @@ Run from the repository root. Passing the source asset directory lets **F5** rel
 
 Edit [the HTML](src/GuiShark.Demo/Assets/index.html), [the CSS](src/GuiShark.Demo/Assets/styles.css), and [the callbacks](src/GuiShark.Demo/DemoController.cs).
 
-## Small, separate responsibilities
+## Balloon game demo
+
+The second demo, **Lantern Valley**, puts an HTML/CSS HUD over an independent 3D OpenGL game. Fly a hot-air balloon over generated green hills, collect six lanterns, and use menus, pause controls and a translucent HUD.
+
+```powershell
+dotnet run --project src/GuiShark.Balloon
+```
+
+Click the landscape to fly, scroll to zoom, and use **Find the next lantern** for guidance. See [controls and integration](docs/balloon-demo.md).
+
+![Lantern Valley's HTML HUD over the OpenGL landscape](docs/balloon-hud.png)
+
+## Architecture
 
 | Project | Responsibility |
 | --- | --- |
 | `GuiShark` | HTML loading, bounded CSS cascade, element state, layout, hit testing, input |
 | `GuiShark.OpenGL` | Fonts, texture caches, GPU drawing, clipping, graphics-state restoration |
 | `GuiShark.Demo` | Window, host background scene, input forwarding, application callbacks |
+| `GuiShark.Balloon` | Independent 3D balloon game, procedural landscape, mouse steering, HTML menus/HUD |
 
 The SDK does not own a window, swap buffers, clear the host framebuffer, or run a game loop. It can be used with another window/input library. See [embedding in your game](docs/embedding.md) and [the CSS subset](docs/css-subset.md).
 
@@ -50,6 +63,6 @@ This is an intentionally small retained UI engine. It has no scrolling, text edi
 
 ## Original prototype
 
-The 2018 `Gui.Shark.*` project directories are preserved unchanged. Open `Gui.Shark.Legacy.sln` to inspect that version. The main `Gui.Shark.sln` builds only the modern SDK and demo. There is no binary compatibility promise with the prototype's `TElement` / `TGame` APIs.
+The 2018 `Gui.Shark.*` project directories are preserved unchanged. Open `Gui.Shark.Legacy.sln` to inspect that version. The main `Gui.Shark.sln` builds only the modern SDK and demos. There is no binary compatibility promise with the prototype's `TElement` / `TGame` APIs.
 
 Code and original shark artwork use the repository's MIT license. Bundled Lato fonts use the SIL Open Font License; see [third-party notices](THIRD-PARTY-NOTICES.md).

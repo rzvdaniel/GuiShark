@@ -10,7 +10,7 @@ internal static class HitTester
             var hit = Hit(element.Children[i], x, y);
             if (hit != null) return hit;
         }
-        return element.Parent == null ? null : element;
+        return element.Parent == null || !element.Style.PointerEvents ? null : element;
     }
 
     public static UiElement? Button(UiElement? element)
@@ -20,7 +20,7 @@ internal static class HitTester
         return null;
     }
 
-    public static bool CanActivate(UiElement element) => element.IsButton && !element.Disabled &&
+    public static bool CanActivate(UiElement element) => element.IsButton && element.Style.PointerEvents && !element.Disabled &&
         !Ancestors(element).Any(e => e.Style.Hidden || e.Disabled) && element.Clip.Width > 0 && element.Clip.Height > 0;
 
     private static IEnumerable<UiElement> Ancestors(UiElement element)

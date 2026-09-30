@@ -4,6 +4,7 @@ public enum FlowDirection { Column, Row }
 public enum CrossAlignment { Stretch, Start, Center, End }
 public enum MainAlignment { Start, Center, End, SpaceBetween }
 public enum TextAlignment { Left, Center, Right }
+public enum ElementPosition { Flow, Absolute }
 
 public sealed class UiStyle
 {
@@ -28,6 +29,12 @@ public sealed class UiStyle
     public UiColor GradientEnd { get; internal set; } = UiColor.Transparent;
     public float Opacity { get; internal set; } = 1;
     public bool Hidden { get; internal set; }
+    public bool PointerEvents { get; internal set; } = true;
+    public ElementPosition Position { get; internal set; }
+    public CssLength Top { get; internal set; } = CssLength.Auto;
+    public CssLength Right { get; internal set; } = CssLength.Auto;
+    public CssLength Bottom { get; internal set; } = CssLength.Auto;
+    public CssLength Left { get; internal set; } = CssLength.Auto;
     public float LineHeight => FontSize * 1.45f;
 
     internal static UiStyle Default(UiElement element, UiStyle? parent) => new()
@@ -35,6 +42,7 @@ public sealed class UiStyle
         FontSize = parent?.FontSize ?? 14,
         Color = parent?.Color ?? new(.12f, .15f, .2f),
         Bold = parent?.Bold ?? false,
+        PointerEvents = parent?.PointerEvents ?? true,
         TextAlign = element.IsButton ? TextAlignment.Center : parent?.TextAlign ?? TextAlignment.Left,
         Padding = element.IsButton ? new(10, 18, 10, 18) : default
     };

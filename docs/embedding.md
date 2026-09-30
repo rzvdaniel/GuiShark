@@ -70,6 +70,8 @@ Map Tab, Enter, Space, and Escape to `UiKey`. Forward releases even when the poi
 
 Use each return value to decide whether to pass the event to game logic. Visible UI boxes except the root body consume pointer input; empty space outside the panel goes through. Disabled buttons consume pointer input but never activate. `HasPointerCapture` and `WantsKeyboard` expose routing intent.
 
+For a game HUD, set `pointer-events: none` on the body or decorative containers and `pointer-events: auto` on buttons. Colors ending in an alpha byte (for example `#153b3bd9`) provide translucent panels; leave the body background transparent to expose the host scene. Anchor HUD groups with `position: absolute` and `top/right/bottom/left`. See the complete example in [Lantern Valley](balloon-demo.md).
+
 A click requires pressing and releasing over the same enabled button. Dragging out and releasing cancels it. Tab follows document order and skips disabled/hidden controls. Enter/Space activate on release; repeated key-down events do not trigger callbacks. UI focus is distinct from native window focus; call `Cancel()` on native focus loss.
 
 ## Resize and DPI
