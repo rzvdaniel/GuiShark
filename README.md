@@ -49,6 +49,8 @@ dotnet run --project src/demos/GuiShark.TextDemo
 
 TTF/OTF files can be copied into your asset directory and loaded using CSS `@font-face` and `font-family`. See [text rendering, font loading and platform notes](docs/text-rendering.md).
 
+MSDF atlases can also be generated during build/publish: configure `GUISHARK_MSDF_GENERATOR` with the native atlas generator's path, then build Text Lab normally. Generation is incremental and stays out of the shipped application. See [build-time setup for your own application](docs/text-rendering.md#generate-msdf-atlases-during-build).
+
 ![GuiShark Text Lab comparing four rendering paths](docs/text-lab.png)
 
 ## Architecture

@@ -6,4 +6,8 @@
     <Content Include="Assets/**/*" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../GuiShark.Demo/Assets/fonts/**/*" Link="Assets/fonts/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+  <Import Project="../../../tools/msdf/GuiShark.Msdf.targets" />
+  <ItemGroup>
+    <GuiSharkMsdfFont Include="../GuiShark.Demo/Assets/fonts/*.ttf" />
+  </ItemGroup>
 </Project>

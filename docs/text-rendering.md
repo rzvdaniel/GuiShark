@@ -112,7 +112,49 @@ There is no DirectWrite, GDI or other Windows-only text path. Skia and FreeType 
 
 Text Lab displays an unavailable pane if a native dependency cannot load; it never silently substitutes Skia while calling it FreeType. A functioning OpenGL 3.3 core context and the host/window library's OS dependencies are still required. Release build passed; framework-dependent publishes for Windows x64, Linux x64, macOS x64 and macOS ARM64 contain the expected Skia/FreeType/GLFW native files. Windows captures were reviewed at 1×, 1.25×, 1.5× and 2× simulated density, including small-window, shadow, bold, bitmap and large MSDF specimens; Lantern Valley still renders with the improved default. The user confirmed Text Lab controls work. Native Linux/macOS execution and real HiDPI display behavior remain unverified. No unit or integration tests were added.
 
-## Rebuild the MSDF assets
+## Generate MSDF atlases during build
+
+Text Lab imports the reusable [MSBuild targets](../tools/msdf/GuiShark.Msdf.targets). Configure a native **msdf-atlas-gen** executable for the build machine, then normal builds and publishes generate the atlases automatically:
+
+```powershell
+$env:GUISHARK_MSDF_GENERATOR = "C:\Tools\msdf-atlas-gen.exe"
+dotnet build src/demos/GuiShark.TextDemo
+dotnet publish src/demos/GuiShark.TextDemo
+```
+
+On Linux/macOS, use a generator compiled for that build host:
+
+```bash
+GUISHARK_MSDF_GENERATOR=/opt/msdf-atlas-gen dotnet build src/demos/GuiShark.TextDemo
+```
+
+Alternatively pass `-p:GuiSharkMsdfGenerator=/absolute/path/to/msdf-atlas-gen`. Providing a generator enables generation unless explicitly disabled with `-p:GuiSharkGenerateMsdfAtlases=false`. With no generator configured, Text Lab uses the committed atlases. Nothing is downloaded during the build, and no generator is copied into the application. Cross-publishing from Windows to Linux still uses a Windows generator; the resulting PNG/JSON assets are portable.
+
+For another application, import the helper and declare a font-folder glob once. Newly added TTF/OTF files are then discovered on the next build; CSS continues to choose the runtime font family:
+
+```xml
+<Import Project="path/to/GuiShark/tools/msdf/GuiShark.Msdf.targets" />
+<ItemGroup>
+  <GuiSharkMsdfFont Include="Assets/fonts/*.ttf;Assets/fonts/*.otf" />
+</ItemGroup>
+```
+
+Keep `GenerateMsdfAtlas.cs` beside the imported targets. This is an explicit project import, not an automatically installed NuGet build extension. Each font produces `FontFileName.png` and `FontFileName.json` under `obj/<configuration>/.../guishark-msdf/`, linked into `Assets/atlas` in the build and publish output. The source asset directory is not modified. Runtime `MsdfAtlas` instances still need to select those matching files and the correct family name; CSS declarations do not generate an atlas registry.
+
+| Setting | Default |
+| --- | --- |
+| `GuiSharkMsdfAssetPath` | `Assets/atlas`, the output/publish asset path |
+| `GuiSharkMsdfCharset` | `[0x20,0x17f], [0x2010,0x2026]` |
+| `GuiSharkMsdfEmSize` | `48` pixels/em |
+| `GuiSharkMsdfDistanceRange` | `4` atlas pixels |
+
+Per-font metadata `AtlasName`, `Charset`, `EmSize` and `DistanceRange` override these defaults. `AtlasName` defaults to the font filename without its extension and must be unique. The charset must contain `?` for the runtime's missing-glyph fallback. Generation uses MSDF PNGs, bottom-origin JSON and no pair kerning, matching the runtime loader.
+
+MSBuild checks font files, generator timestamps, helper files and a settings fingerprint per font. Unchanged atlases are skipped; changed settings or missing outputs regenerate them. Private staging directories keep generator failures from overwriting previously successful assets; a completion marker prevents failed generations from being treated as current. Enabled generation fails with a clear build error if the tool or font is missing. `dotnet clean` does not require the generator, and disabling generation restores the bundled assets even when generated copies are newer. The targets use MSBuild's cross-platform [Roslyn task factory](https://learn.microsoft.com/en-us/visualstudio/msbuild/msbuild-roslyncodetaskfactory) and [incremental target batching](https://learn.microsoft.com/en-us/visualstudio/msbuild/incremental-builds).
+
+Windows verification covered first generation, an unchanged incremental build, changed atlas size, a generator path containing spaces, build/publish asset copying, rendering the generated atlas, and restoring bundled assets. Clean and the normal Release solution build passed. Native Linux/macOS build execution remains unverified; no unit or integration tests were added.
+
+## Rebuild the bundled MSDF assets manually
 
 The included atlases use **msdf-atlas-gen 1.4 / MSDFgen 1.13**, bundled Lato Regular/Bold, 48 pixels/em, a 4-pixel distance range, bottom-origin metadata, and no pair kerning. The requested charset is U+0020–017F plus U+2010–2026. Each font supplies 338 glyphs; controls U+007F–009F and U+2011/2023/2024/2025 are absent. Unsupported scalars render `?` in the atlas backends; this is visible fallback, not full Unicode coverage.
 
