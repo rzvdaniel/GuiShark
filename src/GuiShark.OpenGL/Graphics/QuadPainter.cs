@@ -40,19 +40,36 @@ internal sealed class QuadPainter : IDisposable
 
     public void Shape(UiRect rect, UiStyle style, float opacity)
     {
-        if (style.Background.A == 0 && style.GradientEnd.A == 0 && style.BorderWidth == 0) return;
-        SetRect(rect, style.Radius, style.BorderWidth);
-        SetColor("topColor", style.Background, opacity);
-        SetColor("bottomColor", style.GradientEnd, opacity);
+        if (style.BackgroundInset == default)
+            PaintShape(rect, style, opacity, fill: true, border: true);
+        else
+        {
+            PaintShape(rect.Inset(style.BackgroundInset), style, opacity, fill: true, border: false);
+            PaintShape(rect, style, opacity, fill: false, border: true);
+        }
+    }
+
+    private void PaintShape(UiRect rect, UiStyle style, float opacity, bool fill, bool border)
+    {
+        var top = fill ? style.Background : UiColor.Transparent;
+        var bottom = fill ? style.GradientEnd : UiColor.Transparent;
+        var borderWidth = border ? style.BorderWidth : 0;
+        if (rect.Width <= 0 || rect.Height <= 0 || (top.A == 0 && bottom.A == 0 && borderWidth == 0)) return;
+        SetRect(rect, style.Radius, borderWidth);
+        SetColor("topColor", top, opacity);
+        SetColor("bottomColor", bottom, opacity);
         SetColor("borderColor", style.BorderColor, opacity);
         GL.Uniform1(program["textured"], 0);
         GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
     }
 
-    public void Texture(UiRect rect, GpuTexture texture, UiColor color, float opacity, float radius = 0)
+    public void Texture(UiRect rect, GpuTexture texture, UiColor color, float opacity, float radius = 0, UiRect? source = null)
     {
+        if (rect.Width <= 0 || rect.Height <= 0) return;
         SetRect(rect, radius, 0);
         SetColor("topColor", color, opacity);
+        var uv = source ?? new UiRect(0, 0, 1, 1);
+        GL.Uniform4(program["textureRect"], uv.X, uv.Y, uv.Width, uv.Height);
         GL.Uniform1(program["textured"], 1);
         GL.BindTexture(TextureTarget.Texture2D, texture.Handle);
         GL.DrawArrays(PrimitiveType.Triangles, 0, 6);

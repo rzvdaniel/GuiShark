@@ -72,6 +72,10 @@ Use each return value to decide whether to pass the event to game logic. Visible
 
 For a game HUD, set `pointer-events: none` on the body or decorative containers and `pointer-events: auto` on buttons. Colors ending in an alpha byte (for example `#153b3bd9`) provide translucent panels; leave the body background transparent to expose the host scene. Anchor HUD groups with `position: absolute` and `top/right/bottom/left`. See the complete example in [Lantern Valley](balloon-demo.md).
 
+Illustrated controls can use transparent PNGs through `<img>` or `background-image`. Use `object-fit: contain` for icons and `-guishark-background-slice` plus `-guishark-background-slice-width` for scalable panel/button artwork. Source slices are bitmap pixels; destination widths are logical UI pixels. Hover/pressed/disabled classes can tint artwork using `-guishark-image-tint`. No host-side texture drawing is required. See [illustrated controls](css-subset.md#illustrated-controls) for the complete syntax.
+
+To put a colored backing inside an ornate frame, use `background-color` with `-guishark-background-inset`. The fill moves inward; the PNG stays at the full element bounds. Tune the inset and radius against the artwork's inner edge. This prevents a rectangular color fill from covering transparent outer leaves or corners.
+
 A click requires pressing and releasing over the same enabled button. Dragging out and releasing cancels it. Tab follows document order and skips disabled/hidden controls. Enter/Space activate on release; repeated key-down events do not trigger callbacks. UI focus is distinct from native window focus; call `Cancel()` on native focus loss.
 
 ## Resize and DPI

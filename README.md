@@ -29,7 +29,7 @@ Edit [the HTML](src/GuiShark.Demo/Assets/index.html), [the CSS](src/GuiShark.Dem
 
 ## Balloon game demo
 
-The second demo, **Lantern Valley**, puts an HTML/CSS HUD over an independent 3D OpenGL game. Fly a hot-air balloon over generated green hills, collect six lanterns, and use menus, pause controls and a translucent HUD.
+The second demo, **Lantern Valley**, puts an illustrated woodland fantasy HTML/CSS HUD over an independent 3D OpenGL game. Fly a hot-air balloon over generated green hills, collect six lanterns, and use menus, pause controls and a translucent HUD. Transparent PNG artwork supplies carved wood, golden vines and glowing lanterns; nine-slice backgrounds resize frames without stretching their corners.
 
 ```powershell
 dotnet run --project src/GuiShark.Balloon
@@ -61,8 +61,4 @@ document.GetElement("increment").Clicked += button =>
 
 This is an intentionally small retained UI engine. It has no scrolling, text editing, full inline layout, flex wrapping, animation system, or accessibility bridge. Windows rendering and interaction have been manually checked; Linux/macOS are not yet verified. No unit or integration tests have been added.
 
-## Original prototype
-
-The 2018 `Gui.Shark.*` project directories are preserved unchanged. Open `Gui.Shark.Legacy.sln` to inspect that version. The main `Gui.Shark.sln` builds only the modern SDK and demos. There is no binary compatibility promise with the prototype's `TElement` / `TGame` APIs.
-
-Code and original shark artwork use the repository's MIT license. Bundled Lato fonts use the SIL Open Font License; see [third-party notices](THIRD-PARTY-NOTICES.md).
+Code and project artwork use the repository's MIT license. Woodland asset provenance and generation prompts are in [artwork notes](docs/woodland-artwork.md). Bundled Lato fonts use the SIL Open Font License; see [third-party notices](THIRD-PARTY-NOTICES.md).

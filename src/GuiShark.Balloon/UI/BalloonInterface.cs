@@ -54,6 +54,9 @@ internal sealed class BalloonInterface : IDisposable
         hud.Text("distance", $"{expedition.Flight.DistanceTravelled * 10:0} m travelled");
         hud.Text("message", expedition.Message);
         hud.Text("course", expedition.Flight.Arrived ? "HOVERING" : "ON COURSE");
+        for (var i = 0; i < expedition.Lanterns.Count; i++)
+            hud.Document.GetElement($"lantern-{i}").SetClass("found", expedition.Lanterns[i].Collected);
+        hud.Document.GetElement("guide").Disabled = expedition.Complete;
         panels[GameMode.Complete].Text("summary", $"6 lanterns discovered / {expedition.Time:0} seconds aloft");
     }
 

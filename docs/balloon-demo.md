@@ -2,6 +2,10 @@
 
 A second host application showing GuiShark over a real 3D OpenGL scene. The procedural landscape, flight simulation, terrain picking, camera, and world renderer are independent of the UI SDK.
 
+The woodland skin uses transparent painted PNGs for carved frames, leaf-and-gold buttons and a glowing lantern relic. All labels, layouts, states and callbacks remain HTML/CSS and C#. Its menus, pause screen, completion screen and HUD share the same artwork; collected lantern icons brighten individually. See [asset provenance and prompts](woodland-artwork.md).
+
+Panel fills are inset beneath the carved frame's inner rim, leaving the outer leaves and ornament transparent. The PNG itself has a transparent center; CSS controls the backing color independently. Modal screens also dim the scene behind the window, while the HUD leaves the surrounding game undimmed. A sharp text shadow supports label readability.
+
 ![HTML main menu over the landscape](balloon-menu.png)
 
 ![Transparent HTML HUD during flight](balloon-hud.png)
@@ -58,7 +62,12 @@ Mouse presses are offered to GuiShark first. Only an unconsumed press during fli
 
 - `pointer-events: auto/none`, with inherited behavior and descendant overrides.
 - `position: absolute` with pixel/percentage edge anchors, excluded from normal flow.
-- Existing transparent colors, texture blending and GL state restoration are reused unchanged.
+- Transparent `background-image`, centered `background-size` / `object-fit` scaling.
+- Nine-slice frame backgrounds with independently specified source slices and destination border widths.
+- Inset color/gradient backing that stays inside decorative frames without affecting layout.
+- Image tint for illustrated hover, pressed and disabled states, and collected relics.
+- A single sharp `text-shadow` for readable labels over the game.
+- Existing premultiplied texture blending and GL state restoration are reused unchanged.
 
 These features are shared SDK functionality. No game behavior or window/input dependency was added to `GuiShark`.
 
@@ -66,4 +75,4 @@ These features are shared SDK functionality. No game behavior or window/input de
 
 The landscape is a seeded finite world, generated locally on startup. This is a stylized exploration demo, with simple steering rather than realistic balloon physics. There is no terrain streaming, tree collision, save system, audio, or shadow map. The shadow is a soft ground-darkening approximation. UI clipping remains rectangular, and the demo imposes a minimum window size to keep the HUD readable.
 
-The project has been built and its actual OpenGL menu/HUD frames inspected on Windows with an Intel UHD Graphics 630 OpenGL 3.3 driver. A user play-through confirmed the controls; the application log recorded terrain steering, all six lantern collections, completion, return to the menu, and pause/resume. Resize and physical DPI behavior have not been verified. No unit or integration tests were added.
+Debug and Release builds pass with zero warnings/errors. Actual OpenGL menu/HUD frames were inspected on Windows with an Intel UHD Graphics 630 OpenGL 3.3 driver, including inset panel backing and text shadows. User play-throughs confirmed the full original six-lantern flow and woodland-skin steering, collection and pause/menu transitions. Resize and physical DPI behavior have not been verified. No unit or integration tests were added.
