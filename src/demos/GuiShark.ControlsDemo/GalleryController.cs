@@ -6,14 +6,35 @@ internal sealed class GalleryController
     private readonly UiDocument document;
     private readonly Queue<string> events = new();
     private int clicks;
-    public GalleryController(UiDocument document)
+    public InventoryController Inventory { get; }
+    public GalleryController(UiView view)
     {
-        this.document = document;
+        document = view.Document;
+        Inventory = new(view, Log);
+        _ = new TextEntryController(view, Log);
         foreach (var element in document.Root.DescendantsAndSelf())
         {
             if (element.Control is { } control)
                 control.Changed += _ => Changed(element);
         }
+        foreach (var element in document.Root.DescendantsAndSelf().Where(e => e.Select != null))
+            element.Select!.Changed += select => Log($"{element.Id}: {select.Value}");
+        document.TabGroups[0].Changed += tabs => Log($"Page: {tabs.Selected.Text}");
+        document.GetElement("apply-settings").Clicked += _ =>
+        {
+            var summary = $"Applied {document.GetElement("quality").Select!.Value}, {document.GetElement("resolution").Select!.Value}, {document.GetElement("language").Select!.Value}";
+            document.GetElement("applied").Text = summary;
+            Log(summary);
+        };
+        document.GetElement("go-quests").Clicked += _ => document.TabGroups[0].Select(document.GetElement("tab-lists"));
+        document.GetElement("scroll-top").Clicked += _ => document.GetElement("quest-scroll").Scroll.Offset = 0;
+        document.GetElement("camp").Clicked += _ => Log("Camp marked on the map");
+        foreach (var element in document.Root.DescendantsAndSelf().Where(e => e.Id.StartsWith("quest-", StringComparison.Ordinal) && e.IsButton))
+            element.Clicked += button =>
+            {
+                document.GetElement("quest-status").Text = $"Tracking: {button.Parent!.Children[1].Text}";
+                Log(document.GetElement("quest-status").Text);
+            };
         document.GetElement("action").Clicked += _ => Log($"Launch clicked ({++clicks})");
         document.GetElement("skin-button").Clicked += _ => Log("Emerald action clicked");
         document.GetElement("reset").Clicked += _ => Reset();

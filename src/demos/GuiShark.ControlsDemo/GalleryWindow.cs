@@ -15,10 +15,10 @@ internal sealed class GalleryWindow : GameWindow
     private OpenGlUiRenderer renderer = null!;
     private GalleryController controller = null!;
     private int frames;
-    private readonly bool autoCapture;
+    private readonly GalleryOptions options;
     private bool capture;
 
-    public GalleryWindow(bool autoCapture, string? assetsPath = null) : base(new GameWindowSettings { UpdateFrequency = 60 }, new NativeWindowSettings
+    public GalleryWindow(GalleryOptions options) : base(new GameWindowSettings { UpdateFrequency = 60 }, new NativeWindowSettings
     {
         ClientSize = new Vector2i(1120, 880),
         MinimumClientSize = new Vector2i(1120, 880),
@@ -28,8 +28,8 @@ internal sealed class GalleryWindow : GameWindow
         Flags = ContextFlags.ForwardCompatible
     })
     {
-        this.autoCapture = autoCapture;
-        this.assetsPath = Path.GetFullPath(assetsPath ?? Path.Combine(AppContext.BaseDirectory, "Assets"));
+        this.options = options;
+        this.assetsPath = Path.GetFullPath(options.AssetsPath ?? Path.Combine(AppContext.BaseDirectory, "Assets"));
     }
 
     protected override void OnLoad()
@@ -39,7 +39,13 @@ internal sealed class GalleryWindow : GameWindow
         Console.WriteLine($"OpenGL {GL.GetString(StringName.Version)} / {GL.GetString(StringName.Renderer)}");
         fonts = new(Path.Combine(assetsPath, "fonts/Lato-Regular.ttf"), Path.Combine(assetsPath, "fonts/Lato-Bold.ttf"));
         LoadUi();
-        Console.WriteLine("F5 reloads HTML/CSS. F12 saves a screenshot. Tab/Shift+Tab navigate controls; Enter/Space activate; arrows adjust sliders and radio groups.");
+        Console.WriteLine("F5 reloads HTML/CSS. F12 saves a screenshot. Tab/Shift+Tab navigate controls; Enter/Space activate; arrows adjust controls/switch tabs; wheel scrolls lists.");
+    }
+
+    private sealed class WindowClipboard(GalleryWindow window) : IUiClipboard
+    {
+        public string GetText() => window.ClipboardString;
+        public void SetText(string text) => window.ClipboardString = text;
     }
 
     private void LoadUi()
@@ -49,14 +55,36 @@ internal sealed class GalleryWindow : GameWindow
         var document = HtmlLoader.Load(assets.ReadText("index.html"), assets, UiTheme.Neutral);
         fonts.Load(document);
         var nextView = new UiView(document, fonts);
+        nextView.Input.Clipboard = new WindowClipboard(this);
         nextView.Resize(ClientSize.X, ClientSize.Y);
         nextView.Update();
-        var nextRenderer = new OpenGlUiRenderer(nextView, fonts);
+        var nextRenderer = new OpenGlUiRenderer(nextView, GalleryTextBackend.Create(options.TextBackend, fonts), ownsTextBackend: true);
         renderer?.Dispose();
         view?.Dispose();
         view = nextView;
         renderer = nextRenderer;
-        controller = new(document);
+        controller = new(view);
+        document.TabGroups[0].Select(document.GetElement($"tab-{options.Page}"));
+        view.Update();
+        if (options.Scrolled)
+        {
+            document.GetElement("quest-scroll").Scroll.Offset = 380;
+            document.GetElement("nested-inner").Scroll.Offset = 150;
+            view.Update();
+        }
+        if (options.Modal == "name")
+        {
+            document.GetElement("name-dialog").Dialog!.ShowModal();
+            document.GetElement("character-name").TextInput!.SelectAll();
+        }
+        else if (options.Modal != null) controller.Inventory.Confirm(options.Modal);
+        if (options.Dropdown != null) view.Popup.Open(document.GetElement(options.Dropdown));
+        if (options.Tooltip != null)
+        {
+            view.Update();
+            var bounds = document.GetElement(options.Tooltip).Bounds;
+            view.Input.PointerMove(bounds.X + bounds.Width / 2, bounds.Y + bounds.Height / 2);
+        }
     }
 
     protected override void OnRenderFrame(FrameEventArgs args)
@@ -67,7 +95,13 @@ internal sealed class GalleryWindow : GameWindow
         GL.ClearColor(.035f, .055f, .09f, 1);
         GL.Clear(ClearBufferMask.ColorBufferBit);
         controller.Update(view.Input.Focused);
-        if (autoCapture && ++frames == 30) capture = true;
+        if (options.Capture && options.Tooltip != null)
+        {
+            view.Update();
+            var bounds = view.Document.GetElement(options.Tooltip).Bounds;
+            view.Input.PointerMove(bounds.X + bounds.Width / 2, bounds.Y + bounds.Height / 2);
+        }
+        if (options.Capture && ++frames == 30) capture = true;
         renderer.Render(FramebufferSize.X, FramebufferSize.Y);
         if (capture)
         {
@@ -75,7 +109,7 @@ internal sealed class GalleryWindow : GameWindow
             GuiShark.Demo.FrameCapture.Save(FramebufferSize.X, FramebufferSize.Y);
         }
         SwapBuffers();
-        if (autoCapture && frames >= 30) Close();
+        if (options.Capture && frames >= 30) Close();
     }
 
     protected override void OnResize(ResizeEventArgs args)
@@ -93,13 +127,19 @@ internal sealed class GalleryWindow : GameWindow
     protected override void OnMouseDown(MouseButtonEventArgs args)
     {
         base.OnMouseDown(args);
-        if (args.Button == MouseButton.Left) view?.Input.PointerDown(MousePosition.X, MousePosition.Y);
+        if (args.Button == MouseButton.Left) view?.Input.PointerDown(MousePosition.X, MousePosition.Y, KeyboardState.IsKeyDown(Keys.LeftShift) || KeyboardState.IsKeyDown(Keys.RightShift));
     }
 
     protected override void OnMouseUp(MouseButtonEventArgs args)
     {
         base.OnMouseUp(args);
         if (args.Button == MouseButton.Left) view?.Input.PointerUp(MousePosition.X, MousePosition.Y);
+    }
+
+    protected override void OnMouseWheel(MouseWheelEventArgs args)
+    {
+        base.OnMouseWheel(args);
+        view?.Input.PointerWheel(MousePosition.X, MousePosition.Y, args.OffsetY);
     }
 
     protected override void OnFocusedChanged(FocusedChangedEventArgs args)
@@ -111,11 +151,18 @@ internal sealed class GalleryWindow : GameWindow
     protected override void OnKeyDown(KeyboardKeyEventArgs args)
     {
         base.OnKeyDown(args);
-        if (MapKey(args.Key) is { } key && view.Input.KeyDown(key, args.Shift, args.IsRepeat)) return;
+        if (MapKey(args.Key) is { } key && view.Input.KeyDown(key, args.Shift, args.IsRepeat, args.Control || args.Command)) return;
+        if (view.Input.WantsKeyboard && args.Key != Keys.F5 && args.Key != Keys.F12) return;
         if (args.Key == Keys.Escape) Close();
         if (args.Key == Keys.F12) capture = true;
         if (args.Key == Keys.F5 && !args.IsRepeat)
             try { LoadUi(); } catch (Exception error) { Console.Error.WriteLine($"Reload failed: {error.Message}"); }
+    }
+
+    protected override void OnTextInput(TextInputEventArgs args)
+    {
+        base.OnTextInput(args);
+        view?.Input.TextInput(args.AsString);
     }
 
     protected override void OnKeyUp(KeyboardKeyEventArgs args)
@@ -129,7 +176,10 @@ internal sealed class GalleryWindow : GameWindow
         Keys.Tab => UiKey.Tab, Keys.Enter or Keys.KeyPadEnter => UiKey.Enter,
         Keys.Space => UiKey.Space, Keys.Escape => UiKey.Escape,
         Keys.Left => UiKey.Left, Keys.Right => UiKey.Right, Keys.Up => UiKey.Up, Keys.Down => UiKey.Down,
-        Keys.Home => UiKey.Home, Keys.End => UiKey.End, _ => null
+        Keys.Home => UiKey.Home, Keys.End => UiKey.End,
+        Keys.Backspace => UiKey.Backspace, Keys.Delete => UiKey.Delete,
+        Keys.A => UiKey.A, Keys.C => UiKey.C, Keys.X => UiKey.X, Keys.V => UiKey.V,
+        Keys.PageUp => UiKey.PageUp, Keys.PageDown => UiKey.PageDown, _ => null
     };
 
     protected override void OnUnload()

@@ -55,13 +55,13 @@ MSDF atlases can also be generated during build/publish: configure `GUISHARK_MSD
 
 ## Controls Gallery
 
-Try buttons, checkboxes, grouped radio buttons, sliders, labels, and progress bars in one place. Compare the optional neutral theme with an emerald CSS skin, inspect disabled/focus states, and watch C# value-change events in the live log.
+Try buttons, checkboxes, grouped radio buttons, sliders, labels, progress bars, dropdowns, vertical scrolling, modal dialogs, and tooltips across four HTML-defined tab pages. Compare the optional neutral theme with an emerald CSS skin, inspect disabled/focus states, and watch C# value-change events in the live log.
 
 ```powershell
 dotnet run --project src/demos/GuiShark.ControlsDemo
 ```
 
-See [HTML controls, themes and input forwarding](docs/controls.md). No scrolling, dropdowns or text editing are included in this first set.
+See [HTML controls, themes and input forwarding](docs/controls.md). Dropdowns render above clipped content; nested scroll areas and off-screen keyboard focus are demonstrated in a quest log. An inventory page demonstrates HTML item tooltips, Equip/Discard confirmations, trapped modal focus and popup integration. Text editing remains future work.
 
 ![GuiShark Controls Gallery rendered in OpenGL](docs/controls-gallery.png)
 
@@ -87,6 +87,8 @@ document.GetElement("increment").Clicked += button =>
 };
 ```
 
-This is an intentionally small retained UI engine. It has no scrolling, text editing, full inline layout, flex wrapping, animation system, or accessibility bridge. Windows rendering and interaction have been manually checked; Linux/macOS are not yet verified. No unit or integration tests have been added.
+This is an intentionally small retained UI engine. It has no text editing, full inline layout, flex wrapping, animation system, or accessibility bridge. Windows rendering and interaction have been manually checked; Linux/macOS are not yet verified. No unit or integration tests have been added.
 
 Code and project artwork use the repository's MIT license. Woodland asset provenance and generation prompts are in [artwork notes](docs/woodland-artwork.md). Bundled Lato fonts use the SIL Open Font License; see [third-party notices](THIRD-PARTY-NOTICES.md).
+
+Controls Gallery also includes inventory search and a character-name dialog using portable single-line text editing. Use `--page=inventory --modal=name` to open it, and `--text=skia|freetype|msdf` to choose the whole-view text backend. See [text input and host integration](docs/controls.md#single-line-text-input).

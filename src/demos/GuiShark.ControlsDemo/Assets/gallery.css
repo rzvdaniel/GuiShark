@@ -20,3 +20,47 @@ h2 { font-size: 23px; font-weight: bold; }
 footer.card { padding: 14px; gap: 8px; height: 118px; }
 #events { height: 40px; font-size: 14px; }
 footer .muted { font-size: 11px; }
+
+.tab-strip { flex-direction: row; gap: 12px; }
+.tab-strip button { width: 240px; }
+.tab-strip button:selected { background: #315e83; border-color: #93c5fd; }
+#pages { height: 484px; }
+.page-scroll { height: 100%; overflow-y: auto; }
+.settings-card { gap: 14px; }
+.clipped-box { height: 118px; padding: 14px; gap: 10px; background: #102e2a; border: 1px solid #397267; }
+select { height: 40px; }
+option { padding: 8px 12px; border: none; border-radius: 0; background: #21354a; }
+option:hover { background: #3c6387; }
+option:selected { color: #a6d9ff; }
+option:disabled { opacity: 1; color: #6f8397; }
+.quest-scroll { height: 310px; overflow-y: auto; gap: 12px; }
+.quest-row { padding: 12px; gap: 8px; background: #1b3045; border-radius: 6px; }
+.quest-row button { width: 180px; }
+.nested-outer { height: 240px; overflow-y: auto; padding: 12px; gap: 14px; background: #102e2a; }
+.nested-inner { height: 140px; overflow-y: auto; gap: 12px; padding: 10px; background: #172c3e; }
+
+#page-basics .card { padding: 18px; gap: 8px; }
+#page-basics .skin { gap: 10px; padding: 14px; }
+
+.inventory-row { flex-direction: row; gap: 12px; }
+.item-slot { width: 144px; padding: 12px; gap: 8px; font-size: 13px; background: #1c3444; border: 1px solid #476579; border-radius: 8px; }
+.item-slot:hover { background: #2a4a5e; }
+.item-slot.chosen { border-color: #a9d9f7; }
+.item-slot.equipped { border-color: #e8ca7a; background: #3c3c2b; }
+.item-symbol { height: 50px; justify-content: center; font-size: 17px; font-weight: bold; color: #bbe1ff; background: #263f5c; border-radius: 6px; }
+.leaf .item-symbol { color: #a5e5bd; background: #234d40; }
+.flask .item-symbol { color: #a5e5e5; background: #205153; }
+.feather .item-symbol { color: #d7b5ff; background: #49375e; }
+.coin .item-symbol { color: #f1d59a; background: #534933; }
+.item-stats { color: #b5dfa4; font-size: 14px; }
+.danger { background: #573436; border-color: #b37d77; }
+.danger:hover { background: #754a49; }
+dialog { width: 520px; padding: 26px; gap: 18px; background: #172d35; border: 1px solid #90b1a0; border-radius: 12px; }
+dialog button { width: 210px; }
+.item-tooltip, .guishark-tooltip { width: 290px; padding: 16px; gap: 10px; background: #112b2b; border: 1px solid #83ae90; border-radius: 8px; font-size: 14px; }
+.item-tooltip h3 { font-size: 20px; font-weight: bold; color: #e7db9f; }
+
+.tooltip-probe { position: absolute; right: 0; bottom: 0; width: 28px; height: 28px; padding: 0; border-radius: 14px; }
+
+#inventory-search, #character-name, #profile-id { height: 40px; }
+#page-inventory .settings-card { gap: 10px; }
