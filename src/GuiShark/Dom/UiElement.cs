@@ -22,6 +22,10 @@ public sealed class UiElement
     public string Text { get => text; set { if (text != value) { text = value; Invalidate(); } } }
     public bool Disabled { get => disabled; set { if (disabled != value) { disabled = value; Invalidate(); } } }
     public bool IsButton => Tag == "button";
+    public UiControl? Control { get; internal set; }
+    public bool IsInteractive => IsButton || Control?.IsInteractive == true;
+    internal string? LabelFor { get; set; }
+    internal UiElement? LabelTarget { get; set; }
     public UiElement? Parent { get; internal set; }
     public IReadOnlyList<UiElement> Children { get; internal set; } = [];
     public UiStyle Style { get; internal set; } = new();
@@ -48,6 +52,11 @@ public sealed class UiElement
             foreach (var node in child.DescendantsAndSelf()) yield return node;
     }
 
-    internal void Activate() { if (!Disabled) Clicked?.Invoke(this); }
+    internal void Activate()
+    {
+        if (Disabled) return;
+        Control?.Activate();
+        Clicked?.Invoke(this);
+    }
     internal void Invalidate() => Changed?.Invoke();
 }

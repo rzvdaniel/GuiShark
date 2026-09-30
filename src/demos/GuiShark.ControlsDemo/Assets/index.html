@@ -1,0 +1,25 @@
+<!doctype html>
+<html><head><link rel="stylesheet" href="gallery.css"></head><body>
+<header><p class="eyebrow">GUISHARK / INTERACTIVE SPECIMENS</p><h1>Controls Gallery</h1><p class="muted">HTML controls, OpenGL rendering. A place to try the details.</p></header>
+<main class="columns">
+<section class="card">
+<h2>Game settings</h2><p class="muted">Neutral theme. No CSS needed on these controls.</p>
+<div class="row"><input id="subtitles" type="checkbox" checked><label for="subtitles">Show subtitles</label></div>
+<div class="row"><input id="lock" type="checkbox"><label for="lock">Lock volume and launch button</label></div>
+<p class="eyebrow">DIFFICULTY / GROUPED RADIO BUTTONS</p>
+<div class="row"><input id="easy" type="radio" name="difficulty"><label for="easy">Explorer</label><input id="normal" type="radio" name="difficulty" checked><label for="normal">Normal</label><input id="hard" type="radio" name="difficulty"><label for="hard">Heroic</label></div>
+<label id="volume-value" for="volume">Master volume</label><input id="volume" type="range" min="0" max="100" step="1" value="65">
+<label id="scale-value" for="scale">UI scale</label><input id="scale" type="range" min="0.5" max="2" step="0.05" value="1">
+<p class="eyebrow">LIVE PROGRESS / FOLLOWS VOLUME</p><progress id="progress" max="100" value="65"></progress>
+<div class="row"><button id="action">Launch expedition</button><button id="reset">Reset</button></div>
+</section>
+<section class="card">
+<h2>States and skins</h2><p class="muted">Hover, press and Tab through the controls. Focus stays visible.</p>
+<div class="row"><input type="checkbox" checked disabled><label>Disabled checkbox</label></div>
+<input type="range" value="40" disabled><button disabled>Unavailable action</button>
+<section class="skin"><p class="eyebrow">APPLICATION CSS / EMERALD SKIN</p><div class="row"><input id="emerald" type="checkbox" checked><label for="emerald">Forest ambience</label></div><input id="energy" type="range" value="75"><progress max="100" value="82"></progress><button id="skin-button">A different appearance</button></section>
+<p id="focus" class="muted">Keyboard focus: none</p><p id="summary">Live settings</p>
+</section>
+</main>
+<footer class="card"><p class="eyebrow">LIVE EVENT LOG</p><p id="events">Ready</p><p class="muted">Tab / Shift+Tab: focus | Space / Enter: activate | Arrows: adjust | Home / End: slider limits | F5: reload | F12: capture</p></footer>
+</body></html>

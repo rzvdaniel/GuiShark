@@ -28,6 +28,7 @@ public sealed class UiStyle
     public float Radius { get; internal set; }
     public float BorderWidth { get; internal set; }
     public UiColor BorderColor { get; internal set; } = UiColor.Transparent;
+    public UiColor AccentColor { get; internal set; } = new(.35f, .75f, 1);
     public UiColor Color { get; internal set; } = new(.12f, .15f, .2f);
     public TextShadow? TextShadow { get; internal set; }
     public UiColor Background { get; internal set; } = UiColor.Transparent;
@@ -59,6 +60,8 @@ public sealed class UiStyle
         Bold = parent?.Bold ?? false,
         PointerEvents = parent?.PointerEvents ?? true,
         TextAlign = element.IsButton ? TextAlignment.Center : parent?.TextAlign ?? TextAlignment.Left,
-        Padding = element.IsButton ? new(10, 18, 10, 18) : default
+        Padding = element.IsButton ? new(10, 18, 10, 18) : default,
+        Width = element.Control?.Kind is UiControlKind.Checkbox or UiControlKind.Radio ? CssLength.Parse("24px") : CssLength.Auto,
+        Height = element.Control != null ? CssLength.Parse(element.Control.Kind == UiControlKind.Progress ? "18px" : "24px") : CssLength.Auto
     };
 }

@@ -4,10 +4,10 @@ AngleSharp parses HTML. GuiShark's bounded CSS parser resolves the supported pro
 
 ## Markup
 
-Supported tags: `body`, `div`, `section`, `main`, `header`, `footer`, `p`, `span`, `h1`, `h2`, `h3`, `button`, and `img`.
+Supported tags: `body`, `div`, `section`, `main`, `header`, `footer`, `p`, `span`, `h1`, `h2`, `h3`, `button`, `img`, `label`, `input` (checkbox, radio, range), and `progress`. See [control behavior and themes](controls.md).
 
 - `id` identifies elements for C# lookup; duplicate IDs throw an error.
-- `class` and inline `style` supply styling. `disabled` disables a button.
+- `class` and inline `style` supply styling. `disabled` disables buttons and interactive controls.
 - `<link rel="stylesheet" href="styles.css">` and `<style>` load CSS in document order.
 - `<img src="image.png">` draws a transparent image into its content box. Specify dimensions; the natural fallback size is 48 × 48, with container stretch rules still applying. `object-fit` controls scaling.
 - Entities are decoded and whitespace is collapsed. Text is not duplicated into ancestors.
@@ -16,7 +16,7 @@ Supported tags: `body`, `div`, `section`, `main`, `header`, `footer`, `p`, `span
 
 ## Selectors and cascade
 
-Type (`button`), class (`.primary`), ID (`#save`), universal (`*`), compounds (`button.primary`), comma-separated groups, and descendants (`.dark button`) are supported. State selectors are `:hover`, `:active`, `:focus`, and `:disabled`.
+Type (`button`), class (`.primary`), ID (`#save`), universal (`*`), compounds (`button.primary`), comma-separated groups, and descendants (`.dark button`) are supported. State selectors are `:hover`, `:active`, `:focus`, `:disabled`, and `:checked`.
 
 Rules apply by specificity, then document order; inline styles apply last. Color, font family, size, weight, text alignment, and text shadow inherit. Buttons default to centered text. Hover applies to a hit node and its ancestors. Active/focus follow pointer and keyboard state. Attribute selectors, child/sibling combinators, pseudo-elements, and other pseudo-classes are unsupported.
 
@@ -100,3 +100,5 @@ A transparent frame does not create a panel fill. Set a background color explici
 For small controls, separate the artwork from the surface. Give decorative `<img>` children explicit logical dimensions, `object-fit: contain` and `pointer-events: none`. Anchor them absolutely over CSS backgrounds/borders so the surface can resize without stretching leaves, gems or lettering. Place ornament after content in document order. `-guishark-object-flip` can reuse one corner for all four positions; it flips sampled pixels, not layout or text, and is independent of `object-fit`. It does not apply to background images or introduce general CSS transforms. See [artwork sizing guidance](woodland-artwork.md#size-artwork-for-its-job).
 
 The demo's macOS-inspired buttons use CSS gradients, borders, rounded corners, and pseudo-classes. Its logo demonstrates PNG rendering. All application behavior is C#.
+
+`-guishark-accent-color` accepts a color for checkbox/radio marks, slider fill/thumbs, and progress fill. Control dimensions, backgrounds, borders and state selectors use the existing CSS properties.

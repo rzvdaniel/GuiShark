@@ -53,6 +53,18 @@ MSDF atlases can also be generated during build/publish: configure `GUISHARK_MSD
 
 ![GuiShark Text Lab comparing four rendering paths](docs/text-lab.png)
 
+## Controls Gallery
+
+Try buttons, checkboxes, grouped radio buttons, sliders, labels, and progress bars in one place. Compare the optional neutral theme with an emerald CSS skin, inspect disabled/focus states, and watch C# value-change events in the live log.
+
+```powershell
+dotnet run --project src/demos/GuiShark.ControlsDemo
+```
+
+See [HTML controls, themes and input forwarding](docs/controls.md). No scrolling, dropdowns or text editing are included in this first set.
+
+![GuiShark Controls Gallery rendered in OpenGL](docs/controls-gallery.png)
+
 ## Architecture
 
 | Project | Responsibility |
@@ -61,6 +73,7 @@ MSDF atlases can also be generated during build/publish: configure `GUISHARK_MSD
 | `GuiShark.OpenGL` | Fonts, texture caches, GPU drawing, clipping, graphics-state restoration |
 | `GuiShark.Demo` | Window, host background scene, input forwarding, application callbacks |
 | `GuiShark.Balloon` | Independent 3D balloon game, procedural landscape, mouse steering, HTML menus/HUD |
+| `GuiShark.ControlsDemo` | Interactive controls gallery, CSS skin examples and live state/event diagnostics |
 | `GuiShark.TextDemo` | Backend comparison, density simulation, pixel magnification and observed cache/draw statistics |
 
 The SDK does not own a window, swap buffers, clear the host framebuffer, or run a game loop. It can be used with another window/input library. See [embedding in your game](docs/embedding.md) and [the CSS subset](docs/css-subset.md).

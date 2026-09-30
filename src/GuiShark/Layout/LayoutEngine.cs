@@ -37,6 +37,7 @@ internal sealed class LayoutEngine(ITextMetrics text)
             width = s.Direction == FlowDirection.Row ? widths.Sum() + s.Gap * (children.Length - 1) : widths.Max();
         }
         if (element.Tag == "img") width = 48;
+        if (element.Control?.Kind is UiControlKind.Range or UiControlKind.Progress) width = 160;
         return width + s.Padding.Horizontal + s.BorderWidth * 2;
     }
 

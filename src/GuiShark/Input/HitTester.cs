@@ -13,14 +13,15 @@ internal static class HitTester
         return element.Parent == null || !element.Style.PointerEvents ? null : element;
     }
 
-    public static UiElement? Button(UiElement? element)
+    public static UiElement? Interactive(UiElement? element)
     {
         for (; element != null; element = element.Parent)
-            if (element.IsButton) return element;
+            if (element.IsInteractive) return element;
+            else if (element.LabelTarget != null) return element.LabelTarget;
         return null;
     }
 
-    public static bool CanActivate(UiElement element) => element.IsButton && element.Style.PointerEvents && !element.Disabled &&
+    public static bool CanActivate(UiElement element) => element.IsInteractive && element.Style.PointerEvents && !element.Disabled &&
         !Ancestors(element).Any(e => e.Style.Hidden || e.Disabled) && element.Clip.Width > 0 && element.Clip.Height > 0;
 
     private static IEnumerable<UiElement> Ancestors(UiElement element)

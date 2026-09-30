@@ -1,12 +1,13 @@
 namespace GuiShark;
 
-internal sealed class StyleResolver(IEnumerable<CssRule> rules)
+internal sealed class StyleResolver(IEnumerable<CssRule> rules, UiTheme theme)
 {
     private readonly CssRule[] rules = rules.OrderBy(r => r.Selector.Specificity).ToArray();
 
     public void Resolve(UiElement element, UiStyle? parent = null)
     {
         var style = UiStyle.Default(element, parent);
+        if (theme == UiTheme.Neutral) NeutralTheme.Apply(element, style);
         foreach (var rule in rules)
             if (rule.Selector.Matches(element)) Apply(style, rule.Declarations);
         Apply(style, element.InlineStyle);

@@ -38,6 +38,17 @@ internal sealed class QuadPainter : IDisposable
         GL.Scissor(left, framebufferHeight - bottom, Math.Max(0, right - left), Math.Max(0, bottom - top));
     }
 
+    public void Solid(UiRect rect, UiColor color, float opacity, float radius = 0)
+    {
+        if (rect.Width <= 0 || rect.Height <= 0) return;
+        SetRect(rect, radius, 0);
+        SetColor("topColor", color, opacity);
+        SetColor("bottomColor", color, opacity);
+        SetColor("borderColor", UiColor.Transparent, opacity);
+        GL.Uniform1(program["textured"], 0);
+        GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
+    }
+
     public void Shape(UiRect rect, UiStyle style, float opacity)
     {
         if (style.BackgroundInset == default)

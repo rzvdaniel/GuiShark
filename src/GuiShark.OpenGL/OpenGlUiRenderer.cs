@@ -10,6 +10,7 @@ public sealed class OpenGlUiRenderer : IDisposable
     private bool ownsBackend;
     private readonly ImageTextureCache images;
     private readonly ImagePainter imagePainter;
+    private readonly ControlPainter controls;
     private bool disposed;
     public TextRenderOptions TextOptions { get; set; } = new();
     public ITextBackend TextBackend => backend;
@@ -33,6 +34,7 @@ public sealed class OpenGlUiRenderer : IDisposable
         using var state = new GlStateScope();
         painter = new();
         imagePainter = new(painter);
+        controls = new(painter);
         text = new(painter);
         images = new(view.Document.Assets);
     }
@@ -72,6 +74,7 @@ public sealed class OpenGlUiRenderer : IDisposable
         PaintBackground(element, opacity);
         var content = element.ContentBounds;
         painter.Clip(element.Clip.Intersect(content));
+        controls.Draw(element, opacity);
         if (element.ImageSource != null && content.Width > 0 && content.Height > 0)
             imagePainter.Draw(content, images.Get(element.ImageSource), element.Style.ObjectFit,
                 element.Style.ImageTint, opacity, element.Style.Radius, element.Style.ObjectFlip);

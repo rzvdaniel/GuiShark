@@ -16,7 +16,7 @@ internal sealed class CssSelector
         {
             foreach (Match token in Regex.Matches(part, @"[.#:][\w-]+|^[a-z][\w-]*"))
             {
-                if (token.Value[0] == ':' && token.Value is not (":hover" or ":active" or ":focus" or ":disabled"))
+                if (token.Value[0] == ':' && token.Value is not (":hover" or ":active" or ":focus" or ":disabled" or ":checked"))
                     throw new FormatException($"Unsupported pseudo-class: {token.Value}");
                 var current = Specificity;
                 Specificity = token.Value[0] switch
@@ -55,6 +55,7 @@ internal sealed class CssSelector
                     ":active" => element.IsPressed,
                     ":focus" => element.IsFocused,
                     ":disabled" => element.Disabled,
+                    ":checked" => element.Control?.Checked == true,
                     _ => false
                 },
                 _ => element.Tag == value
