@@ -23,6 +23,7 @@ public sealed class UiStyle
     public MainAlignment Justify { get; internal set; }
     public TextAlignment TextAlign { get; internal set; }
     public float FontSize { get; internal set; } = 14;
+    public string FontFamily { get; internal set; } = "";
     public bool Bold { get; internal set; }
     public float Radius { get; internal set; }
     public float BorderWidth { get; internal set; }
@@ -52,6 +53,7 @@ public sealed class UiStyle
     internal static UiStyle Default(UiElement element, UiStyle? parent) => new()
     {
         FontSize = parent?.FontSize ?? 14,
+        FontFamily = parent?.FontFamily ?? "",
         Color = parent?.Color ?? new(.12f, .15f, .2f),
         TextShadow = parent?.TextShadow,
         Bold = parent?.Bold ?? false,

@@ -3,7 +3,7 @@ namespace GuiShark;
 /// <summary>Owns document layout and input. No window or graphics-context dependencies.</summary>
 public sealed class UiView : IDisposable
 {
-    private readonly LayoutEngine layout;
+    private LayoutEngine layout;
     private bool dirty = true;
     private bool disposed;
     public UiDocument Document { get; }
@@ -26,6 +26,14 @@ public sealed class UiView : IDisposable
             throw new ArgumentOutOfRangeException(nameof(width));
         Width = width;
         Height = height;
+        Invalidate();
+    }
+
+    /// <summary>Use the active renderer's metrics for wrapping and alignment.</summary>
+    public void SetTextMetrics(ITextMetrics metrics)
+    {
+        ObjectDisposedException.ThrowIf(disposed, this);
+        layout = new(metrics);
         Invalidate();
     }
 

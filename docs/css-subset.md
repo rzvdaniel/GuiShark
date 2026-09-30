@@ -12,13 +12,13 @@ Supported tags: `body`, `div`, `section`, `main`, `header`, `footer`, `p`, `span
 - `<img src="image.png">` draws a transparent image into its content box. Specify dimensions; the natural fallback size is 48 × 48, with container stretch rules still applying. `object-fit` controls scaling.
 - Entities are decoded and whitespace is collapsed. Text is not duplicated into ancestors.
 - Mixed text and child elements within a node are rejected; wrap text in its own `<span>`.
-- Unknown tags, properties, selectors, values, CSS at-rules, and `!important` are rejected rather than silently ignored.
+- Unknown tags, properties, selectors, values, CSS at-rules other than `@font-face`, and `!important` are rejected rather than silently ignored.
 
 ## Selectors and cascade
 
 Type (`button`), class (`.primary`), ID (`#save`), universal (`*`), compounds (`button.primary`), comma-separated groups, and descendants (`.dark button`) are supported. State selectors are `:hover`, `:active`, `:focus`, and `:disabled`.
 
-Rules apply by specificity, then document order; inline styles apply last. Color, font size, weight, text alignment, and text shadow inherit. Buttons default to centered text. Hover applies to a hit node and its ancestors. Active/focus follow pointer and keyboard state. Attribute selectors, child/sibling combinators, pseudo-elements, and other pseudo-classes are unsupported.
+Rules apply by specificity, then document order; inline styles apply last. Color, font family, size, weight, text alignment, and text shadow inherit. Buttons default to centered text. Hover applies to a hit node and its ancestors. Active/focus follow pointer and keyboard state. Attribute selectors, child/sibling combinators, pseudo-elements, and other pseudo-classes are unsupported.
 
 ## Layout
 
@@ -63,11 +63,14 @@ Absolutely positioned children are removed from flow. Each anchors to its immedi
 | `border-radius` | One nonnegative pixel radius |
 | `opacity` | 0–1, multiplied into each primitive and descendant |
 | `font-size` | Positive pixel size |
+| `font-family` | One loaded family name, optionally quoted; inherits |
 | `font-weight` | `normal`, `400`, `bold`, `600`, `700` |
 | `text-align` | `left`, `center`, `right` |
 | `text-shadow` | `none` or one sharp shadow: nonnegative pixel X/Y offsets and a supported color, e.g. `1px 1px #000000cc` |
 
-Text uses the host's `FontBook` and a line height of 1.45 × font size. No font downloads occur. Text shadows reuse the glyph texture and follow the same content clipping as text; blur, multiple shadows and box shadows are unsupported. Animations, font-family selection, text input/selection are not implemented.
+Text uses the selected backend's metrics and a line height of 1.45 × font size. No font downloads occur. Text shadows reuse the glyph texture and follow the same content clipping as text; blur, multiple shadows and box shadows are unsupported. Animations and text input/selection are not implemented.
+
+`@font-face` supports `font-family`, one local `src: url('fonts/YourFont.ttf')`, and optional `font-weight` (`400`/`normal`, `600`/`700`/`bold`). TTF/OTF paths follow the document asset root. Source lists, `local()`, `format()`, WOFF, italic, variable axes, Unicode ranges and fallback family lists are outside this subset. Create `new FontBook(document, "Your Family")` to load declarations and set the default family, or call `fonts.Load(document)` when using host-supplied defaults. Declare each bold face separately; an absent bold face uses the family's regular face. Unknown families fail with a clear error. MSDF also requires prebuilt atlases for the selected font; see [font loading](text-rendering.md#load-fonts-with-css).
 
 ## Illustrated controls
 

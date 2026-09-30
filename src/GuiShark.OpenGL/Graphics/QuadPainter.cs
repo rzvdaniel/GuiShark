@@ -63,7 +63,8 @@ internal sealed class QuadPainter : IDisposable
         GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
     }
 
-    public void Texture(UiRect rect, GpuTexture texture, UiColor color, float opacity, float radius = 0, UiRect? source = null)
+    public void Texture(UiRect rect, GpuTexture texture, UiColor color, float opacity, float radius = 0, UiRect? source = null,
+        TextSampling sampling = TextSampling.Linear, float distanceRange = 0)
     {
         if (rect.Width <= 0 || rect.Height <= 0) return;
         SetRect(rect, radius, 0);
@@ -71,7 +72,12 @@ internal sealed class QuadPainter : IDisposable
         var uv = source ?? new UiRect(0, 0, 1, 1);
         GL.Uniform4(program["textureRect"], uv.X, uv.Y, uv.Width, uv.Height);
         GL.Uniform1(program["textured"], 1);
+        GL.Uniform1(program["distanceRange"], distanceRange);
         GL.BindTexture(TextureTarget.Texture2D, texture.Handle);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter,
+            (int)(sampling == TextSampling.Nearest ? TextureMinFilter.Nearest : TextureMinFilter.Linear));
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter,
+            (int)(sampling == TextSampling.Nearest ? TextureMagFilter.Nearest : TextureMagFilter.Linear));
         GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
     }
 

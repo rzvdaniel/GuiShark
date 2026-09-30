@@ -30,7 +30,7 @@ internal sealed class LayoutEngine(ITextMetrics text)
     {
         var s = element.Style;
         var children = VisibleChildren(element);
-        var width = text.MeasureWidth(element.Text, s.FontSize, s.Bold);
+        var width = text.MeasureWidth(element.Text, s.FontSize, s.Bold, s.FontFamily);
         if (children.Length > 0)
         {
             var widths = children.Select(c => c.Style.Width.Resolve(available, NaturalWidth(c, available)) + c.Style.Margin.Horizontal);

@@ -22,13 +22,13 @@ From the repository root, with the .NET 10 SDK and an OpenGL 3.3 core driver:
 
 ```powershell
 dotnet build Gui.Shark.sln
-dotnet run --project src/GuiShark.Balloon
+dotnet run --project src/demos/GuiShark.Balloon
 ```
 
 Use `-- --play` to skip the main menu. To load source HTML/CSS instead of the copied output assets:
 
 ```powershell
-dotnet run --project src/GuiShark.Balloon -- --assets src/GuiShark.Balloon/Assets
+dotnet run --project src/demos/GuiShark.Balloon -- --assets src/demos/GuiShark.Balloon/Assets
 ```
 
 The Lato font files are copied from the original playground's licensed assets into this demo's output. No additional downloads or external game assets are required.
@@ -48,9 +48,9 @@ The Lato font files are copied from the original playground's licensed assets in
 Menu and HUD previews can also be exported from the executable without playing:
 
 ```powershell
-dotnet run --project src/GuiShark.Balloon -- --capture artifacts/menu.png
-dotnet run --project src/GuiShark.Balloon -- --play --capture artifacts/hud.png
-dotnet run --project src/GuiShark.Balloon -- --play --size 920x680 --capture artifacts/hud-small.png
+dotnet run --project src/demos/GuiShark.Balloon -- --capture artifacts/menu.png
+dotnet run --project src/demos/GuiShark.Balloon -- --play --capture artifacts/hud.png
+dotnet run --project src/demos/GuiShark.Balloon -- --play --size 920x680 --capture artifacts/hud-small.png
 ```
 
 The capture option renders three frames, writes the requested PNG, and exits. It is a screenshot export feature; it does not perform input checks or run a test suite.

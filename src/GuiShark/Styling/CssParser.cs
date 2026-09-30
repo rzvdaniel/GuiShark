@@ -7,9 +7,14 @@ internal sealed record CssRule(CssSelector Selector, IReadOnlyDictionary<string,
 internal static class CssParser
 {
     // A deliberately bounded grammar: flat rules, simple selectors and plain declaration values.
-    public static List<CssRule> Parse(string css)
+    public static List<CssRule> Parse(string css, List<FontFace> fonts)
     {
         css = Regex.Replace(css, @"/\*.*?\*/", "", RegexOptions.Singleline);
+        css = Regex.Replace(css, @"@font-face\s*\{([^{}]*)\}", match =>
+        {
+            fonts.Add(FontFaceParser.Parse(match.Groups[1].Value));
+            return "";
+        });
         if (css.Contains('@')) throw new FormatException("CSS at-rules are not supported.");
         var rules = new List<CssRule>();
         var consumed = 0;

@@ -10,12 +10,13 @@ public static class HtmlLoader
     {
         using var dom = new HtmlParser().ParseDocument(html);
         var rules = new List<CssRule>();
+        var fonts = new List<FontFace>();
         foreach (var node in dom.QuerySelectorAll("style, link[rel=stylesheet]"))
         {
             var css = node.LocalName == "style" ? node.TextContent : assets.ReadText(node.GetAttribute("href") ?? "");
-            rules.AddRange(CssParser.Parse(css));
+            rules.AddRange(CssParser.Parse(css, fonts));
         }
-        return new UiDocument(Convert(dom.Body ?? throw new FormatException("Missing body.")), rules, assets);
+        return new UiDocument(Convert(dom.Body ?? throw new FormatException("Missing body.")), rules, assets, fonts);
     }
 
     private static UiElement Convert(IElement source)

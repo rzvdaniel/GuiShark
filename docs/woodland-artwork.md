@@ -4,13 +4,13 @@ Generated with the built-in image generation tool for Lantern Valley. These are 
 
 | Asset | Current use and logical display size |
 | --- | --- |
-| `src/GuiShark.Balloon/Assets/art/woodland-corner.png` | Menu/modal corners, 128 × 128; mirrored for the other three corners |
-| `src/GuiShark.Balloon/Assets/art/woodland-leaf.png` | Button accents 52 × 52; guidance accents 40 × 40; objective accent 56 × 56 |
-| `src/GuiShark.Balloon/Assets/art/lantern-relic.png` | Menu emblem 88 × 104, HUD relic 64 × 84; aspect ratio preserved with `contain` |
-| `src/GuiShark.Balloon/Assets/art/woodland-frame.png` | Earlier full-frame study, retained as optional artwork; not used by the current skin |
-| `src/GuiShark.Balloon/Assets/art/woodland-button.png` | Earlier illustrated button study, retained as optional artwork; not used by the current skin |
+| `src/demos/GuiShark.Balloon/Assets/art/woodland-corner.png` | Menu/modal corners, 128 × 128; mirrored for the other three corners |
+| `src/demos/GuiShark.Balloon/Assets/art/woodland-leaf.png` | Button accents 52 × 52; guidance accents 40 × 40; objective accent 56 × 56 |
+| `src/demos/GuiShark.Balloon/Assets/art/lantern-relic.png` | Menu emblem 88 × 104, HUD relic 64 × 84; aspect ratio preserved with `contain` |
+| `src/demos/GuiShark.Balloon/Assets/art/woodland-frame.png` | Earlier full-frame study, retained as optional artwork; not used by the current skin |
+| `src/demos/GuiShark.Balloon/Assets/art/woodland-button.png` | Earlier illustrated button study, retained as optional artwork; not used by the current skin |
 
-Display sizes and tints are in `src/GuiShark.Balloon/Assets/styles.css`. The SDK caches each used image once per renderer; four corner nodes share one texture and two button accents share one leaf texture. The artwork contains no text; all labels are rendered from HTML. The compact six-slot progress indicator uses shader-drawn shapes instead of miniature copies of the detailed relic.
+Display sizes and tints are in `src/demos/GuiShark.Balloon/Assets/styles.css`. The SDK caches each used image once per renderer; four corner nodes share one texture and two button accents share one leaf texture. The artwork contains no text; all labels are rendered from HTML. The compact six-slot progress indicator uses shader-drawn shapes instead of miniature copies of the detailed relic.
 
 ## Size artwork for its job
 

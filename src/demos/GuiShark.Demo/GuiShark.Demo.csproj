@@ -3,7 +3,7 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../GuiShark.OpenGL/GuiShark.OpenGL.csproj" />
+    <ProjectReference Include="../../GuiShark.OpenGL/GuiShark.OpenGL.csproj" />
     <PackageReference Include="OpenTK.Windowing.Desktop" Version="4.9.4" />
     <Content Include="Assets/**/*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>

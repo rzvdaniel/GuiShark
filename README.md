@@ -2,7 +2,7 @@
 
 Define a small interface in HTML and CSS, render it in an existing OpenGL application, and bind buttons to C# code.
 
-The modern implementation is in `src/`. It uses **.NET 10**, **AngleSharp 1.8.2**, **OpenTK 4.9.4**, and **SkiaSharp 4.153.0**. Shapes, borders, rounded corners, and gradients are drawn by OpenGL shaders. SkiaSharp rasterizes font and image textures; it does not render the whole UI to a bitmap. There is no embedded browser or JavaScript runtime.
+The SDK is in `src/GuiShark` and `src/GuiShark.OpenGL`; all examples live in `src/demos`. It uses **.NET 10**, **AngleSharp 1.8.2**, **OpenTK 4.9.4**, **SkiaSharp 4.153.0**, and **FreeTypeSharp 3.1.0**. Shapes, borders, rounded corners, and gradients are drawn by OpenGL shaders. Pluggable text backends draw label bitmaps or glyph atlases; the engine does not render the whole UI to a bitmap. There is no embedded browser or JavaScript runtime.
 
 ![GuiShark's HTML/CSS playground rendered by OpenGL](docs/preview.png)
 
@@ -12,7 +12,7 @@ Install a stable .NET 10 SDK and use a desktop with an OpenGL 3.3 core driver.
 
 ```powershell
 dotnet build Gui.Shark.sln
-dotnet run --project src/GuiShark.Demo -- src/GuiShark.Demo/Assets
+dotnet run --project src/demos/GuiShark.Demo -- src/demos/GuiShark.Demo/Assets
 ```
 
 Run from the repository root. Passing the source asset directory lets **F5** reload HTML/CSS edits. Without the argument, the demo uses assets copied beside the executable. The window is resizable, with a minimum size to keep this example readable.
@@ -25,19 +25,31 @@ Run from the repository root. Passing the source asset directory lets **F5** rel
 - **F5** reloads the document and resets demo state. Invalid CSS is reported in the console and leaves the existing UI running.
 - **F12** saves a PNG of the actual framebuffer in `artifacts/` under the current working directory.
 
-Edit [the HTML](src/GuiShark.Demo/Assets/index.html), [the CSS](src/GuiShark.Demo/Assets/styles.css), and [the callbacks](src/GuiShark.Demo/DemoController.cs).
+Edit [the HTML](src/demos/GuiShark.Demo/Assets/index.html), [the CSS](src/demos/GuiShark.Demo/Assets/styles.css), and [the callbacks](src/demos/GuiShark.Demo/DemoController.cs).
 
 ## Balloon game demo
 
 The second demo, **Lantern Valley**, puts an illustrated woodland fantasy HTML/CSS HUD over an independent 3D OpenGL game. Fly a hot-air balloon over generated green hills, collect six lanterns, and use menus, pause controls and a translucent HUD. Large windows use fixed-size carved corners; buttons use leaf accents; compact HUD elements use restrained gold trim. Transparent artwork keeps its proportions while CSS surfaces expand with the controls.
 
 ```powershell
-dotnet run --project src/GuiShark.Balloon
+dotnet run --project src/demos/GuiShark.Balloon
 ```
 
 Click the landscape to fly, scroll to zoom, and use **Find the next lantern** for guidance. See [controls and integration](docs/balloon-demo.md).
 
 ![Lantern Valley's HTML HUD over the OpenGL landscape](docs/balloon-hud.png)
+
+## Text Lab
+
+Compare **pixel-aligned Skia**, **FreeType glyph atlases**, and **MSDF scalable text** through the same SDK interface, with the original Skia path as a reference. Switch backends or view all four together; adjust size, weight, color, hinting, filtering, pixel snapping, fractional positioning, density, backgrounds and shadows. A nearest-pixel magnifier shows the actual framebuffer pixels.
+
+```powershell
+dotnet run --project src/demos/GuiShark.TextDemo
+```
+
+TTF/OTF files can be copied into your asset directory and loaded using CSS `@font-face` and `font-family`. See [text rendering, font loading and platform notes](docs/text-rendering.md).
+
+![GuiShark Text Lab comparing four rendering paths](docs/text-lab.png)
 
 ## Architecture
 
@@ -47,6 +59,7 @@ Click the landscape to fly, scroll to zoom, and use **Find the next lantern** fo
 | `GuiShark.OpenGL` | Fonts, texture caches, GPU drawing, clipping, graphics-state restoration |
 | `GuiShark.Demo` | Window, host background scene, input forwarding, application callbacks |
 | `GuiShark.Balloon` | Independent 3D balloon game, procedural landscape, mouse steering, HTML menus/HUD |
+| `GuiShark.TextDemo` | Backend comparison, density simulation, pixel magnification and observed cache/draw statistics |
 
 The SDK does not own a window, swap buffers, clear the host framebuffer, or run a game loop. It can be used with another window/input library. See [embedding in your game](docs/embedding.md) and [the CSS subset](docs/css-subset.md).
 

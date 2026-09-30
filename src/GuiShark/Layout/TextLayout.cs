@@ -11,7 +11,7 @@ public static class TextLayout
         foreach (var word in text.Split(' '))
         {
             var candidate = line.Length == 0 ? word : line + " " + word;
-            if (line.Length > 0 && metrics.MeasureWidth(candidate, style.FontSize, style.Bold) > width)
+            if (line.Length > 0 && metrics.MeasureWidth(candidate, style.FontSize, style.Bold, style.FontFamily) > width)
             {
                 lines.Add(line);
                 line = word;

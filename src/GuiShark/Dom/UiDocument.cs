@@ -6,11 +6,13 @@ public sealed class UiDocument
     internal StyleResolver Styles { get; }
     public UiElement Root { get; }
     public IAssetSource Assets { get; }
+    public IReadOnlyList<FontFace> FontFaces { get; }
 
-    internal UiDocument(UiElement root, IEnumerable<CssRule> rules, IAssetSource assets)
+    internal UiDocument(UiElement root, IEnumerable<CssRule> rules, IAssetSource assets, IReadOnlyList<FontFace> fontFaces)
     {
         Root = root;
         Assets = assets;
+        FontFaces = fontFaces;
         Styles = new(rules);
         elements = new(StringComparer.Ordinal);
         foreach (var element in root.DescendantsAndSelf().Where(e => e.Id.Length > 0))

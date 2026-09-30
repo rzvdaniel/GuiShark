@@ -24,6 +24,7 @@ internal static class StyleProperty
             case "justify-content": style.Justify = value switch { "flex-start" => MainAlignment.Start, "center" => MainAlignment.Center, "flex-end" => MainAlignment.End, "space-between" => MainAlignment.SpaceBetween, _ => throw Invalid(name, value) }; break;
             case "text-align": style.TextAlign = value switch { "left" => TextAlignment.Left, "center" => TextAlignment.Center, "right" => TextAlignment.Right, _ => throw Invalid(name, value) }; break;
             case "font-size": style.FontSize = Math.Max(1, Nonnegative(value)); break;
+            case "font-family": style.FontFamily = FontFace.ParseFamily(value); break;
             case "font-weight": style.Bold = value switch { "bold" or "600" or "700" => true, "normal" or "400" => false, _ => throw Invalid(name, value) }; break;
             case "color": style.Color = UiColor.Parse(value); break;
             case "text-shadow": style.TextShadow = ParseShadow(value); break;
