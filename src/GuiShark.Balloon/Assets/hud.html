@@ -1,25 +1,25 @@
 <!doctype html><html><head><link rel="stylesheet" href="styles.css"></head><body class="hud">
 <header class="topbar">
     <div class="brand"><span class="brand-title">Lantern Valley</span><span class="brand-caption">THE WOODLAND EXPEDITION</span></div>
-    <div class="top-actions"><span id="course" class="course">HOVERING</span><button id="pause" class="small">Pause / Esc</button></div>
+    <div class="top-actions"><span id="course" class="course">HOVERING</span><button id="pause" class="small"><span class="button-label">Pause / Esc</span><img class="button-leaf leaf-left" src="art/woodland-leaf.png"><img class="button-leaf leaf-right" src="art/woodland-leaf.png"></button></div>
 </header>
 <section class="collection woodland-panel">
     <span class="eyebrow">LIGHTS OF THE ELDERWOOD</span>
     <div class="progress-heading"><img class="hud-relic" src="art/lantern-relic.png"><span id="progress" class="progress">00 / 06</span></div>
     <p class="muted">Guardian lanterns discovered</p>
     <div class="lantern-slots">
-        <img id="lantern-0" class="lantern-slot" src="art/lantern-relic.png">
-        <img id="lantern-1" class="lantern-slot" src="art/lantern-relic.png">
-        <img id="lantern-2" class="lantern-slot" src="art/lantern-relic.png">
-        <img id="lantern-3" class="lantern-slot" src="art/lantern-relic.png">
-        <img id="lantern-4" class="lantern-slot" src="art/lantern-relic.png">
-        <img id="lantern-5" class="lantern-slot" src="art/lantern-relic.png">
+        <span id="lantern-0" class="lantern-slot"></span>
+        <span id="lantern-1" class="lantern-slot"></span>
+        <span id="lantern-2" class="lantern-slot"></span>
+        <span id="lantern-3" class="lantern-slot"></span>
+        <span id="lantern-4" class="lantern-slot"></span>
+        <span id="lantern-5" class="lantern-slot"></span>
     </div><div class="rule"></div>
     <div class="telemetry"><span class="muted">ALTITUDE</span><span id="altitude" class="altitude">70 m</span></div>
     <span id="distance" class="muted">0 m travelled</span>
 </section>
 <footer class="bottom-bar">
-    <div class="objective woodland-panel"><span class="eyebrow">THE GUARDIANS' CALL</span><span id="message">The valley is yours. Follow the floating golden lanterns.</span></div>
-    <div class="navigation"><button id="guide" class="primary">Find the next lantern</button><span class="hint">Click to fly / Scroll to explore</span></div>
+    <div class="objective woodland-panel"><img class="objective-leaf" src="art/woodland-leaf.png"><div class="objective-copy"><span class="eyebrow">THE GUARDIANS' CALL</span><span id="message">The valley is yours. Follow the floating golden lanterns.</span></div></div>
+    <div class="navigation"><button id="guide" class="primary"><span class="button-label">Find the next lantern</span><img class="button-leaf leaf-left" src="art/woodland-leaf.png"><img class="button-leaf leaf-right" src="art/woodland-leaf.png"></button><span class="hint">Click to fly / Scroll to explore</span></div>
 </footer>
 </body></html>

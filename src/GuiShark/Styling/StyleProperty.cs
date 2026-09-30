@@ -32,6 +32,7 @@ internal static class StyleProperty
             case "background-image": style.BackgroundImage = ParseImage(value); break;
             case "background-size": style.BackgroundSize = ParseFit(value); break;
             case "object-fit": style.ObjectFit = ParseFit(value); break;
+            case "-guishark-object-flip": style.ObjectFlip = ParseFlip(value); break;
             case "-guishark-image-tint": style.ImageTint = UiColor.Parse(value); break;
             case "-guishark-background-slice": style.BackgroundSlice = ParseInsets(value); break;
             case "-guishark-background-slice-width": style.BackgroundSliceWidth = ParseInsets(value); break;
@@ -52,6 +53,15 @@ internal static class StyleProperty
         "contain" => ImageFit.Contain,
         "cover" => ImageFit.Cover,
         _ => throw Invalid("image fit", value)
+    };
+
+    private static ImageFlip ParseFlip(string value) => value switch
+    {
+        "none" => ImageFlip.None,
+        "horizontal" => ImageFlip.Horizontal,
+        "vertical" => ImageFlip.Vertical,
+        "both" => ImageFlip.Both,
+        _ => throw Invalid("image flip", value)
     };
 
     private static TextShadow? ParseShadow(string value)

@@ -54,6 +54,7 @@ Absolutely positioned children are removed from flow. Each anchors to its immedi
 | `background` | A supported color or `linear-gradient(to bottom, color1, color2)` |
 | `background-image` | One `url("asset/path.png")`, unquoted URL, or `none` |
 | `background-size`, `object-fit` | `fill` (default), `contain`, `cover`; centered, no tiling |
+| `-guishark-object-flip` | `none`, `horizontal`, `vertical`, `both`; mirrors `<img>` texture coordinates only |
 | `-guishark-background-slice` | One to four nonnegative source-image pixel lengths, CSS shorthand order |
 | `-guishark-background-slice-width` | One to four destination lengths in logical UI pixels; defaults to source slice lengths |
 | `-guishark-background-inset` | One to four nonnegative logical pixel lengths; inset only the background color/gradient |
@@ -92,5 +93,7 @@ A nonzero slice enables nine-slice drawing: four corners, four stretched edges, 
 Backgrounds do not affect layout or hit testing. Transparent parts of an interactive button still belong to its rectangular hit box. Use `pointer-events: none` on decorative elements and restore `auto` on controls. Image tint is white by default and only affects that element's images; normal element opacity still multiplies into images and descendants.
 
 A transparent frame does not create a panel fill. Set a background color explicitly if you want one. `-guishark-background-inset` moves the color/gradient rectangle inward while the background image and CSS border keep the full element bounds. It changes neither content layout nor hit testing. `border-radius` rounds the inset fill; nine-slice image corners still use their own alpha. This is an authored rectangular inset, not an automatic silhouette mask: choose inset/radius values that tuck beneath the artwork's inner rim. Lantern Valley uses this to fill panels without leaking color outside their frames, plus a sharp text shadow for readability.
+
+For small controls, separate the artwork from the surface. Give decorative `<img>` children explicit logical dimensions, `object-fit: contain` and `pointer-events: none`. Anchor them absolutely over CSS backgrounds/borders so the surface can resize without stretching leaves, gems or lettering. Place ornament after content in document order. `-guishark-object-flip` can reuse one corner for all four positions; it flips sampled pixels, not layout or text, and is independent of `object-fit`. It does not apply to background images or introduce general CSS transforms. See [artwork sizing guidance](woodland-artwork.md#size-artwork-for-its-job).
 
 The demo's macOS-inspired buttons use CSS gradients, borders, rounded corners, and pseudo-classes. Its logo demonstrates PNG rendering. All application behavior is C#.

@@ -41,7 +41,7 @@ public sealed class OpenGlUiRenderer : IDisposable
         painter.Clip(element.Clip.Intersect(content));
         if (element.ImageSource != null && content.Width > 0 && content.Height > 0)
             imagePainter.Draw(content, images.Get(element.ImageSource), element.Style.ObjectFit,
-                element.Style.ImageTint, opacity, element.Style.Radius);
+                element.Style.ImageTint, opacity, element.Style.Radius, element.Style.ObjectFlip);
         if (element.Text.Length > 0 && content.Width > 0 && content.Height > 0)
             PaintText(element, content, opacity, scale);
         foreach (var child in element.Children) Paint(child, opacity, scale);

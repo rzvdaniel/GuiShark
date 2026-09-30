@@ -6,6 +6,8 @@ public enum MainAlignment { Start, Center, End, SpaceBetween }
 public enum TextAlignment { Left, Center, Right }
 public enum ElementPosition { Flow, Absolute }
 public enum ImageFit { Fill, Contain, Cover }
+[Flags]
+public enum ImageFlip { None = 0, Horizontal = 1, Vertical = 2, Both = Horizontal | Vertical }
 
 public sealed class UiStyle
 {
@@ -32,6 +34,7 @@ public sealed class UiStyle
     public string? BackgroundImage { get; internal set; }
     public ImageFit BackgroundSize { get; internal set; } = ImageFit.Fill;
     public ImageFit ObjectFit { get; internal set; } = ImageFit.Fill;
+    public ImageFlip ObjectFlip { get; internal set; }
     public UiColor ImageTint { get; internal set; } = new(1, 1, 1);
     public Insets BackgroundSlice { get; internal set; }
     public Insets? BackgroundSliceWidth { get; internal set; }

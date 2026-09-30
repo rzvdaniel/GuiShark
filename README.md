@@ -29,7 +29,7 @@ Edit [the HTML](src/GuiShark.Demo/Assets/index.html), [the CSS](src/GuiShark.Dem
 
 ## Balloon game demo
 
-The second demo, **Lantern Valley**, puts an illustrated woodland fantasy HTML/CSS HUD over an independent 3D OpenGL game. Fly a hot-air balloon over generated green hills, collect six lanterns, and use menus, pause controls and a translucent HUD. Transparent PNG artwork supplies carved wood, golden vines and glowing lanterns; nine-slice backgrounds resize frames without stretching their corners.
+The second demo, **Lantern Valley**, puts an illustrated woodland fantasy HTML/CSS HUD over an independent 3D OpenGL game. Fly a hot-air balloon over generated green hills, collect six lanterns, and use menus, pause controls and a translucent HUD. Large windows use fixed-size carved corners; buttons use leaf accents; compact HUD elements use restrained gold trim. Transparent artwork keeps its proportions while CSS surfaces expand with the controls.
 
 ```powershell
 dotnet run --project src/GuiShark.Balloon

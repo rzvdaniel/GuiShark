@@ -1,15 +1,19 @@
-/* Illustrated skin: all ornament is PNG; text, layout and states remain HTML/CSS. */
+/* Rich fixed-size ornament on large windows; restrained shader-drawn trim on the HUD. */
 body { color: #f4e5bc; font-size: 14px; text-shadow: 1px 1px #03120ee6; }
 .modal { padding: 24px; align-items: center; justify-content: center; background: #071b1966; }
 .menu-card, .pause-card {
-    width: 548px; max-width: 100%; padding: 54px; gap: 12px;
-    background: linear-gradient(to bottom, #102e27f5, #081c19f5); border-radius: 24px;
-    -guishark-background-inset: 35px;
-    background-image: url("art/woodland-frame.png");
-    -guishark-background-slice: 340px; -guishark-background-slice-width: 82px;
+    width: 588px; max-width: 100%; padding: 0px;
+    background: linear-gradient(to bottom, #15332cf5, #081c19f5);
+    border: 2px solid #af955b; border-radius: 18px; -guishark-background-inset: 4px;
 }
+.card-content { padding: 62px; gap: 12px; }
+.frame-corner { position: absolute; width: 128px; height: 128px; object-fit: contain; pointer-events: none; }
+.top-left { top: 0px; left: 0px; }
+.top-right { top: 0px; right: 0px; -guishark-object-flip: horizontal; }
+.bottom-left { bottom: 0px; left: 0px; -guishark-object-flip: vertical; }
+.bottom-right { bottom: 0px; right: 0px; -guishark-object-flip: both; }
 .card-heading { flex-direction: row; align-items: center; gap: 12px; }
-.relic { width: 78px; height: 92px; object-fit: contain; pointer-events: none; }
+.relic { width: 88px; height: 104px; object-fit: contain; pointer-events: none; }
 .title-group { gap: 4px; flex-grow: 1; }
 .eyebrow { font-size: 10px; font-weight: bold; color: #dfc27c; }
 h1 { font-size: 34px; font-weight: bold; color: #fff1c5; }
@@ -19,22 +23,27 @@ h1 { font-size: 34px; font-weight: bold; color: #fff1c5; }
 .instruction { padding: 12px; gap: 5px; background: #a3c69a0b; border: 1px solid #bca56b30; border-radius: 8px; color: #b6c9ad; font-size: 11px; }
 .instruction-label { font-size: 9px; font-weight: bold; color: #e0c480; }
 button {
-    height: 62px; padding: 0px 39px; font-size: 13px; font-weight: bold; color: #eee3bb;
-    background-image: url("art/woodland-button.png");
-    -guishark-background-slice: 260px 430px; -guishark-background-slice-width: 12px 46px;
-    -guishark-image-tint: #b6c9b7; pointer-events: auto;
+    height: 64px; padding: 0px 26px; justify-content: center;
+    font-size: 13px; font-weight: bold; color: #eee3bb;
+    background: linear-gradient(to bottom, #285046, #122f29);
+    border: 1px solid #a38d53; border-radius: 9px; pointer-events: auto;
 }
-button:hover { -guishark-image-tint: #ffffff; color: #fff4ce; }
-button:active { -guishark-image-tint: #7b967e; color: #dfd4ad; }
-button:focus { border: 1px solid #f4d989; border-radius: 10px; }
-button.primary { -guishark-image-tint: #fff4cf; color: #fff1be; }
-button.primary:hover { -guishark-image-tint: #ffffff; color: #ffffff; }
-button.primary:active { -guishark-image-tint: #bba97d; }
-button.quiet { -guishark-image-tint: #879e8e; color: #c0c9ac; }
-button.quiet:hover { -guishark-image-tint: #c5dbc1; }
-button:disabled, button.primary:disabled, button.quiet:disabled { -guishark-image-tint: #647569; color: #829184; }
+button:hover { background: linear-gradient(to bottom, #3a6350, #1b4437); border-color: #f0d18b; color: #fff4ce; }
+button:active { background: #102a23; border-color: #947c44; color: #dfd4ad; }
+button:focus { border: 2px solid #f4d989; }
+button.primary { background: linear-gradient(to bottom, #345744, #203c2d); border-color: #d9b975; color: #fff1be; }
+button.primary:hover { background: linear-gradient(to bottom, #4d7150, #294e37); border-color: #ffe7a4; color: #ffffff; }
+button.primary:active { background: #1c3527; }
+button.quiet { background: #112a24; border-color: #708065; color: #c0c9ac; }
+button.quiet:hover { background: #28453a; border-color: #b4bd8e; }
+button:disabled { opacity: 0.5; }
+.button-leaf { position: absolute; width: 52px; height: 52px; top: 4px; object-fit: contain; pointer-events: none; -guishark-image-tint: #c4cbb1; }
+.leaf-left { left: 0px; }
+.leaf-right { right: 0px; -guishark-object-flip: horizontal; }
+button:hover .button-leaf { -guishark-image-tint: #ffffff; }
+button:active .button-leaf { -guishark-image-tint: #9fac90; }
 .fine-print { text-align: center; font-size: 10px; color: #8fa58b; margin: 3px 0px 0px 0px; }
-.signature { position: absolute; left: 28px; right: 28px; bottom: 23px; flex-direction: row; justify-content: space-between; font-size: 9px; color: #d8dfba; }
+.signature { position: absolute; left: 28px; right: 28px; bottom: 10px; flex-direction: row; justify-content: space-between; font-size: 9px; color: #d8dfba; }
 .signature-right { text-align: right; }
 .hud { pointer-events: none; }
 .topbar { position: absolute; left: 24px; right: 24px; top: 18px; flex-direction: row; justify-content: space-between; align-items: center; }
@@ -43,26 +52,25 @@ button:disabled, button.primary:disabled, button.quiet:disabled { -guishark-imag
 .brand-caption { font-size: 9px; font-weight: bold; color: #e4e9c5; }
 .top-actions { flex-direction: row; gap: 18px; align-items: center; }
 .course { font-size: 10px; color: #fff4d4; }
-button.small { height: 56px; width: 168px; font-size: 12px; }
-.woodland-panel {
-    background: #0c271fe8; border-radius: 16px;
-    -guishark-background-inset: 24px;
-    background-image: url("art/woodland-frame.png");
-    -guishark-background-slice: 340px; -guishark-background-slice-width: 56px;
-}
-.collection { position: absolute; top: 102px; left: 24px; width: 260px; padding: 30px; gap: 7px; }
-.progress-heading { flex-direction: row; align-items: center; gap: 12px; }
-.hud-relic { width: 52px; height: 65px; object-fit: contain; }
-.progress { font-size: 31px; font-weight: bold; color: #ffedb2; }
-.muted { font-size: 10px; color: #e1eaca; }
-.lantern-slots { flex-direction: row; gap: 4px; margin: 4px 0px; }
-.lantern-slot { width: 29px; height: 36px; object-fit: contain; -guishark-image-tint: #607362; opacity: 0.6; }
-.lantern-slot.found { -guishark-image-tint: #ffffff; opacity: 1; }
+button.small { height: 42px; width: 128px; padding: 0px 12px; font-size: 12px; }
+button.small .button-leaf { display: none; }
+.woodland-panel { background: linear-gradient(to bottom, #18382ee8, #0c241ee8); border: 2px solid #a38d53; border-radius: 9px; }
+.collection { position: absolute; top: 102px; left: 24px; width: 280px; padding: 22px; gap: 8px; }
+.progress-heading { flex-direction: row; align-items: center; gap: 14px; }
+.hud-relic { width: 64px; height: 84px; object-fit: contain; }
+.progress { font-size: 33px; font-weight: bold; color: #ffedb2; }
+.muted { font-size: 11px; color: #d6e0bc; }
+.lantern-slots { flex-direction: row; gap: 9px; margin: 4px 0px; }
+.lantern-slot { width: 22px; height: 14px; border-radius: 7px; border: 1px solid #8b936b; background: #17372c; }
+.lantern-slot.found { background: linear-gradient(to bottom, #ffe7a1, #c6933b); border-color: #ffedae; }
 .telemetry { flex-direction: row; align-items: center; justify-content: space-between; }
 .altitude { font-size: 16px; font-weight: bold; color: #ffe8a6; }
 .bottom-bar { position: absolute; left: 24px; right: 24px; bottom: 20px; flex-direction: row; justify-content: space-between; align-items: flex-end; }
-.objective { width: 460px; padding: 27px 32px; gap: 8px; -guishark-background-inset: 19px 24px; }
+.objective { width: 460px; padding: 14px 18px; gap: 14px; flex-direction: row; align-items: center; }
+.objective-leaf { width: 56px; height: 56px; object-fit: contain; }
+.objective-copy { width: 340px; gap: 7px; }
 #message { font-size: 12px; color: #d7dfbd; }
-.navigation { width: 260px; gap: 6px; }
+.navigation { width: 280px; gap: 8px; }
+.navigation .button-leaf { width: 40px; height: 40px; top: 10px; }
 .hint { text-align: center; font-size: 10px; color: #f4e8c3; }
 .summary { text-align: center; padding: 12px; background: #bca56b0d; border: 1px solid #bca56b30; border-radius: 8px; color: #f4db9b; }

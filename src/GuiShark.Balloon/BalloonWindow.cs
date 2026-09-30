@@ -20,7 +20,7 @@ internal sealed class BalloonWindow : GameWindow
 
     public BalloonWindow(LaunchOptions options) : base(new GameWindowSettings { UpdateFrequency = 60 }, new NativeWindowSettings
     {
-        ClientSize = new Vector2i(1200, 820),
+        ClientSize = new Vector2i(options.Width, options.Height),
         MinimumClientSize = new Vector2i(920, 680),
         Title = "Lantern Valley · GuiShark OpenGL game",
         APIVersion = new Version(3, 3),

@@ -3,7 +3,8 @@ namespace GuiShark.OpenGL;
 /// <summary>Image placement and frame slicing, independent of document traversal.</summary>
 internal sealed class ImagePainter(QuadPainter painter)
 {
-    public void Draw(UiRect bounds, GpuTexture texture, ImageFit fit, UiColor tint, float opacity, float radius)
+    public void Draw(UiRect bounds, GpuTexture texture, ImageFit fit, UiColor tint, float opacity, float radius,
+        ImageFlip flip = ImageFlip.None)
     {
         if (bounds.Width <= 0 || bounds.Height <= 0) return;
         var source = new UiRect(0, 0, 1, 1);
@@ -21,6 +22,8 @@ internal sealed class ImagePainter(QuadPainter painter)
             var height = bounds.Height / (texture.Height * scale);
             source = new((1 - width) / 2, (1 - height) / 2, width, height);
         }
+        if ((flip & ImageFlip.Horizontal) != 0) source = source with { X = source.Right, Width = -source.Width };
+        if ((flip & ImageFlip.Vertical) != 0) source = source with { Y = source.Bottom, Height = -source.Height };
         painter.Texture(bounds, texture, tint, opacity, radius, source);
     }
 

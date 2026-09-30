@@ -76,6 +76,8 @@ Illustrated controls can use transparent PNGs through `<img>` or `background-ima
 
 To put a colored backing inside an ornate frame, use `background-color` with `-guishark-background-inset`. The fill moves inward; the PNG stays at the full element bounds. Tune the inset and radius against the artwork's inner edge. This prevents a rectangular color fill from covering transparent outer leaves or corners.
 
+For artwork that should keep its proportions, use separate absolutely positioned `<img>` decorations with fixed logical dimensions and `object-fit: contain`. `-guishark-object-flip: horizontal/vertical/both` mirrors a corner without duplicating its asset or texture. Keep the outer decoration container unpadded and put padded text/content inside a child container, since absolute positioning uses the immediate parent's content box. Set decorations to `pointer-events: none`. Lantern Valley's [menu markup](../src/GuiShark.Balloon/Assets/menu.html) demonstrates this arrangement; its small HUD uses simple CSS borders rather than scaling down the same frame.
+
 A click requires pressing and releasing over the same enabled button. Dragging out and releasing cancels it. Tab follows document order and skips disabled/hidden controls. Enter/Space activate on release; repeated key-down events do not trigger callbacks. UI focus is distinct from native window focus; call `Cancel()` on native focus loss.
 
 ## Resize and DPI
