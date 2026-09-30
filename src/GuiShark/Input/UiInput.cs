@@ -4,20 +4,33 @@ namespace GuiShark;
 public sealed class UiInput
 {
     private readonly UiView view;
+    private readonly UiFocusNavigation navigation;
     private UiElement? hovered;
     private UiElement? pressed;
     private UiElement? keyboardPressed;
     private UiKey? activationKey;
+    private readonly ScrollDrag scrollDrag = new();
+    private readonly HashSet<UiKey> consumedKeys = [];
+    private UiElement? popupPressed;
+    private bool swallowPointerUp;
+    public IUiClipboard? Clipboard { get; set; }
     public UiElement? Focused { get; private set; }
-    public bool HasPointerCapture => pressed != null;
-    public bool WantsKeyboard => Focused != null;
+    public bool HasPointerCapture => pressed != null || scrollDrag.Active || view.Popup.IsOpen || swallowPointerUp || view.Modal.IsOpen;
+    public bool WantsKeyboard => Focused != null || view.Popup.IsOpen || view.Modal.IsOpen;
 
-    internal UiInput(UiView view) => this.view = view;
+    internal UiInput(UiView view)
+    {
+        this.view = view;
+        navigation = new(view, () => Focused, SetFocus);
+    }
 
     public bool PointerMove(float x, float y)
     {
         view.Update();
-        var hit = HitTester.Hit(view.Document.Root, x, y);
+        if (view.Popup.IsOpen) { view.Popup.Hover(x, y); return true; }
+        if (scrollDrag.Active) { scrollDrag.Move(y); return true; }
+        var hit = Hit(x, y);
+        view.Tooltips.Track(pressed == null ? hit : null, x, y);
         if (hovered != hit)
         {
             SetHover(hovered, false);
@@ -27,48 +40,84 @@ public sealed class UiInput
         }
         if (pressed != null)
         {
+            pressed.TextInput?.MovePointer(x, view.TextMetrics, extend: true);
             SetPressed(pressed, HitTester.Interactive(hit) == pressed);
             if (HitTester.CanActivate(pressed)) ControlInteraction.Drag(pressed, x);
         }
         return hit != null || HasPointerCapture;
     }
 
-    public bool PointerDown(float x, float y)
+    public bool PointerDown(float x, float y, bool shift = false)
     {
+        view.Update();
+        view.Tooltips.Hide();
+        if (view.Popup.IsOpen)
+        {
+            popupPressed = view.Popup.Hit(x, y);
+            swallowPointerUp = true;
+            if (popupPressed == null) view.Popup.Close();
+            return true;
+        }
         if (pressed != null) SetPressed(pressed, false);
         pressed = null;
         PointerMove(x, y);
+        view.Tooltips.Hide();
+        if (scrollDrag.Begin(hovered, x, y)) return true;
         var button = HitTester.Interactive(hovered);
-        SetFocus(button != null && HitTester.CanActivate(button) ? button : null);
-        if (Focused != null)
+        if (button != null && CanFocus(button) && HitTester.CanActivate(button)) SetFocus(button);
+        else if (!view.Modal.IsOpen) SetFocus(null);
+        if (button != null && Focused == button)
         {
             pressed = Focused;
             SetPressed(pressed, true);
+            pressed.TextInput?.MovePointer(x, view.TextMetrics, shift);
             ControlInteraction.Drag(pressed, x);
         }
-        return hovered != null;
+        return hovered != null || view.Modal.IsOpen;
     }
 
     public bool PointerUp(float x, float y)
     {
+        view.Update();
+        if (swallowPointerUp)
+        {
+            swallowPointerUp = false;
+            if (popupPressed != null && view.Popup.Hit(x, y) == popupPressed) view.Popup.Commit(popupPressed);
+            popupPressed = null;
+            return true;
+        }
+        if (scrollDrag.Active) { scrollDrag.Move(y); scrollDrag.Cancel(); return true; }
         PointerMove(x, y);
         var target = pressed;
         pressed = null;
-        if (target == null) return hovered != null;
+        if (target == null) return hovered != null || view.Modal.IsOpen;
         SetPressed(target, false);
-        if (HitTester.Interactive(hovered) == target && HitTester.CanActivate(target)) target.Activate();
+        if (target.TextInput == null && HitTester.Interactive(hovered) == target && HitTester.CanActivate(target)) Activate(target);
         return true;
     }
 
-    public bool KeyDown(UiKey key, bool shift = false, bool repeat = false)
+    public bool KeyDown(UiKey key, bool shift = false, bool repeat = false, bool command = false)
     {
         view.Update();
-        if (key == UiKey.Tab) { if (!repeat) AdvanceFocus(shift); return Focused != null; }
+        view.Tooltips.Hide();
+        if (key == UiKey.Escape && repeat && consumedKeys.Contains(key)) return true;
+        if (key == UiKey.Tab) { view.Popup.Close(); if (!repeat) navigation.AdvanceFocus(shift); return Focused != null || view.Modal.IsOpen; }
+        if (view.Popup.IsOpen) { consumedKeys.Add(key); return view.Popup.Key(key); }
+        if (key == UiKey.Escape && view.Modal.Active is { } dialog)
+        {
+            dialog.RequestCancel();
+            consumedKeys.Add(key);
+            return true;
+        }
         if (key == UiKey.Escape) { var consumed = Focused != null || HasPointerCapture; Cancel(); return consumed; }
-        if (Focused == null) return false;
-        if (AdvanceRadio(key)) return true;
+        if (Focused == null) return view.Modal.IsOpen;
+        if (Focused.TextInput is { } input) { var handled = input.Key(key, shift, command, Clipboard); consumedKeys.Add(key); return handled; }
+        if (navigation.AdvanceTab(key)) return true;
+        if (navigation.AdvanceRadio(key)) return true;
+        if (navigation.ScrollPage(key)) return true;
+        if (Focused.Select != null && key is UiKey.Up or UiKey.Down) { consumedKeys.Add(key); view.Popup.Open(Focused); return true; }
         if (ControlInteraction.Key(Focused, key)) return true;
-        if (key is not (UiKey.Enter or UiKey.Space)) return false;
+        if (key is not (UiKey.Enter or UiKey.Space)) return view.Modal.IsOpen;
         if (!repeat && keyboardPressed == null && HitTester.CanActivate(Focused))
         {
             activationKey = key;
@@ -78,15 +127,25 @@ public sealed class UiInput
         return true;
     }
 
+    /// <summary>Forward committed Unicode text from the host text event, separately from physical keys.</summary>
+    public bool TextInput(string text)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        view.Update();
+        if (Focused?.TextInput is { } input && CanFocus(Focused)) { input.Insert(text); return true; }
+        return view.Modal.IsOpen;
+    }
+
     public bool KeyUp(UiKey key)
     {
         view.Update();
-        if (activationKey != key || keyboardPressed == null) return false;
+        if (consumedKeys.Remove(key)) return true;
+        if (activationKey != key || keyboardPressed == null) return view.Modal.IsOpen;
         var target = keyboardPressed;
         keyboardPressed = null;
         activationKey = null;
         SetPressed(target, false);
-        if (target == Focused && HitTester.CanActivate(target)) target.Activate();
+        if (target == Focused && HitTester.CanActivate(target)) Activate(target);
         return true;
     }
 
@@ -95,6 +154,12 @@ public sealed class UiInput
         if (pressed != null) SetPressed(pressed, false);
         if (keyboardPressed != null) SetPressed(keyboardPressed, false);
         pressed = keyboardPressed = null;
+        scrollDrag.Cancel();
+        view.Tooltips.Hide();
+        view.Popup.Close();
+        popupPressed = null;
+        swallowPointerUp = false;
+        consumedKeys.Clear();
         activationKey = null;
         SetHover(hovered, false);
         hovered = null;
@@ -104,28 +169,57 @@ public sealed class UiInput
 
     internal void ValidateTargets()
     {
-        if (Focused != null && !HitTester.CanActivate(Focused)) Cancel();
+        if (Focused != null && !CanFocus(Focused)) Cancel();
+        if (view.Modal.Active is { } dialog && Focused == null) FocusFirst(dialog.Element);
+        if (scrollDrag.Active && !scrollDrag.IsVisible) scrollDrag.Cancel();
     }
 
-    private bool AdvanceRadio(UiKey key)
+    public bool PointerWheel(float x, float y, float delta)
     {
-        if (Focused?.Control is not { Kind: UiControlKind.Radio } control || control.Name.Length == 0 ||
-            key is not (UiKey.Left or UiKey.Right or UiKey.Up or UiKey.Down)) return false;
-        var group = view.Document.Root.DescendantsAndSelf().Where(e =>
-            e.Control is { Kind: UiControlKind.Radio } radio && radio.Name == control.Name && HitTester.CanActivate(e)).ToList();
-        if (group.Count == 0) return false;
-        var offset = key is UiKey.Left or UiKey.Up ? group.Count - 1 : 1;
-        SetFocus(group[(group.IndexOf(Focused) + offset) % group.Count]);
-        Focused!.Activate();
+        if (!float.IsFinite(delta)) throw new ArgumentOutOfRangeException(nameof(delta));
+        view.Update();
+        view.Tooltips.Hide();
+        if (view.Popup.IsOpen) { view.Popup.Wheel(delta); return true; }
+        var hit = Hit(x, y);
+        for (var node = hit; node != null; node = node.Parent)
+        {
+            var before = node.Scroll.Offset;
+            if (node.Style.ScrollY) node.Scroll.Offset -= delta * 40;
+            if (before != node.Scroll.Offset) return true;
+        }
+        return hit != null || view.Modal.IsOpen;
+    }
+
+    /// <summary>Move keyboard focus within the current modal scope, or clear it.</summary>
+    public void Focus(UiElement? element)
+    {
+        view.Update();
+        if (element != null && (!view.Document.Root.DescendantsAndSelf().Contains(element) || !CanFocus(element)))
+            throw new ArgumentException("Element is not focusable in this view's active scope.", nameof(element));
+        SetFocus(element);
+    }
+
+    internal bool CanFocus(UiElement element)
+    {
+        if (!HitTester.CanFocus(element) || !view.Modal.Contains(element)) return false;
+        for (var node = element; node != null; node = node.Parent)
+            if (node.Role == "tooltip") return false;
         return true;
     }
 
-    private void AdvanceFocus(bool backwards)
+    internal void FocusFirst(UiElement root)
     {
-        var controls = view.Document.Root.DescendantsAndSelf().Where(HitTester.CanActivate).ToList();
-        if (controls.Count == 0) { SetFocus(null); return; }
-        var index = Focused == null ? (backwards ? 0 : -1) : controls.IndexOf(Focused);
-        SetFocus(controls[(index + (backwards ? controls.Count - 1 : 1)) % controls.Count]);
+        var controls = root.DescendantsAndSelf().Where(e => CanFocus(e) && (e.TabGroup == null || e.IsSelected)).ToArray();
+        SetFocus(controls.FirstOrDefault(e => e.AutoFocus) ?? controls.FirstOrDefault());
+    }
+
+    private UiElement? Hit(float x, float y) => view.Modal.Active is { } dialog
+        ? HitTester.Hit(dialog.Element, x, y, overlay: true) : HitTester.Hit(view.Document.Root, x, y);
+
+    private void Activate(UiElement target)
+    {
+        if (target.Select != null) view.Popup.Open(target);
+        else target.Activate();
     }
 
     private void SetFocus(UiElement? element)
@@ -138,6 +232,7 @@ public sealed class UiInput
         Focused = element;
         if (Focused != null) Focused.IsFocused = true;
         view.Invalidate();
+        if (Focused != null) navigation.Reveal(Focused);
     }
 
     private void SetPressed(UiElement element, bool value)

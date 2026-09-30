@@ -13,8 +13,8 @@ internal static class TextPlacement
     public static float Top(TextDrawRequest request, int lines)
     {
         var element = request.Element;
-        return element.ContentBounds.Y + (element.IsButton
-            ? Math.Max(0, (element.ContentBounds.Height - lines * element.Style.LineHeight) / 2) : 0);
+        return element.TextBounds.Y + (element.IsButton
+            ? Math.Max(0, (element.TextBounds.Height - lines * element.Style.LineHeight) / 2) : 0);
     }
 
     public static void Draw(ITextCanvas canvas, TextImage image, UiRect bounds, UiRect uv,
@@ -22,7 +22,7 @@ internal static class TextPlacement
     {
         if (request.Element.Style.TextShadow is { } shadow)
             Shadow(canvas, image, bounds, uv, shadow, request, options, range);
-        canvas.Draw(image, bounds, uv, request.Element.Style.Color, request.Opacity, options.Sampling, range);
+        canvas.Draw(image, bounds, uv, Color(request.Element), request.Opacity, options.Sampling, range);
     }
 
     public static void DrawGlyphs(ITextCanvas canvas, IReadOnlyList<TextGlyphDraw> glyphs,
@@ -33,9 +33,11 @@ internal static class TextPlacement
             foreach (var glyph in glyphs)
                 Shadow(canvas, glyph.Image, glyph.Bounds, glyph.Source, shadow, request, options, range);
         foreach (var glyph in glyphs)
-            canvas.Draw(glyph.Image, glyph.Bounds, glyph.Source, request.Element.Style.Color,
+            canvas.Draw(glyph.Image, glyph.Bounds, glyph.Source, Color(request.Element),
                 request.Opacity, options.Sampling, range);
     }
+
+    private static UiColor Color(UiElement element) => element.TextInput?.IsPlaceholder == true ? element.Style.Color with { A = element.Style.Color.A * .55f } : element.Style.Color;
 
     private static void Shadow(ITextCanvas canvas, TextImage image, UiRect bounds, UiRect uv,
         TextShadow shadow, TextDrawRequest request, TextRenderOptions options, float range)

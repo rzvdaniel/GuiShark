@@ -41,13 +41,13 @@ public sealed class MsdfTextBackend(MsdfAtlas regular, MsdfAtlas bold, string fa
         var element = request.Element;
         var style = element.Style;
         var atlas = Atlas(style.Bold, style.FontFamily);
-        var lines = TextLayout.Wrap(element.Text, element.ContentBounds.Width, style, this);
+        var lines = TextLayout.Lines(element, element.TextBounds.Width, this);
         var draws = new List<TextGlyphDraw>();
         var baseline = TextPlacement.Top(request, lines.Count)
             + (style.LineHeight - (atlas.Ascender - atlas.Descender) * style.FontSize) / 2 + atlas.Ascender * style.FontSize;
         foreach (var line in lines)
         {
-            var x = element.ContentBounds.X + TextPlacement.Align(element.ContentBounds.Width,
+            var x = element.TextBounds.X + TextPlacement.Align(element.TextBounds.Width,
                 MeasureWidth(line, style.FontSize, style.Bold, style.FontFamily), style.TextAlign);
             x = TextPlacement.Snap(x, request.ScaleX, options.PixelSnap);
             var y = TextPlacement.Snap(baseline, request.ScaleY, options.PixelSnap);

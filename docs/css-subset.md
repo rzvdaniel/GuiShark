@@ -4,7 +4,7 @@ AngleSharp parses HTML. GuiShark's bounded CSS parser resolves the supported pro
 
 ## Markup
 
-Supported tags: `body`, `div`, `section`, `main`, `header`, `footer`, `p`, `span`, `h1`, `h2`, `h3`, `button`, `img`, `label`, `input` (checkbox, radio, range), and `progress`. See [control behavior and themes](controls.md).
+Supported tags: `body`, `div`, `section`, `main`, `header`, `footer`, `p`, `span`, `h1`, `h2`, `h3`, `button`, `img`, `label`, `input` (checkbox, radio, range), `progress`, `select`, `option`, and `dialog`. See [control behavior and themes](controls.md).
 
 - `id` identifies elements for C# lookup; duplicate IDs throw an error.
 - `class` and inline `style` supply styling. `disabled` disables buttons and interactive controls.
@@ -16,7 +16,7 @@ Supported tags: `body`, `div`, `section`, `main`, `header`, `footer`, `p`, `span
 
 ## Selectors and cascade
 
-Type (`button`), class (`.primary`), ID (`#save`), universal (`*`), compounds (`button.primary`), comma-separated groups, and descendants (`.dark button`) are supported. State selectors are `:hover`, `:active`, `:focus`, `:disabled`, and `:checked`.
+Type (`button`), class (`.primary`), ID (`#save`), universal (`*`), compounds (`button.primary`), comma-separated groups, and descendants (`.dark button`) are supported. State selectors are `:hover`, `:active`, `:focus`, `:disabled`, `:checked`, and `:selected` (GuiShark active tab/option).
 
 Rules apply by specificity, then document order; inline styles apply last. Color, font family, size, weight, text alignment, and text shadow inherit. Buttons default to centered text. Hover applies to a hit node and its ancestors. Active/focus follow pointer and keyboard state. Attribute selectors, child/sibling combinators, pseudo-elements, and other pseudo-classes are unsupported.
 
@@ -102,3 +102,9 @@ For small controls, separate the artwork from the surface. Give decorative `<img
 The demo's macOS-inspired buttons use CSS gradients, borders, rounded corners, and pseudo-classes. Its logo demonstrates PNG rendering. All application behavior is C#.
 
 `-guishark-accent-color` accepts a color for checkbox/radio marks, slider fill/thumbs, and progress fill. Control dimensions, backgrounds, borders and state selectors use the existing CSS properties.
+
+`overflow-y: auto` / `scroll` enables vertical scrolling for bounded containers with children; `hidden` disables scrolling. Scrollbars reserve a 12px gutter and appear when content overflows. HTML `hidden` and programmatic `UiElement.Hidden` take precedence over CSS display. Tabs use `role="tablist"`, button `role="tab"` with `aria-controls`, and `role="tabpanel"` targets. See [controls](controls.md) for input forwarding and limits.
+
+`dialog` is a centered modal overlay opened with C# `ShowModal()`, rather than the HTML `open` attribute. `role="tooltip"` declares a rich description addressed by one `aria-describedby` ID; `title` supplies plain text. These overlays do not contribute to normal flow. `autofocus` chooses initial modal focus. See [dialogs and tooltips](controls.md#modal-dialogs) for lifecycle and host input rules.
+
+Text inputs support `type="text"` (also the default type), `value`, `placeholder`, `maxlength`, `readonly`, `disabled` and `autofocus`. Fields inherit CSS fonts/colors, use left aligned single-line text, and horizontally scroll to the caret. See [text input integration](controls.md#single-line-text-input).

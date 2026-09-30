@@ -1,3 +1,3 @@
 using GuiShark.ControlsDemo;
-using var window = new GalleryWindow(args.Contains("--capture"), args.FirstOrDefault(arg => arg != "--capture"));
+using var window = new GalleryWindow(GalleryOptions.Parse(args));
 window.Run();

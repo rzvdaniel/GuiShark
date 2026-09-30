@@ -42,6 +42,7 @@ public sealed class UiStyle
     public Insets? BackgroundSliceWidth { get; internal set; }
     public Insets BackgroundInset { get; internal set; }
     public float Opacity { get; internal set; } = 1;
+    public bool ScrollY { get; internal set; }
     public bool Hidden { get; internal set; }
     public bool PointerEvents { get; internal set; } = true;
     public ElementPosition Position { get; internal set; }
@@ -58,10 +59,13 @@ public sealed class UiStyle
         Color = parent?.Color ?? new(.12f, .15f, .2f),
         TextShadow = parent?.TextShadow,
         Bold = parent?.Bold ?? false,
-        PointerEvents = parent?.PointerEvents ?? true,
-        TextAlign = element.IsButton ? TextAlignment.Center : parent?.TextAlign ?? TextAlignment.Left,
-        Padding = element.IsButton ? new(10, 18, 10, 18) : default,
-        Width = element.Control?.Kind is UiControlKind.Checkbox or UiControlKind.Radio ? CssLength.Parse("24px") : CssLength.Auto,
+        PointerEvents = element.Role == "tooltip" ? false : parent?.PointerEvents ?? true,
+        ScrollY = element.Dialog != null,
+        MaxWidth = element.IsOverlay ? CssLength.Parse("90%") : CssLength.Auto,
+        Gap = element.IsOverlay ? 12 : 0,
+        TextAlign = element.TextInput != null ? TextAlignment.Left : element.Role == "tooltip" ? TextAlignment.Left : element.IsButton ? TextAlignment.Center : parent?.TextAlign ?? TextAlignment.Left,
+        Padding = element.TextInput != null ? new(8, 12, 8, 12) : element.Select != null ? new(8, 30, 8, 12) : element.IsButton || element.Tag == "option" ? new(10, 18, 10, 18) : element.IsOverlay ? Insets.All(20) : default,
+        Width = element.Control?.Kind is UiControlKind.Checkbox or UiControlKind.Radio ? CssLength.Parse("24px") : element.Dialog != null ? CssLength.Parse("480px") : element.Role == "tooltip" ? CssLength.Parse("280px") : CssLength.Auto,
         Height = element.Control != null ? CssLength.Parse(element.Control.Kind == UiControlKind.Progress ? "18px" : "24px") : CssLength.Auto
     };
 }

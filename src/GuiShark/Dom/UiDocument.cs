@@ -7,6 +7,7 @@ public sealed class UiDocument
     public UiElement Root { get; }
     public IAssetSource Assets { get; }
     public IReadOnlyList<FontFace> FontFaces { get; }
+    public IReadOnlyList<UiTabs> TabGroups { get; }
 
     internal UiDocument(UiElement root, IEnumerable<CssRule> rules, IAssetSource assets, IReadOnlyList<FontFace> fontFaces, UiTheme theme)
     {
@@ -17,6 +18,15 @@ public sealed class UiDocument
         elements = new(StringComparer.Ordinal);
         foreach (var element in root.DescendantsAndSelf().Where(e => e.Id.Length > 0))
             if (!elements.TryAdd(element.Id, element)) throw new FormatException($"Duplicate element id: {element.Id}");
+        if (root.DescendantsAndSelf().Any(e => e.Tag == "option" && e.Parent?.Tag != "select"))
+            throw new FormatException("Options must be direct children of a select.");
+        TabGroups = root.DescendantsAndSelf().Where(e => e.Role == "tablist").Select(e => new UiTabs(e, this)).ToArray();
+        foreach (var owner in root.DescendantsAndSelf().Where(e => e.TooltipTargetId != null))
+        {
+            var target = GetElement(owner.TooltipTargetId!);
+            if (target.Role != "tooltip") throw new FormatException("Tooltip aria-describedby requires a role=tooltip target.");
+            owner.TooltipTarget = target;
+        }
         foreach (var label in root.DescendantsAndSelf().Where(e => e.Tag == "label"))
         {
             label.LabelTarget = label.LabelFor is { } id && elements.TryGetValue(id, out var target)

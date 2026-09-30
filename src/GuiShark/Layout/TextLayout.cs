@@ -3,6 +3,9 @@ namespace GuiShark;
 /// <summary>Shared wrapping for measurement and painting. Whitespace is collapsed by the HTML loader.</summary>
 public static class TextLayout
 {
+    public static IReadOnlyList<string> Lines(UiElement element, float width, ITextMetrics metrics) =>
+        element.TextInput != null ? [element.Text] : Wrap(element.Text, width, element.Style, metrics);
+
     public static IReadOnlyList<string> Wrap(string text, float width, UiStyle style, ITextMetrics metrics)
     {
         if (string.IsNullOrEmpty(text) || width <= 0) return [];

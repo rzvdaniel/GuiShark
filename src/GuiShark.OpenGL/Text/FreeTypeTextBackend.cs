@@ -59,14 +59,14 @@ public sealed class FreeTypeTextBackend : ITextBackend
     {
         var element = request.Element;
         var style = element.Style;
-        var lines = TextLayout.Wrap(element.Text, element.ContentBounds.Width, style, this);
+        var lines = TextLayout.Lines(element, element.TextBounds.Width, this);
         var draws = new List<TextGlyphDraw>();
         var metrics = Get(new Rune('M'), style.FontSize, style.Bold, style.FontFamily).Raster;
         var baseline = TextPlacement.Top(request, lines.Count)
             + (style.LineHeight - (metrics.Ascender - metrics.Descender) / scale) / 2 + metrics.Ascender / scale;
         foreach (var line in lines)
         {
-            var x = element.ContentBounds.X + TextPlacement.Align(element.ContentBounds.Width,
+            var x = element.TextBounds.X + TextPlacement.Align(element.TextBounds.Width,
                 MeasureWidth(line, style.FontSize, style.Bold, style.FontFamily), style.TextAlign);
             x = TextPlacement.Snap(x, request.ScaleX, options.PixelSnap);
             var y = TextPlacement.Snap(baseline, request.ScaleY, options.PixelSnap);

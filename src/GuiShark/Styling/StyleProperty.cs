@@ -43,6 +43,7 @@ internal static class StyleProperty
             case "border": SetBorder(style, value); break;
             case "border-color": style.BorderColor = UiColor.Parse(value); break;
             case "opacity": style.Opacity = Math.Clamp(CssLength.Pixels(value), 0, 1); break;
+            case "overflow-y": style.ScrollY = value switch { "auto" or "scroll" => true, "hidden" => false, _ => throw Invalid(name, value) }; break;
             case "display": style.Hidden = value switch { "none" => true, "flex" or "block" => false, _ => throw Invalid(name, value) }; break;
             case "box-sizing": if (value != "border-box") throw Invalid(name, value); break;
             default: throw new FormatException($"Unsupported CSS property '{name}'. See docs/css-subset.md.");

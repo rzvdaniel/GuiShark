@@ -7,14 +7,27 @@ internal sealed class LayoutEngine(ITextMetrics text)
     public void Layout(UiElement root, float width, float height) =>
         Arrange(root, new(0, 0, width, height), new(0, 0, width, height));
 
+    public void LayoutOverlay(UiElement element, float width, float height, UiRect? anchor = null)
+    {
+        var viewport = new UiRect(8, 8, Math.Max(0, width - 16), Math.Max(0, height - 16));
+        var size = Measure(element, viewport.Width, viewport.Height, false);
+        size = new(Math.Min(size.Width, viewport.Width), Math.Min(size.Height, viewport.Height));
+        var x = anchor?.X + 16 ?? viewport.X + (viewport.Width - size.Width) / 2;
+        var y = anchor?.Bottom + 20 ?? viewport.Y + (viewport.Height - size.Height) / 2;
+        if (anchor is { } point && y + size.Height > viewport.Bottom) y = point.Y - size.Height - 12;
+        x = Math.Clamp(x, viewport.X, Math.Max(viewport.X, viewport.Right - size.Width));
+        y = Math.Clamp(y, viewport.Y, Math.Max(viewport.Y, viewport.Bottom - size.Height));
+        Arrange(element, new(x, y, size.Width, size.Height), viewport);
+    }
+
     private Size Measure(UiElement element, float availableWidth, float availableHeight, bool stretch, float? forcedWidth = null)
     {
         var s = element.Style;
         var width = forcedWidth ?? s.Width.Resolve(availableWidth, stretch ? availableWidth : NaturalWidth(element, availableWidth));
         width = Math.Clamp(width, 0, Math.Max(0, s.MaxWidth.Resolve(availableWidth, availableWidth)));
-        var innerWidth = Math.Max(0, width - s.Padding.Horizontal - 2 * s.BorderWidth);
+        var innerWidth = Math.Max(0, width - s.Padding.Horizontal - 2 * s.BorderWidth - (s.ScrollY ? 12 : 0));
         var children = VisibleChildren(element);
-        var height = TextLayout.Wrap(element.Text, innerWidth, s, text).Count * s.LineHeight;
+        var height = element.TextInput != null ? s.LineHeight : TextLayout.Wrap(element.Text, innerWidth, s, text).Count * s.LineHeight;
         if (children.Length > 0)
         {
             var sizes = MeasureChildren(element, innerWidth, availableHeight);
@@ -37,6 +50,7 @@ internal sealed class LayoutEngine(ITextMetrics text)
             width = s.Direction == FlowDirection.Row ? widths.Sum() + s.Gap * (children.Length - 1) : widths.Max();
         }
         if (element.Tag == "img") width = 48;
+        if (element.TextInput != null) width = 200;
         if (element.Control?.Kind is UiControlKind.Range or UiControlKind.Progress) width = 160;
         return width + s.Padding.Horizontal + s.BorderWidth * 2;
     }
@@ -71,7 +85,10 @@ internal sealed class LayoutEngine(ITextMetrics text)
         var free = Math.Max(0, (row ? content.Width : content.Height) - occupied - gap * Math.Max(0, children.Length - 1));
         var offset = element.Style.Justify switch { MainAlignment.Center => free / 2, MainAlignment.End => free, _ => 0 };
         if (element.Style.Justify == MainAlignment.SpaceBetween && children.Length > 1) gap += free / (children.Length - 1);
-        var cursor = (row ? content.X : content.Y) + offset;
+        var contentHeight = row ? sizes.Select((size, i) => size.Height + children[i].Style.Margin.Vertical).DefaultIfEmpty(0).Max()
+            : occupied + gap * Math.Max(0, children.Length - 1);
+        element.Scroll.Arrange(contentHeight);
+        var cursor = (row ? content.X : content.Y - element.Scroll.Offset) + offset;
         for (var i = 0; i < children.Length; i++)
         {
             var child = children[i];
@@ -86,7 +103,7 @@ internal sealed class LayoutEngine(ITextMetrics text)
             Arrange(child, new(x, y, size.Width, size.Height), element.Clip.Intersect(content));
             cursor += (row ? size.Width + margin.Horizontal : size.Height + margin.Vertical) + gap;
         }
-        foreach (var child in element.Children.Where(c => !c.Style.Hidden && c.Style.Position == ElementPosition.Absolute))
+        foreach (var child in element.Children.Where(c => !c.IsOverlay && !c.Style.Hidden && c.Style.Position == ElementPosition.Absolute))
             ArrangeAbsolute(child, content, element.Clip.Intersect(content));
     }
 
@@ -107,6 +124,6 @@ internal sealed class LayoutEngine(ITextMetrics text)
         Arrange(element, new(x, y, size.Width, size.Height), clip);
     }
 
-    private static UiElement[] VisibleChildren(UiElement element) => element.Children
-        .Where(c => !c.Style.Hidden && c.Style.Position == ElementPosition.Flow).ToArray();
+    private static UiElement[] VisibleChildren(UiElement element) => (element.Select != null ? Array.Empty<UiElement>() : element.Children)
+        .Where(c => !c.IsOverlay && !c.Style.Hidden && c.Style.Position == ElementPosition.Flow).ToArray();
 }
