@@ -1,0 +1,22 @@
+@font-face { font-family: "Lato"; src: url("fonts/Lato-Regular.ttf"); font-weight: 400; }
+@font-face { font-family: "Lato"; src: url("fonts/Lato-Bold.ttf"); font-weight: 700; }
+body { padding: 28px; gap: 20px; font-family: "Lato"; font-size: 15px; color: #e4edf8; }
+header { gap: 6px; }
+h1 { font-size: 34px; font-weight: bold; }
+h2 { font-size: 23px; font-weight: bold; }
+.eyebrow { font-size: 11px; font-weight: bold; color: #83b9e7; }
+.muted { font-size: 13px; color: #acbfd3; }
+.columns { flex-direction: row; gap: 20px; align-items: flex-start; }
+.card { padding: 22px; gap: 16px; background: #142134; border: 1px solid #30455e; border-radius: 12px; }
+.columns .card { width: 480px; flex-grow: 1; }
+.row { flex-direction: row; gap: 12px; align-items: center; }
+.skin { padding: 18px; gap: 16px; background: #102e2a; border: 1px solid #397267; border-radius: 10px; }
+.skin input, .skin progress, .skin button { background: #153c34; border: 1px solid #508c6d; border-radius: 8px; -guishark-accent-color: #9bdd9c; }
+.skin button:hover { background: #235643; }
+.skin input:checked { border-color: #c8efad; }
+.skin input:focus, .skin button:focus { border-color: #e6e7a9; }
+
+#action { width: 210px; }
+footer.card { padding: 14px; gap: 8px; height: 118px; }
+#events { height: 40px; font-size: 14px; }
+footer .muted { font-size: 11px; }

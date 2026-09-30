@@ -24,9 +24,21 @@ internal static class StyleProperty
             case "justify-content": style.Justify = value switch { "flex-start" => MainAlignment.Start, "center" => MainAlignment.Center, "flex-end" => MainAlignment.End, "space-between" => MainAlignment.SpaceBetween, _ => throw Invalid(name, value) }; break;
             case "text-align": style.TextAlign = value switch { "left" => TextAlignment.Left, "center" => TextAlignment.Center, "right" => TextAlignment.Right, _ => throw Invalid(name, value) }; break;
             case "font-size": style.FontSize = Math.Max(1, Nonnegative(value)); break;
+            case "font-family": style.FontFamily = FontFace.ParseFamily(value); break;
             case "font-weight": style.Bold = value switch { "bold" or "600" or "700" => true, "normal" or "400" => false, _ => throw Invalid(name, value) }; break;
+            case "-guishark-accent-color": style.AccentColor = UiColor.Parse(value); break;
             case "color": style.Color = UiColor.Parse(value); break;
-            case "background": case "background-color": SetBackground(style, value); break;
+            case "text-shadow": style.TextShadow = ParseShadow(value); break;
+            case "background": style.BackgroundImage = null; SetBackground(style, value); break;
+            case "background-color": SetBackground(style, value); break;
+            case "background-image": style.BackgroundImage = ParseImage(value); break;
+            case "background-size": style.BackgroundSize = ParseFit(value); break;
+            case "object-fit": style.ObjectFit = ParseFit(value); break;
+            case "-guishark-object-flip": style.ObjectFlip = ParseFlip(value); break;
+            case "-guishark-image-tint": style.ImageTint = UiColor.Parse(value); break;
+            case "-guishark-background-slice": style.BackgroundSlice = ParseInsets(value); break;
+            case "-guishark-background-slice-width": style.BackgroundSliceWidth = ParseInsets(value); break;
+            case "-guishark-background-inset": style.BackgroundInset = ParseInsets(value); break;
             case "border-radius": style.Radius = Nonnegative(value); break;
             case "border": SetBorder(style, value); break;
             case "border-color": style.BorderColor = UiColor.Parse(value); break;
@@ -35,6 +47,46 @@ internal static class StyleProperty
             case "box-sizing": if (value != "border-box") throw Invalid(name, value); break;
             default: throw new FormatException($"Unsupported CSS property '{name}'. See docs/css-subset.md.");
         }
+    }
+
+    private static ImageFit ParseFit(string value) => value switch
+    {
+        "fill" => ImageFit.Fill,
+        "contain" => ImageFit.Contain,
+        "cover" => ImageFit.Cover,
+        _ => throw Invalid("image fit", value)
+    };
+
+    private static ImageFlip ParseFlip(string value) => value switch
+    {
+        "none" => ImageFlip.None,
+        "horizontal" => ImageFlip.Horizontal,
+        "vertical" => ImageFlip.Vertical,
+        "both" => ImageFlip.Both,
+        _ => throw Invalid("image flip", value)
+    };
+
+    private static TextShadow? ParseShadow(string value)
+    {
+        if (value == "none") return null;
+        var parts = value.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length != 3) throw Invalid("text-shadow", value);
+        return new(CssLength.Pixels(parts[0]), CssLength.Pixels(parts[1]), UiColor.Parse(parts[2]));
+    }
+
+    private static string? ParseImage(string value)
+    {
+        if (value == "none") return null;
+        if (!value.StartsWith("url(") || !value.EndsWith(')')) throw Invalid("background-image", value);
+        var path = value[4..^1].Trim();
+        if (path.Length >= 2 && (path[0] == '\"' || path[0] == '\''))
+        {
+            if (path[^1] != path[0]) throw Invalid("background-image", value);
+            path = path[1..^1];
+        }
+        if (string.IsNullOrWhiteSpace(path) || path.IndexOfAny(['\"', '\'', '(', ')', ';']) >= 0)
+            throw Invalid("background-image", value);
+        return path;
     }
 
     private static void SetBackground(UiStyle style, string value)

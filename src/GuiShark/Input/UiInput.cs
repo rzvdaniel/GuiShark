@@ -25,7 +25,11 @@ public sealed class UiInput
             SetHover(hovered, true);
             view.Invalidate();
         }
-        if (pressed != null) SetPressed(pressed, HitTester.Button(hit) == pressed);
+        if (pressed != null)
+        {
+            SetPressed(pressed, HitTester.Interactive(hit) == pressed);
+            if (HitTester.CanActivate(pressed)) ControlInteraction.Drag(pressed, x);
+        }
         return hit != null || HasPointerCapture;
     }
 
@@ -34,9 +38,14 @@ public sealed class UiInput
         if (pressed != null) SetPressed(pressed, false);
         pressed = null;
         PointerMove(x, y);
-        var button = HitTester.Button(hovered);
+        var button = HitTester.Interactive(hovered);
         SetFocus(button != null && HitTester.CanActivate(button) ? button : null);
-        if (Focused != null) { pressed = Focused; SetPressed(pressed, true); }
+        if (Focused != null)
+        {
+            pressed = Focused;
+            SetPressed(pressed, true);
+            ControlInteraction.Drag(pressed, x);
+        }
         return hovered != null;
     }
 
@@ -47,7 +56,7 @@ public sealed class UiInput
         pressed = null;
         if (target == null) return hovered != null;
         SetPressed(target, false);
-        if (HitTester.Button(hovered) == target && HitTester.CanActivate(target)) target.Activate();
+        if (HitTester.Interactive(hovered) == target && HitTester.CanActivate(target)) target.Activate();
         return true;
     }
 
@@ -57,6 +66,9 @@ public sealed class UiInput
         if (key == UiKey.Tab) { if (!repeat) AdvanceFocus(shift); return Focused != null; }
         if (key == UiKey.Escape) { var consumed = Focused != null || HasPointerCapture; Cancel(); return consumed; }
         if (Focused == null) return false;
+        if (AdvanceRadio(key)) return true;
+        if (ControlInteraction.Key(Focused, key)) return true;
+        if (key is not (UiKey.Enter or UiKey.Space)) return false;
         if (!repeat && keyboardPressed == null && HitTester.CanActivate(Focused))
         {
             activationKey = key;
@@ -95,12 +107,25 @@ public sealed class UiInput
         if (Focused != null && !HitTester.CanActivate(Focused)) Cancel();
     }
 
+    private bool AdvanceRadio(UiKey key)
+    {
+        if (Focused?.Control is not { Kind: UiControlKind.Radio } control || control.Name.Length == 0 ||
+            key is not (UiKey.Left or UiKey.Right or UiKey.Up or UiKey.Down)) return false;
+        var group = view.Document.Root.DescendantsAndSelf().Where(e =>
+            e.Control is { Kind: UiControlKind.Radio } radio && radio.Name == control.Name && HitTester.CanActivate(e)).ToList();
+        if (group.Count == 0) return false;
+        var offset = key is UiKey.Left or UiKey.Up ? group.Count - 1 : 1;
+        SetFocus(group[(group.IndexOf(Focused) + offset) % group.Count]);
+        Focused!.Activate();
+        return true;
+    }
+
     private void AdvanceFocus(bool backwards)
     {
-        var buttons = view.Document.Root.DescendantsAndSelf().Where(HitTester.CanActivate).ToList();
-        if (buttons.Count == 0) { SetFocus(null); return; }
-        var index = Focused == null ? (backwards ? 0 : -1) : buttons.IndexOf(Focused);
-        SetFocus(buttons[(index + (backwards ? buttons.Count - 1 : 1)) % buttons.Count]);
+        var controls = view.Document.Root.DescendantsAndSelf().Where(HitTester.CanActivate).ToList();
+        if (controls.Count == 0) { SetFocus(null); return; }
+        var index = Focused == null ? (backwards ? 0 : -1) : controls.IndexOf(Focused);
+        SetFocus(controls[(index + (backwards ? controls.Count - 1 : 1)) % controls.Count]);
     }
 
     private void SetFocus(UiElement? element)
@@ -124,6 +149,10 @@ public sealed class UiInput
 
     private static void SetHover(UiElement? element, bool value)
     {
-        for (; element != null; element = element.Parent) element.IsHovered = value;
+        for (; element != null; element = element.Parent)
+        {
+            element.IsHovered = value;
+            if (element.LabelTarget is { } target) target.IsHovered = value;
+        }
     }
 }

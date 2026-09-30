@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../GuiShark.OpenGL/GuiShark.OpenGL.csproj" />
+    <PackageReference Include="OpenTK.Windowing.Desktop" Version="4.9.4" />
+    <Content Include="Assets/**/*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../GuiShark.Demo/Assets/fonts/*.ttf" Link="Assets/fonts/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Compile Include="../GuiShark.Demo/FrameCapture.cs" Link="FrameCapture.cs" />
+  </ItemGroup>
+</Project>

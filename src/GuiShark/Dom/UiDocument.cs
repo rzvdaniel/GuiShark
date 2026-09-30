@@ -6,15 +6,27 @@ public sealed class UiDocument
     internal StyleResolver Styles { get; }
     public UiElement Root { get; }
     public IAssetSource Assets { get; }
+    public IReadOnlyList<FontFace> FontFaces { get; }
 
-    internal UiDocument(UiElement root, IEnumerable<CssRule> rules, IAssetSource assets)
+    internal UiDocument(UiElement root, IEnumerable<CssRule> rules, IAssetSource assets, IReadOnlyList<FontFace> fontFaces, UiTheme theme)
     {
         Root = root;
         Assets = assets;
-        Styles = new(rules);
+        FontFaces = fontFaces;
+        Styles = new(rules, theme);
         elements = new(StringComparer.Ordinal);
         foreach (var element in root.DescendantsAndSelf().Where(e => e.Id.Length > 0))
             if (!elements.TryAdd(element.Id, element)) throw new FormatException($"Duplicate element id: {element.Id}");
+        foreach (var label in root.DescendantsAndSelf().Where(e => e.Tag == "label"))
+        {
+            label.LabelTarget = label.LabelFor is { } id && elements.TryGetValue(id, out var target)
+                ? target : label.DescendantsAndSelf().FirstOrDefault(e => e.IsInteractive);
+        }
+        foreach (var radio in root.DescendantsAndSelf().Where(e => e.Control is { Kind: UiControlKind.Radio, Checked: true }).ToArray())
+        {
+            radio.Control!.Checked = false;
+            radio.Control.Checked = true;
+        }
     }
 
     public UiElement GetElement(string id) => elements.TryGetValue(id, out var element)

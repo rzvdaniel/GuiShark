@@ -72,6 +72,12 @@ Use each return value to decide whether to pass the event to game logic. Visible
 
 For a game HUD, set `pointer-events: none` on the body or decorative containers and `pointer-events: auto` on buttons. Colors ending in an alpha byte (for example `#153b3bd9`) provide translucent panels; leave the body background transparent to expose the host scene. Anchor HUD groups with `position: absolute` and `top/right/bottom/left`. See the complete example in [Lantern Valley](balloon-demo.md).
 
+Illustrated controls can use transparent PNGs through `<img>` or `background-image`. Use `object-fit: contain` for icons and `-guishark-background-slice` plus `-guishark-background-slice-width` for scalable panel/button artwork. Source slices are bitmap pixels; destination widths are logical UI pixels. Hover/pressed/disabled classes can tint artwork using `-guishark-image-tint`. No host-side texture drawing is required. See [illustrated controls](css-subset.md#illustrated-controls) for the complete syntax.
+
+To put a colored backing inside an ornate frame, use `background-color` with `-guishark-background-inset`. The fill moves inward; the PNG stays at the full element bounds. Tune the inset and radius against the artwork's inner edge. This prevents a rectangular color fill from covering transparent outer leaves or corners.
+
+For artwork that should keep its proportions, use separate absolutely positioned `<img>` decorations with fixed logical dimensions and `object-fit: contain`. `-guishark-object-flip: horizontal/vertical/both` mirrors a corner without duplicating its asset or texture. Keep the outer decoration container unpadded and put padded text/content inside a child container, since absolute positioning uses the immediate parent's content box. Set decorations to `pointer-events: none`. Lantern Valley's [menu markup](../src/demos/GuiShark.Balloon/Assets/menu.html) demonstrates this arrangement; its small HUD uses simple CSS borders rather than scaling down the same frame.
+
 A click requires pressing and releasing over the same enabled button. Dragging out and releasing cancels it. Tab follows document order and skips disabled/hidden controls. Enter/Space activate on release; repeated key-down events do not trigger callbacks. UI focus is distinct from native window focus; call `Cancel()` on native focus loss.
 
 ## Resize and DPI
@@ -92,6 +98,8 @@ Use `GetElement(id).Text`, `.Disabled`, and `.SetClass(name, enabled)` to change
 
 Implement `IAssetSource` for embedded resources or game asset packs. `DirectoryAssetSource` resolves files beneath a local directory. CSS links and PNG paths are relative to that root, not to the CSS file's directory. No scripts, event-handler attributes, or remote fetches execute. Use trusted application assets; this is not a sandbox for arbitrary web content.
 
-Fonts are host-supplied. This backend uses one regular face and one bold face, simple word wrapping, and no font fallback, complex-script shaping, bidirectional layout, or text editor. Text textures are capped at 128 cached entries; image textures live until renderer disposal. Images/text must fit the device's maximum texture size.
+Fonts can be host-supplied or loaded from local CSS `@font-face` declarations. Use `new FontBook(document, "Your Family")` for the CSS-only path, or call `fonts.Load(document)` before explicit layout when combining CSS families with host defaults. The compatible renderer constructor loads declarations and uses pixel-aligned Skia by default. Named families inherit through `font-family`. Each backend provides its own layout metrics; keep a separate backend instance per renderer, but share the font book. See [text backends and CSS examples](text-rendering.md).
 
-See the complete adapter in [DemoWindow.cs](../src/GuiShark.Demo/DemoWindow.cs) and the separate application callbacks in [DemoController.cs](../src/GuiShark.Demo/DemoController.cs).
+Text uses simple word wrapping, with no complex-script shaping, pair kerning, bidirectional layout or text editor. Skia labels are capped at 128 cached entries; FreeType atlas pages have an explicit memory budget; stale GPU text images are released. Image textures live until renderer disposal. Images/text must fit the device's maximum texture size.
+
+See the complete adapter in [DemoWindow.cs](../src/demos/GuiShark.Demo/DemoWindow.cs) and the separate application callbacks in [DemoController.cs](../src/demos/GuiShark.Demo/DemoController.cs).

@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Description>OpenGL 3.3 renderer for GuiShark.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
@@ -8,6 +9,9 @@
     <PackageReference Include="OpenTK.Graphics" Version="4.9.4" />
     <PackageReference Include="SkiaSharp" Version="4.153.0" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="4.153.0" />
+    <PackageReference Include="FreeTypeSharp" Version="3.1.0" />
+    <Content Include="../../licenses/FreeType-FTL.txt" Link="licenses/FreeType-FTL.txt" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../licenses/MSDFgen-MIT.txt" Link="licenses/MSDFgen-MIT.txt" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
 

@@ -2,9 +2,19 @@
 
 A second host application showing GuiShark over a real 3D OpenGL scene. The procedural landscape, flight simulation, terrain picking, camera, and world renderer are independent of the UI SDK.
 
+The woodland skin uses transparent painted PNGs for large carved corners, button/quest leaf accents and a glowing lantern relic. All labels, layouts, states and callbacks remain HTML/CSS and C#. Menus use four mirrored 128px corners; compact HUD panels use simple gold borders rather than miniature frames. Six shader-drawn progress markers light up individually when lanterns are collected. See [asset provenance, sizing guidance and prompts](woodland-artwork.md).
+
+Menu panel fills are inset within the gold border, while separately positioned transparent ornament paints above them. CSS controls the surface independently of the artwork. Modal screens also dim the scene behind the window, while the HUD leaves the surrounding game undimmed. A sharp text shadow supports label readability.
+
 ![HTML main menu over the landscape](balloon-menu.png)
 
 ![Transparent HTML HUD during flight](balloon-hud.png)
+
+The same artwork keeps its logical size at the minimum supported window size:
+
+![Main menu at 920 by 680](balloon-menu-small.png)
+
+![HUD at 920 by 680](balloon-hud-small.png)
 
 ## Run
 
@@ -12,13 +22,13 @@ From the repository root, with the .NET 10 SDK and an OpenGL 3.3 core driver:
 
 ```powershell
 dotnet build Gui.Shark.sln
-dotnet run --project src/GuiShark.Balloon
+dotnet run --project src/demos/GuiShark.Balloon
 ```
 
 Use `-- --play` to skip the main menu. To load source HTML/CSS instead of the copied output assets:
 
 ```powershell
-dotnet run --project src/GuiShark.Balloon -- --assets src/GuiShark.Balloon/Assets
+dotnet run --project src/demos/GuiShark.Balloon -- --assets src/demos/GuiShark.Balloon/Assets
 ```
 
 The Lato font files are copied from the original playground's licensed assets into this demo's output. No additional downloads or external game assets are required.
@@ -38,11 +48,14 @@ The Lato font files are copied from the original playground's licensed assets in
 Menu and HUD previews can also be exported from the executable without playing:
 
 ```powershell
-dotnet run --project src/GuiShark.Balloon -- --capture artifacts/menu.png
-dotnet run --project src/GuiShark.Balloon -- --play --capture artifacts/hud.png
+dotnet run --project src/demos/GuiShark.Balloon -- --capture artifacts/menu.png
+dotnet run --project src/demos/GuiShark.Balloon -- --play --capture artifacts/hud.png
+dotnet run --project src/demos/GuiShark.Balloon -- --play --size 920x680 --capture artifacts/hud-small.png
 ```
 
 The capture option renders three frames, writes the requested PNG, and exits. It is a screenshot export feature; it does not perform input checks or run a test suite.
+
+`--size WIDTHxHEIGHT` selects an initial logical window size, at least 920 × 680; the default is 1200 × 820. It also works without `--capture`.
 
 ## How the integration works
 
@@ -58,7 +71,13 @@ Mouse presses are offered to GuiShark first. Only an unconsumed press during fli
 
 - `pointer-events: auto/none`, with inherited behavior and descendant overrides.
 - `position: absolute` with pixel/percentage edge anchors, excluded from normal flow.
-- Existing transparent colors, texture blending and GL state restoration are reused unchanged.
+- Transparent `background-image`, centered `background-size` / `object-fit` scaling.
+- `-guishark-object-flip` mirrors `<img>` artwork horizontally, vertically or both without changing layout.
+- Nine-slice frame backgrounds with independently specified source slices and destination border widths.
+- Inset color/gradient backing that stays inside decorative frames without affecting layout.
+- Image tint for illustrated hover/pressed accents; normal opacity also supports disabled controls.
+- A single sharp `text-shadow` for readable labels over the game.
+- Existing premultiplied texture blending and GL state restoration are reused unchanged.
 
 These features are shared SDK functionality. No game behavior or window/input dependency was added to `GuiShark`.
 
@@ -66,4 +85,4 @@ These features are shared SDK functionality. No game behavior or window/input de
 
 The landscape is a seeded finite world, generated locally on startup. This is a stylized exploration demo, with simple steering rather than realistic balloon physics. There is no terrain streaming, tree collision, save system, audio, or shadow map. The shadow is a soft ground-darkening approximation. UI clipping remains rectangular, and the demo imposes a minimum window size to keep the HUD readable.
 
-The project has been built and its actual OpenGL menu/HUD frames inspected on Windows with an Intel UHD Graphics 630 OpenGL 3.3 driver. A user play-through confirmed the controls; the application log recorded terrain steering, all six lantern collections, completion, return to the menu, and pause/resume. Resize and physical DPI behavior have not been verified. No unit or integration tests were added.
+Debug and Release builds pass with zero warnings/errors. Actual OpenGL menu/HUD captures were inspected at 1200 × 820 and 920 × 680 on Windows with an Intel UHD Graphics 630 OpenGL 3.3 driver, including fixed-size mirrored ornament, readable control labels and panel backing. Earlier user play-throughs confirmed the full six-lantern flow and woodland controls. Physical DPI and non-Windows behavior have not been verified. No unit or integration tests were added.

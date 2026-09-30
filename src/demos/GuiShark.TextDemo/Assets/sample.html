@@ -1,0 +1,24 @@
+<!doctype html>
+<html><head><style>
+@font-face { font-family: Lato; src: url('fonts/Lato-Regular.ttf'); font-weight: 400; }
+@font-face { font-family: Lato; src: url('fonts/Lato-Bold.ttf'); font-weight: 700; }
+body { padding: {{padding}}px; font-family: Lato; color: {{color}}; font-weight: {{weight}}; text-shadow: {{shadow}}; gap: 2px; pointer-events: none; }
+#inspect { font-size: {{size}}px; margin: {{offset}}px 0 0 {{offset}}px; }
+.samples { flex-direction: row; gap: 8px; }
+.column { width: 30%; gap: 2px; }
+.tiny { font-size: 10px; }
+.small { font-size: 12px; }
+.normal { font-size: 14px; }
+.medium { font-size: 18px; }
+.large { font-size: 24px; }
+.display { font-size: 36px; }
+.hint { font-size: 12px; color: {{accent}}; display: {{hint-display}}; }
+.specimen { font-size: 14px; height: 32px; padding: 4px 10px; background: {{button-background}}; border: 1px solid #789a86; border-radius: 4px; display: {{button-display}}; }
+</style></head><body>
+<p id="inspect">Illl 1O0 | AV fi</p>
+<div class="samples">
+  {{matrix}}
+</div>
+<p class="hint">“Quiet skies…” — Élan</p>
+<button class="specimen">Resume flight</button>
+</body></html>
