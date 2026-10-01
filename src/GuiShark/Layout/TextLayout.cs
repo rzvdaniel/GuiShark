@@ -4,7 +4,7 @@ namespace GuiShark;
 public static class TextLayout
 {
     public static IReadOnlyList<string> Lines(UiElement element, float width, ITextMetrics metrics) =>
-        element.TextInput != null ? [element.Text] : Wrap(element.Text, width, element.Style, metrics);
+        element.TextInput != null ? element.TextInput.DisplayLines : Wrap(element.Text, width, element.Style, metrics);
 
     public static IReadOnlyList<string> Wrap(string text, float width, UiStyle style, ITextMetrics metrics)
     {

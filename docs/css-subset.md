@@ -4,13 +4,13 @@ AngleSharp parses HTML. GuiShark's bounded CSS parser resolves the supported pro
 
 ## Markup
 
-Supported tags: `body`, `div`, `section`, `main`, `header`, `footer`, `p`, `span`, `h1`, `h2`, `h3`, `button`, `img`, `label`, `input` (checkbox, radio, range), `progress`, `select`, `option`, and `dialog`. See [control behavior and themes](controls.md).
+Supported tags: `body`, `div`, `section`, `main`, `header`, `footer`, `p`, `span`, `h1`, `h2`, `h3`, `button`, `img`, `label`, `input` (text, password, checkbox, radio, range), `textarea`, `progress`, `select`, `option`, and `dialog`. See [control behavior and themes](controls.md).
 
 - `id` identifies elements for C# lookup; duplicate IDs throw an error.
 - `class` and inline `style` supply styling. `disabled` disables buttons and interactive controls.
 - `<link rel="stylesheet" href="styles.css">` and `<style>` load CSS in document order.
 - `<img src="image.png">` draws a transparent image into its content box. Specify dimensions; the natural fallback size is 48 × 48, with container stretch rules still applying. `object-fit` controls scaling.
-- Entities are decoded and whitespace is collapsed. Text is not duplicated into ancestors.
+- Entities are decoded and whitespace is collapsed, except textarea values preserve spaces and line breaks. Text is not duplicated into ancestors.
 - Mixed text and child elements within a node are rejected; wrap text in its own `<span>`.
 - Unknown tags, properties, selectors, values, CSS at-rules other than `@font-face`, and `!important` are rejected rather than silently ignored.
 
@@ -108,3 +108,5 @@ The demo's macOS-inspired buttons use CSS gradients, borders, rounded corners, a
 `dialog` is a centered modal overlay opened with C# `ShowModal()`, rather than the HTML `open` attribute. `role="tooltip"` declares a rich description addressed by one `aria-describedby` ID; `title` supplies plain text. These overlays do not contribute to normal flow. `autofocus` chooses initial modal focus. See [dialogs and tooltips](controls.md#modal-dialogs) for lifecycle and host input rules.
 
 Text inputs support `type="text"` (also the default type), `value`, `placeholder`, `maxlength`, `readonly`, `disabled` and `autofocus`. Fields inherit CSS fonts/colors, use left aligned single-line text, and horizontally scroll to the caret. See [text input integration](controls.md#single-line-text-input).
+
+`textarea` supports initial text contents, `rows`, `maxlength`, `placeholder`, `readonly`, `disabled` and `autofocus`. It uses whitespace-preserving wrapped lines, left aligned text, and vertical scrolling. CSS height overrides rows. See [textareas and edit history](controls.md#textareas-and-edit-history).

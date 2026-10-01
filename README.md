@@ -55,7 +55,7 @@ MSDF atlases can also be generated during build/publish: configure `GUISHARK_MSD
 
 ## Controls Gallery
 
-Try buttons, checkboxes, grouped radio buttons, sliders, labels, progress bars, dropdowns, vertical scrolling, modal dialogs, and tooltips across four HTML-defined tab pages. Compare the optional neutral theme with an emerald CSS skin, inspect disabled/focus states, and watch C# value-change events in the live log.
+Try buttons, checkboxes, grouped radio buttons, sliders, labels, progress bars, dropdowns, vertical scrolling, modal dialogs, and tooltips, text fields, and textareas across five HTML-defined tab pages. Compare the optional neutral theme with an emerald CSS skin, inspect disabled/focus states, and watch C# value-change events in the live log.
 
 ```powershell
 dotnet run --project src/demos/GuiShark.ControlsDemo
@@ -92,3 +92,5 @@ This is an intentionally small retained UI engine. It has no text editing, full 
 Code and project artwork use the repository's MIT license. Woodland asset provenance and generation prompts are in [artwork notes](docs/woodland-artwork.md). Bundled Lato fonts use the SIL Open Font License; see [third-party notices](THIRD-PARTY-NOTICES.md).
 
 Controls Gallery also includes inventory search and a character-name dialog using portable single-line text editing. Use `--page=inventory --modal=name` to open it, and `--text=skia|freetype|msdf` to choose the whole-view text backend. See [text input and host integration](docs/controls.md#single-line-text-input).
+
+The **Journal & chat** gallery tab demonstrates wrapped textareas, multiline selection, scrolling, and undo/redo for both textareas and single-line fields. Run with `--page=journal`; [editor API and shortcuts](docs/controls.md#textareas-and-edit-history).

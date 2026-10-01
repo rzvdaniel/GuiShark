@@ -6,12 +6,15 @@ internal sealed class GalleryController
     private readonly UiDocument document;
     private readonly Queue<string> events = new();
     private int clicks;
+    private readonly JournalController journal;
     public InventoryController Inventory { get; }
     public GalleryController(UiView view)
     {
         document = view.Document;
         Inventory = new(view, Log);
         _ = new TextEntryController(view, Log);
+        _ = new PasswordController(view, Log);
+        journal = new(view, Log);
         foreach (var element in document.Root.DescendantsAndSelf())
         {
             if (element.Control is { } control)
@@ -46,7 +49,11 @@ internal sealed class GalleryController
         Refresh();
         Log("Gallery ready. Try a control or Tab to explore.");
     }
-    public void Update(UiElement? focused) => document.GetElement("focus").Text = $"Keyboard focus: {focused?.Id ?? "none"}";
+    public void Update(UiElement? focused)
+    {
+        document.GetElement("focus").Text = $"Keyboard focus: {focused?.Id ?? "none"}";
+        journal.Update();
+    }
     private void Changed(UiElement element)
     {
         var control = element.Control!;

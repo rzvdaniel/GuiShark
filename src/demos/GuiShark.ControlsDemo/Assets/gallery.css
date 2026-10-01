@@ -22,7 +22,7 @@ footer.card { padding: 14px; gap: 8px; height: 118px; }
 footer .muted { font-size: 11px; }
 
 .tab-strip { flex-direction: row; gap: 12px; }
-.tab-strip button { width: 240px; }
+.tab-strip button { width: 196px; padding: 10px 12px; font-size: 14px; }
 .tab-strip button:selected { background: #315e83; border-color: #93c5fd; }
 #pages { height: 484px; }
 .page-scroll { height: 100%; overflow-y: auto; }
@@ -64,3 +64,14 @@ dialog button { width: 210px; }
 
 #inventory-search, #character-name, #profile-id { height: 40px; }
 #page-inventory .settings-card { gap: 10px; }
+
+.journal-card { padding: 18px; gap: 10px; }
+#journal-notes { height: 240px; font-size: 15px; background: #122d2a; border-color: #678f78; }
+#chat-history { height: 158px; font-size: 14px; background: #102233; }
+#chat-compose { height: 84px; font-size: 14px; }
+.journal-actions button { padding: 8px 14px; font-size: 13px; }
+#journal-notes:focus, #chat-compose:focus { border-color: #acd9c1; }
+
+#lobby-password { height: 42px; font-size: 18px; }
+
+#inline-password { height: 42px; font-size: 18px; }
