@@ -38,4 +38,3 @@ Linux/macOS package contents were inspected, but their native applications were 
 ## Windows interaction follow-up
 
 Native gallery mouse checks confirmed preview, conversion, commit, cancellation and cancellation on focus change. The user confirmed physical Ctrl+Z and Tab behavior. See [Windows IME checks](windows-ime-checks.md) for the evidence and remaining native IME checklist. The event log now separates records with visible slashes instead of unsupported newline glyphs.
-

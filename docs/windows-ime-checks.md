@@ -38,4 +38,3 @@ Enable/select Japanese input using your Windows language controls, then switch t
 7. In the gallery's password dialog, composing text must remain masked. Do not use a real password; copy/cut must remain disabled.
 
 Record the OS version, IME mode and display scale with results. Mark unsupported or untested behavior explicitly. No Windows language settings or optional language features were changed by the automated check.
-
