@@ -23,8 +23,13 @@ internal sealed record GalleryOptions(bool Capture, string Page, string? Dropdow
             else if (!arg.StartsWith("--", StringComparison.Ordinal) && assets == null) assets = arg;
             else throw new ArgumentException($"Unknown gallery argument: {arg}");
         }
+        Validate(page, backend);
+        return new(capture, page, dropdown, scrolled, assets, modal, tooltip, backend, selectNotes);
+    }
+
+    private static void Validate(string page, string backend)
+    {
         if (page is not ("basics" or "settings" or "lists" or "inventory" or "journal")) throw new ArgumentException("Page must be basics, settings, lists, inventory or journal.");
         if (backend is not ("skia" or "freetype" or "msdf")) throw new ArgumentException("Text backend must be skia, freetype or msdf.");
-        return new(capture, page, dropdown, scrolled, assets, modal, tooltip, backend, selectNotes);
     }
 }

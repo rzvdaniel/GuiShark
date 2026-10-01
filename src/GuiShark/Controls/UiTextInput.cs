@@ -97,43 +97,83 @@ public sealed class UiTextInput
     internal bool Key(UiKey key, bool shift, bool command, IUiClipboard? clipboard, ITextMetrics metrics, bool wordNavigation)
     {
         wordNavigation &= !IsPassword;
-        if (command)
+        if (command && HandleCommand(key, shift, clipboard)) return true;
+        if (HandleNavigation(key, shift, command, wordNavigation, metrics)) return true;
+        if (key == UiKey.Backspace) DeleteBackward();
+        if (key == UiKey.Delete) DeleteForward();
+        if (key == UiKey.Enter)
         {
-            switch (key)
-            {
-                case UiKey.Z: if (shift) Redo(); else Undo(); return true;
-                case UiKey.Y: Redo(); return true;
-                case UiKey.A: SelectAll(); return true;
-                case UiKey.C: if (!IsPassword && SelectionLength > 0 && clipboard != null) clipboard.SetText(SelectedText); return true;
-                case UiKey.X:
-                    if (!IsPassword && !ReadOnly && SelectionLength > 0 && clipboard != null) { clipboard.SetText(SelectedText); DeleteSelection(); }
-                    return true;
-                case UiKey.V: if (!ReadOnly && clipboard != null) Insert(clipboard.GetText() ?? ""); return true;
-            }
-        }
-        switch (key)
-        {
-            case UiKey.Left: Move(!shift && SelectionLength > 0 ? SelectionStart : wordNavigation ? new TextWordBoundaries(value).Previous(caret) : Previous(caret), shift); break;
-            case UiKey.Right: Move(!shift && SelectionLength > 0 ? SelectionStart + SelectionLength : wordNavigation ? new TextWordBoundaries(value).Next(caret) : Next(caret), shift); break;
-            case UiKey.Home: Move(IsMultiline && !command ? geometry.LineAt(caret).Start : 0, shift); break;
-            case UiKey.End:
-                var line = geometry.LineAt(caret);
-                var end = IsMultiline && !command ? line.End : value.Length;
-                Move(end, shift, IsMultiline && !command && end < value.Length && value[end] != '\n'); break;
-            case UiKey.Up: MoveVertical(-1, shift, metrics); break;
-            case UiKey.Down: MoveVertical(1, shift, metrics); break;
-            case UiKey.PageUp: MoveVertical(-Math.Max(1, (int)(owner.ContentBounds.Height / owner.Style.LineHeight)), shift, metrics); break;
-            case UiKey.PageDown: MoveVertical(Math.Max(1, (int)(owner.ContentBounds.Height / owner.Style.LineHeight)), shift, metrics); break;
-            case UiKey.Backspace:
-                if (!ReadOnly && !DeleteSelection() && caret > 0) Replace(Previous(caret), caret - Previous(caret), "");
-                break;
-            case UiKey.Delete:
-                if (!ReadOnly && !DeleteSelection() && caret < value.Length) Replace(caret, Next(caret) - caret, "");
-                break;
-            case UiKey.Enter: if (IsMultiline && !command) Insert("\n"); else Submitted?.Invoke(this); break;
+            if (IsMultiline && !command) Insert("\n");
+            else Submitted?.Invoke(this);
         }
         // Space and character keys arrive separately through TextInput, never activate the control.
         return true;
+    }
+    private bool HandleCommand(UiKey key, bool shift, IUiClipboard? clipboard)
+    {
+        switch (key)
+        {
+            case UiKey.Z: if (shift) Redo(); else Undo(); return true;
+            case UiKey.Y: Redo(); return true;
+            case UiKey.A: SelectAll(); return true;
+            case UiKey.C: CopySelection(clipboard); return true;
+            case UiKey.X: CutSelection(clipboard); return true;
+            case UiKey.V: if (!ReadOnly && clipboard != null) Insert(clipboard.GetText() ?? ""); return true;
+            default: return false;
+        }
+    }
+    private void CopySelection(IUiClipboard? clipboard)
+    {
+        if (!IsPassword && SelectionLength > 0 && clipboard != null) clipboard.SetText(SelectedText);
+    }
+    private void CutSelection(IUiClipboard? clipboard)
+    {
+        if (IsPassword || ReadOnly || SelectionLength == 0 || clipboard == null) return;
+        clipboard.SetText(SelectedText);
+        DeleteSelection();
+    }
+    private bool HandleNavigation(UiKey key, bool shift, bool command, bool words, ITextMetrics metrics)
+    {
+        var page = Math.Max(1, (int)(owner.ContentBounds.Height / owner.Style.LineHeight));
+        switch (key)
+        {
+            case UiKey.Left: MoveHorizontal(false, shift, words); break;
+            case UiKey.Right: MoveHorizontal(true, shift, words); break;
+            case UiKey.Home: Move(IsMultiline && !command ? geometry.LineAt(caret).Start : 0, shift); break;
+            case UiKey.End: MoveToEnd(shift, command); break;
+            case UiKey.Up: MoveVertical(-1, shift, metrics); break;
+            case UiKey.Down: MoveVertical(1, shift, metrics); break;
+            case UiKey.PageUp: MoveVertical(-page, shift, metrics); break;
+            case UiKey.PageDown: MoveVertical(page, shift, metrics); break;
+            default: return false;
+        }
+        return true;
+    }
+    private void MoveHorizontal(bool right, bool shift, bool words)
+    {
+        if (!shift && SelectionLength > 0) { Move(right ? SelectionStart + SelectionLength : SelectionStart, false); return; }
+        var position = right ? Next(caret) : Previous(caret);
+        if (words)
+        {
+            var boundaries = new TextWordBoundaries(value);
+            position = right ? boundaries.Next(caret) : boundaries.Previous(caret);
+        }
+        Move(position, shift);
+    }
+    private void MoveToEnd(bool shift, bool command)
+    {
+        var end = IsMultiline && !command ? geometry.LineAt(caret).End : value.Length;
+        Move(end, shift, IsMultiline && !command && end < value.Length && value[end] != '\n');
+    }
+    private void DeleteBackward()
+    {
+        if (ReadOnly || DeleteSelection() || caret == 0) return;
+        Replace(Previous(caret), caret - Previous(caret), "");
+    }
+    private void DeleteForward()
+    {
+        if (ReadOnly || DeleteSelection() || caret >= value.Length) return;
+        Replace(caret, Next(caret) - caret, "");
     }
     internal void MovePointer(float x, float y, ITextMetrics metrics, bool extend)
     {

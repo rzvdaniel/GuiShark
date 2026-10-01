@@ -1,0 +1,24 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build complete solution (Debug)
+        run: dotnet build Gui.Shark.sln -c Debug --no-incremental -v minimal
+      - name: Build complete solution (Release)
+        run: dotnet build Gui.Shark.sln -c Release --no-incremental -v minimal

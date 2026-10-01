@@ -82,11 +82,7 @@ internal sealed class TextLabWindow : GameWindow
         elapsed += args.Time; statisticsTime += args.Time;
         var time = launch.Capture == null ? (float)elapsed : 1;
         foreach (var pane in panes) pane.Render(painter, settings, time);
-        if (statisticsTime > .25 || frames == 0)
-        {
-            foreach (var pane in panes) chrome!.Statistics(pane);
-            statisticsTime = 0;
-        }
+        RefreshStatistics();
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
         painter.Background(FramebufferSize.X, FramebufferSize.Y, 0, time);
         chrome!.Render(FramebufferSize.X, FramebufferSize.Y);
@@ -105,6 +101,15 @@ internal sealed class TextLabWindow : GameWindow
             if (launch.Capture != null) Close();
         }
         frames++; SwapBuffers();
+    }
+
+    private void RefreshStatistics()
+    {
+        if (statisticsTime > .25 || frames == 0)
+        {
+            foreach (var pane in panes) chrome!.Statistics(pane);
+            statisticsTime = 0;
+        }
     }
 
     protected override void OnResize(ResizeEventArgs args) { base.OnResize(args); rebuild = true; }

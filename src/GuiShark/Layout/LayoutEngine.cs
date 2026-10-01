@@ -92,19 +92,23 @@ internal sealed class LayoutEngine(ITextMetrics text)
         for (var i = 0; i < children.Length; i++)
         {
             var child = children[i];
-            var margin = child.Style.Margin;
-            var size = sizes[i];
-            if (row && element.Style.Align == CrossAlignment.Stretch && child.Style.Height.IsAuto)
-                size = size with { Height = Math.Max(0, content.Height - margin.Vertical) };
-            var crossFree = row ? content.Height - size.Height - margin.Vertical : content.Width - size.Width - margin.Horizontal;
-            var cross = element.Style.Align switch { CrossAlignment.Center => crossFree / 2, CrossAlignment.End => crossFree, _ => 0 };
-            var x = row ? cursor + margin.Left : content.X + margin.Left + cross;
-            var y = row ? content.Y + margin.Top + cross : cursor + margin.Top;
-            Arrange(child, new(x, y, size.Width, size.Height), element.Clip.Intersect(content));
-            cursor += (row ? size.Width + margin.Horizontal : size.Height + margin.Vertical) + gap;
+            ArrangeFlowChild(element, child, sizes[i], content, row, cursor);
+            cursor += (row ? sizes[i].Width + child.Style.Margin.Horizontal : sizes[i].Height + child.Style.Margin.Vertical) + gap;
         }
         foreach (var child in element.Children.Where(c => !c.IsOverlay && !c.Style.Hidden && c.Style.Position == ElementPosition.Absolute))
             ArrangeAbsolute(child, content, element.Clip.Intersect(content));
+    }
+
+    private void ArrangeFlowChild(UiElement element, UiElement child, Size size, UiRect content, bool row, float cursor)
+    {
+        var margin = child.Style.Margin;
+        if (row && element.Style.Align == CrossAlignment.Stretch && child.Style.Height.IsAuto)
+            size = size with { Height = Math.Max(0, content.Height - margin.Vertical) };
+        var crossFree = row ? content.Height - size.Height - margin.Vertical : content.Width - size.Width - margin.Horizontal;
+        var cross = element.Style.Align switch { CrossAlignment.Center => crossFree / 2, CrossAlignment.End => crossFree, _ => 0 };
+        var x = row ? cursor + margin.Left : content.X + margin.Left + cross;
+        var y = row ? content.Y + margin.Top + cross : cursor + margin.Top;
+        Arrange(child, new(x, y, size.Width, size.Height), element.Clip.Intersect(content));
     }
 
     private void ArrangeAbsolute(UiElement element, UiRect parent, UiRect clip)

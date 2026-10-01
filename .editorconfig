@@ -1,0 +1,17 @@
+root = true
+
+[*.cs]
+# Metrics thresholds are registered through CodeMetricsConfig.txt.
+dotnet_diagnostic.CA1502.severity = error
+dotnet_diagnostic.CA1506.severity = error
+dotnet_diagnostic.CA1501.severity = warning
+
+# Keep S3776's standard threshold (15).
+dotnet_diagnostic.S3776.severity = error
+dotnet_diagnostic.S1764.severity = error
+dotnet_diagnostic.S2757.severity = error
+dotnet_diagnostic.S4830.severity = error
+dotnet_diagnostic.S5445.severity = error
+dotnet_diagnostic.S4502.severity = error
+dotnet_diagnostic.S2930.severity = error
+dotnet_diagnostic.S2190.severity = error

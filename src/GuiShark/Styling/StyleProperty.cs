@@ -2,52 +2,63 @@ namespace GuiShark;
 
 internal static class StyleProperty
 {
+    private static readonly IReadOnlyDictionary<string, Action<UiStyle, string>> Setters =
+        new Dictionary<string, Action<UiStyle, string>>(StringComparer.Ordinal)
+    {
+        ["width"] = (style, value) => { style.Width = CssLength.Parse(value); },
+        ["height"] = (style, value) => { style.Height = CssLength.Parse(value); },
+        ["max-width"] = (style, value) => { style.MaxWidth = CssLength.Parse(value); },
+        ["position"] = (style, value) => { style.Position = ParseChoice("position", value, ("static", ElementPosition.Flow), ("absolute", ElementPosition.Absolute)); },
+        ["top"] = (style, value) => { style.Top = CssLength.Parse(value); },
+        ["right"] = (style, value) => { style.Right = CssLength.Parse(value); },
+        ["bottom"] = (style, value) => { style.Bottom = CssLength.Parse(value); },
+        ["left"] = (style, value) => { style.Left = CssLength.Parse(value); },
+        ["pointer-events"] = (style, value) => { style.PointerEvents = ParseChoice("pointer-events", value, ("auto", true), ("none", false)); },
+        ["padding"] = (style, value) => { style.Padding = ParseInsets(value); },
+        ["margin"] = (style, value) => { style.Margin = ParseInsets(value); },
+        ["gap"] = (style, value) => { style.Gap = Nonnegative(value); },
+        ["flex-grow"] = (style, value) => { style.Grow = Nonnegative(value); },
+        ["flex-direction"] = (style, value) => { style.Direction = ParseChoice("flex-direction", value, ("row", FlowDirection.Row), ("column", FlowDirection.Column)); },
+        ["align-items"] = (style, value) => { style.Align = ParseChoice("align-items", value, ("stretch", CrossAlignment.Stretch), ("flex-start", CrossAlignment.Start), ("center", CrossAlignment.Center), ("flex-end", CrossAlignment.End)); },
+        ["justify-content"] = (style, value) => { style.Justify = ParseChoice("justify-content", value, ("flex-start", MainAlignment.Start), ("center", MainAlignment.Center), ("flex-end", MainAlignment.End), ("space-between", MainAlignment.SpaceBetween)); },
+        ["text-align"] = (style, value) => { style.TextAlign = ParseChoice("text-align", value, ("left", TextAlignment.Left), ("center", TextAlignment.Center), ("right", TextAlignment.Right)); },
+        ["font-size"] = (style, value) => { style.FontSize = Math.Max(1, Nonnegative(value)); },
+        ["font-family"] = (style, value) => { style.FontFamily = FontFace.ParseFamily(value); },
+        ["font-weight"] = (style, value) => { style.Bold = ParseChoice("font-weight", value, ("bold", true), ("600", true), ("700", true), ("normal", false), ("400", false)); },
+        ["-guishark-accent-color"] = (style, value) => { style.AccentColor = UiColor.Parse(value); },
+        ["color"] = (style, value) => { style.Color = UiColor.Parse(value); },
+        ["text-shadow"] = (style, value) => { style.TextShadow = ParseShadow(value); },
+        ["background"] = (style, value) => { style.BackgroundImage = null; SetBackground(style, value); },
+        ["background-color"] = (style, value) => { SetBackground(style, value); },
+        ["background-image"] = (style, value) => { style.BackgroundImage = ParseImage(value); },
+        ["background-size"] = (style, value) => { style.BackgroundSize = ParseFit(value); },
+        ["object-fit"] = (style, value) => { style.ObjectFit = ParseFit(value); },
+        ["-guishark-object-flip"] = (style, value) => { style.ObjectFlip = ParseFlip(value); },
+        ["-guishark-image-tint"] = (style, value) => { style.ImageTint = UiColor.Parse(value); },
+        ["-guishark-background-slice"] = (style, value) => { style.BackgroundSlice = ParseInsets(value); },
+        ["-guishark-background-slice-width"] = (style, value) => { style.BackgroundSliceWidth = ParseInsets(value); },
+        ["-guishark-background-inset"] = (style, value) => { style.BackgroundInset = ParseInsets(value); },
+        ["border-radius"] = (style, value) => { style.Radius = Nonnegative(value); },
+        ["border"] = (style, value) => { SetBorder(style, value); },
+        ["border-color"] = (style, value) => { style.BorderColor = UiColor.Parse(value); },
+        ["opacity"] = (style, value) => { style.Opacity = Math.Clamp(CssLength.Pixels(value), 0, 1); },
+        ["overflow-y"] = (style, value) => { style.ScrollY = ParseChoice("overflow-y", value, ("auto", true), ("scroll", true), ("hidden", false)); },
+        ["display"] = (style, value) => { style.Hidden = ParseChoice("display", value, ("none", true), ("flex", false), ("block", false)); },
+        ["box-sizing"] = (style, value) => { if (value != "border-box") throw Invalid("box-sizing", value); },
+    };
+
     public static void Apply(UiStyle style, string name, string value)
     {
-        switch (name)
-        {
-            case "width": style.Width = CssLength.Parse(value); break;
-            case "height": style.Height = CssLength.Parse(value); break;
-            case "max-width": style.MaxWidth = CssLength.Parse(value); break;
-            case "position": style.Position = value switch { "static" => ElementPosition.Flow, "absolute" => ElementPosition.Absolute, _ => throw Invalid(name, value) }; break;
-            case "top": style.Top = CssLength.Parse(value); break;
-            case "right": style.Right = CssLength.Parse(value); break;
-            case "bottom": style.Bottom = CssLength.Parse(value); break;
-            case "left": style.Left = CssLength.Parse(value); break;
-            case "pointer-events": style.PointerEvents = value switch { "auto" => true, "none" => false, _ => throw Invalid(name, value) }; break;
-            case "padding": style.Padding = ParseInsets(value); break;
-            case "margin": style.Margin = ParseInsets(value); break;
-            case "gap": style.Gap = Nonnegative(value); break;
-            case "flex-grow": style.Grow = Nonnegative(value); break;
-            case "flex-direction": style.Direction = value switch { "row" => FlowDirection.Row, "column" => FlowDirection.Column, _ => throw Invalid(name, value) }; break;
-            case "align-items": style.Align = value switch { "stretch" => CrossAlignment.Stretch, "flex-start" => CrossAlignment.Start, "center" => CrossAlignment.Center, "flex-end" => CrossAlignment.End, _ => throw Invalid(name, value) }; break;
-            case "justify-content": style.Justify = value switch { "flex-start" => MainAlignment.Start, "center" => MainAlignment.Center, "flex-end" => MainAlignment.End, "space-between" => MainAlignment.SpaceBetween, _ => throw Invalid(name, value) }; break;
-            case "text-align": style.TextAlign = value switch { "left" => TextAlignment.Left, "center" => TextAlignment.Center, "right" => TextAlignment.Right, _ => throw Invalid(name, value) }; break;
-            case "font-size": style.FontSize = Math.Max(1, Nonnegative(value)); break;
-            case "font-family": style.FontFamily = FontFace.ParseFamily(value); break;
-            case "font-weight": style.Bold = value switch { "bold" or "600" or "700" => true, "normal" or "400" => false, _ => throw Invalid(name, value) }; break;
-            case "-guishark-accent-color": style.AccentColor = UiColor.Parse(value); break;
-            case "color": style.Color = UiColor.Parse(value); break;
-            case "text-shadow": style.TextShadow = ParseShadow(value); break;
-            case "background": style.BackgroundImage = null; SetBackground(style, value); break;
-            case "background-color": SetBackground(style, value); break;
-            case "background-image": style.BackgroundImage = ParseImage(value); break;
-            case "background-size": style.BackgroundSize = ParseFit(value); break;
-            case "object-fit": style.ObjectFit = ParseFit(value); break;
-            case "-guishark-object-flip": style.ObjectFlip = ParseFlip(value); break;
-            case "-guishark-image-tint": style.ImageTint = UiColor.Parse(value); break;
-            case "-guishark-background-slice": style.BackgroundSlice = ParseInsets(value); break;
-            case "-guishark-background-slice-width": style.BackgroundSliceWidth = ParseInsets(value); break;
-            case "-guishark-background-inset": style.BackgroundInset = ParseInsets(value); break;
-            case "border-radius": style.Radius = Nonnegative(value); break;
-            case "border": SetBorder(style, value); break;
-            case "border-color": style.BorderColor = UiColor.Parse(value); break;
-            case "opacity": style.Opacity = Math.Clamp(CssLength.Pixels(value), 0, 1); break;
-            case "overflow-y": style.ScrollY = value switch { "auto" or "scroll" => true, "hidden" => false, _ => throw Invalid(name, value) }; break;
-            case "display": style.Hidden = value switch { "none" => true, "flex" or "block" => false, _ => throw Invalid(name, value) }; break;
-            case "box-sizing": if (value != "border-box") throw Invalid(name, value); break;
-            default: throw new FormatException($"Unsupported CSS property '{name}'. See docs/css-subset.md.");
-        }
+        if (!Setters.TryGetValue(name, out var setter))
+            throw new FormatException($"Unsupported CSS property '{name}'. See docs/css-subset.md.");
+        setter(style, value);
+    }
+
+    private static T ParseChoice<T>(string name, string value, params (string Name, T Value)[] choices)
+    {
+        foreach (var choice in choices)
+            if (choice.Name == value) return choice.Value;
+        throw Invalid(name, value);
     }
 
     private static ImageFit ParseFit(string value) => value switch
