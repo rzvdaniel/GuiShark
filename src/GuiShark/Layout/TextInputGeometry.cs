@@ -59,32 +59,41 @@ internal sealed class TextInputGeometry(UiElement owner, UiTextInput input)
         var row = Row(input.Caret);
         var x = CaretX(input.Caret, metrics);
         var height = owner.Style.LineHeight;
-        if (input.IsMultiline)
-        {
-            horizontal = 0;
-            owner.Scroll.Arrange(DisplayLines.Count * height);
-            if (reveal)
-            {
-                if (row * height < owner.Scroll.Offset) owner.Scroll.Offset = row * height;
-                if ((row + 1) * height > owner.Scroll.Offset + content.Height) owner.Scroll.Offset = (row + 1) * height - content.Height;
-            }
-            owner.Scroll.Arrange(DisplayLines.Count * height);
-            TextBounds = content with { Y = content.Y - owner.Scroll.Offset };
-        }
-        else
-        {
-            var width = metrics.MeasureWidth(owner.Text, owner.Style.FontSize, owner.Style.Bold, owner.Style.FontFamily);
-            if (reveal)
-            {
-                if (x < horizontal) horizontal = x;
-                if (x > horizontal + Math.Max(0, content.Width - 2)) horizontal = x - Math.Max(0, content.Width - 2);
-            }
-            horizontal = Math.Clamp(horizontal, 0, Math.Max(0, width + 2 - content.Width));
-            TextBounds = content with { X = content.X - horizontal, Width = Math.Max(content.Width, width + 2) };
-        }
+        ArrangeViewport(content, row, x, height, reveal, metrics);
         CaretBounds = new(content.X + x - horizontal, TextBounds.Y + row * height, 1, Math.Min(height, content.Height));
         SelectionRects = Selection(metrics, height);
     }
+    private void ArrangeViewport(UiRect content, int row, float x, float height, bool reveal, ITextMetrics metrics)
+    {
+        if (input.IsMultiline) ArrangeVerticalViewport(content, row, height, reveal);
+        else ArrangeHorizontalViewport(content, x, reveal, metrics);
+    }
+
+    private void ArrangeVerticalViewport(UiRect content, int row, float height, bool reveal)
+    {
+        horizontal = 0;
+        owner.Scroll.Arrange(DisplayLines.Count * height);
+        if (reveal)
+        {
+            if (row * height < owner.Scroll.Offset) owner.Scroll.Offset = row * height;
+            if ((row + 1) * height > owner.Scroll.Offset + content.Height) owner.Scroll.Offset = (row + 1) * height - content.Height;
+        }
+        owner.Scroll.Arrange(DisplayLines.Count * height);
+        TextBounds = content with { Y = content.Y - owner.Scroll.Offset };
+    }
+
+    private void ArrangeHorizontalViewport(UiRect content, float x, bool reveal, ITextMetrics metrics)
+    {
+        var width = metrics.MeasureWidth(owner.Text, owner.Style.FontSize, owner.Style.Bold, owner.Style.FontFamily);
+        if (reveal)
+        {
+            if (x < horizontal) horizontal = x;
+            if (x > horizontal + Math.Max(0, content.Width - 2)) horizontal = x - Math.Max(0, content.Width - 2);
+        }
+        horizontal = Math.Clamp(horizontal, 0, Math.Max(0, width + 2 - content.Width));
+        TextBounds = content with { X = content.X - horizontal, Width = Math.Max(content.Width, width + 2) };
+    }
+
     private IReadOnlyList<UiRect> Selection(ITextMetrics metrics, float height)
     {
         if (input.SelectionLength == 0) return [];

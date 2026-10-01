@@ -52,20 +52,53 @@ public sealed class UiStyle
     public CssLength Left { get; internal set; } = CssLength.Auto;
     public float LineHeight => FontSize * 1.45f;
 
-    internal static UiStyle Default(UiElement element, UiStyle? parent) => new()
+    internal static UiStyle Default(UiElement element, UiStyle? parent)
     {
-        FontSize = parent?.FontSize ?? 14,
-        FontFamily = parent?.FontFamily ?? "",
-        Color = parent?.Color ?? new(.12f, .15f, .2f),
-        TextShadow = parent?.TextShadow,
-        Bold = parent?.Bold ?? false,
-        PointerEvents = element.Role == "tooltip" ? false : parent?.PointerEvents ?? true,
-        ScrollY = element.Dialog != null || element.TextInput?.IsMultiline == true,
-        MaxWidth = element.IsOverlay ? CssLength.Parse("90%") : CssLength.Auto,
-        Gap = element.IsOverlay ? 12 : 0,
-        TextAlign = element.TextInput != null ? TextAlignment.Left : element.Role == "tooltip" ? TextAlignment.Left : element.IsButton ? TextAlignment.Center : parent?.TextAlign ?? TextAlignment.Left,
-        Padding = element.TextInput != null ? new(8, 12, 8, 12) : element.Select != null ? new(8, 30, 8, 12) : element.IsButton || element.Tag == "option" ? new(10, 18, 10, 18) : element.IsOverlay ? Insets.All(20) : default,
-        Width = element.Control?.Kind is UiControlKind.Checkbox or UiControlKind.Radio ? CssLength.Parse("24px") : element.Dialog != null ? CssLength.Parse("480px") : element.Role == "tooltip" ? CssLength.Parse("280px") : CssLength.Auto,
-        Height = element.Control != null ? CssLength.Parse(element.Control.Kind == UiControlKind.Progress ? "18px" : "24px") : CssLength.Auto
-    };
+        var style = new UiStyle
+        {
+            FontSize = parent?.FontSize ?? 14,
+            FontFamily = parent?.FontFamily ?? "",
+            Color = parent?.Color ?? new(.12f, .15f, .2f),
+            TextShadow = parent?.TextShadow,
+            Bold = parent?.Bold ?? false,
+            PointerEvents = parent?.PointerEvents ?? true,
+            TextAlign = parent?.TextAlign ?? TextAlignment.Left
+        };
+        ApplyElementDefaults(element, style);
+        return style;
+    }
+
+    private static void ApplyElementDefaults(UiElement element, UiStyle style)
+    {
+        if (element.IsOverlay)
+        {
+            style.MaxWidth = CssLength.Parse("90%");
+            style.Gap = 12;
+            style.Padding = Insets.All(20);
+        }
+        if (element.Role == "tooltip")
+        {
+            style.PointerEvents = false;
+            style.TextAlign = TextAlignment.Left;
+            style.Width = CssLength.Parse("280px");
+        }
+        if (element.Dialog != null) { style.ScrollY = true; style.Width = CssLength.Parse("480px"); }
+        ApplyControlDefaults(element, style);
+    }
+
+    private static void ApplyControlDefaults(UiElement element, UiStyle style)
+    {
+        if (element.IsButton && element.Role != "tooltip") style.TextAlign = TextAlignment.Center;
+        if (element.IsButton || element.Tag == "option") style.Padding = new(10, 18, 10, 18);
+        if (element.Select != null) style.Padding = new(8, 30, 8, 12);
+        if (element.TextInput != null)
+        {
+            style.TextAlign = TextAlignment.Left;
+            style.Padding = new(8, 12, 8, 12);
+            style.ScrollY |= element.TextInput.IsMultiline;
+        }
+        if (element.Control == null) return;
+        if (element.Control.Kind is UiControlKind.Checkbox or UiControlKind.Radio) style.Width = CssLength.Parse("24px");
+        style.Height = CssLength.Parse(element.Control.Kind == UiControlKind.Progress ? "18px" : "24px");
+    }
 }

@@ -81,6 +81,14 @@ public sealed class OpenGlUiRenderer : IDisposable
         painter.Clip(element.Clip);
         painter.Shape(element.Bounds, element.Style, opacity);
         PaintBackground(element, opacity);
+        PaintContent(element, opacity, scaleX, scaleY);
+        if (element.Select == null)
+            foreach (var child in element.Children) Paint(child, opacity, scaleX, scaleY);
+        PaintChrome(element, opacity);
+    }
+
+    private void PaintContent(UiElement element, float opacity, float scaleX, float scaleY)
+    {
         var content = element.ContentBounds;
         painter.Clip(element.Clip.Intersect(content));
         controls.Draw(element, opacity);
@@ -94,8 +102,10 @@ public sealed class OpenGlUiRenderer : IDisposable
             backend.Draw(new(element, opacity, scaleX, scaleY), text);
         if (element.IsFocused && element.TextInput is { } input && Environment.TickCount64 % 1000 < 600)
             painter.Solid(input.CaretBounds with { X = MathF.Round(input.CaretBounds.X * scaleX) / scaleX, Width = 1 / scaleX }, element.Style.Color, opacity);
-        if (element.Select == null)
-            foreach (var child in element.Children) Paint(child, opacity, scaleX, scaleY);
+    }
+
+    private void PaintChrome(UiElement element, float opacity)
+    {
         if (element.Style.ScrollY && element.Scroll.Maximum > 0)
         {
             painter.Clip(element.Clip);

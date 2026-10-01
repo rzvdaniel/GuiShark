@@ -10,11 +10,11 @@ internal sealed class CssSelector
     public CssSelector(string selector)
     {
         parts = selector.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length == 0 || parts.Any(p => !Regex.IsMatch(p, @"^(\*|[a-z][\w-]*)?([.#:][\w-]+)*$")))
+        if (parts.Length == 0 || parts.Any(p => !Regex.IsMatch(p, @"^(\*|[a-z][\w-]*)?([.#:][\w-]+)*$", RegexOptions.None, ParserLimits.RegexTimeout)))
             throw new FormatException($"Unsupported selector: {selector}");
         foreach (var part in parts)
         {
-            foreach (Match token in Regex.Matches(part, @"[.#:][\w-]+|^[a-z][\w-]*"))
+            foreach (Match token in Regex.Matches(part, @"[.#:][\w-]+|^[a-z][\w-]*", RegexOptions.None, ParserLimits.RegexTimeout))
             {
                 if (token.Value[0] == ':' && token.Value is not (":hover" or ":active" or ":focus" or ":disabled" or ":checked" or ":selected"))
                     throw new FormatException($"Unsupported pseudo-class: {token.Value}");
@@ -42,7 +42,7 @@ internal sealed class CssSelector
 
     private static bool MatchCompound(UiElement element, string part)
     {
-        foreach (Match token in Regex.Matches(part, @"[.#:][\w-]+|^[a-z][\w-]*"))
+        foreach (Match token in Regex.Matches(part, @"[.#:][\w-]+|^[a-z][\w-]*", RegexOptions.None, ParserLimits.RegexTimeout))
         {
             var value = token.Value;
             var matches = value[0] switch
