@@ -8,5 +8,10 @@
   <ItemGroup>
     <PackageReference Include="xunit.v3" Version="4.0.1" PrivateAssets="all" />
     <ProjectReference Include="../../GuiShark/GuiShark.csproj" />
+    <ProjectReference Include="../../GuiShark.OpenGL/GuiShark.OpenGL.csproj" />
+    <Content Include="../../demos/GuiShark.Demo/Assets/fonts/Lato-Regular.ttf" Link="fonts/Lato-Regular.ttf" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../demos/GuiShark.Demo/Assets/fonts/Lato-Bold.ttf" Link="fonts/Lato-Bold.ttf" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../demos/GuiShark.Demo/Assets/fonts/OFL.txt" Link="fonts/OFL.txt" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../demos/SharedAssets/fonts/*" Link="fonts/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

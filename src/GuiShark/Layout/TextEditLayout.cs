@@ -43,10 +43,4 @@ internal sealed class TextEditLayout
         for (var i = Lines.Count - 1; i >= 0; i--) if (position >= Lines[i].Start) return i;
         return 0;
     }
-    public int Nearest(int row, float x, Func<string, float> measure)
-    {
-        var line = Lines[Math.Clamp(row, 0, Lines.Count - 1)];
-        return line.Start + StringInfo.ParseCombiningCharacters(line.Text).Append(line.Text.Length)
-            .MinBy(i => Math.Abs(measure(line.Text[..i]) - x));
-    }
 }

@@ -74,6 +74,8 @@ Next stop: the hidden clearing beyond the birch grove.</textarea><p id="journal-
 </div></section>
 <section id="page-multilingual" role="tabpanel" class="page-scroll"><div class="columns">
 <section class="card language-card"><h2>Write across languages</h2><p class="muted">Use your OS input method, or try the composition exercise below. Preedit is underlined; only committed text changes Value.</p>
+<label for="fallback-text">One field / automatic local font fallback</label><input id="fallback-text" class="font-stack" value="Hello / 東京 / नमस्ते">
+<p class="muted">Lato stays the primary font. Japanese and Devanagari use the bundled Noto fonts. Select, edit or paste mixed text here.</p>
 <label for="multilingual-text">Japanese / native IME</label><input id="multilingual-text" class="japanese" placeholder="ここに入力してください">
 <label for="multilingual-notes">CJK notes / wrap, select and copy</label><textarea id="multilingual-notes" class="japanese">緑の丘を越えて、灯りを探します。
 東京の空へ。こんにちは、世界！</textarea>
@@ -83,8 +85,12 @@ Next stop: the hidden clearing beyond the birch grove.</textarea><p id="journal-
 <div class="row"><button id="preedit-start">Preview kana</button><button id="preedit-convert">Convert</button></div>
 <div class="row"><button id="preedit-commit">Commit Tokyo</button><button id="preedit-cancel">Cancel</button></div>
 <p class="eyebrow">EVENTS / NO PREEDIT IN UNDO HISTORY</p><p id="composition-events">Ready.</p>
+<label for="ligature-text">Ligatures / click between the letters</label><input id="ligature-text" value="office affine efficient">
+<div class="row"><button id="ligature-select">Select middle f</button><button id="ligature-reset">Reset sample</button></div>
+<label for="combining-text">Combining marks / one caret step per character</label><input id="combining-text" value="Cafe&#769; / nai&#776;ve / A&#778;ngstro&#776;m">
+<p class="muted">Try mouse selection, Shift + arrows, Backspace and undo. Ligatures have evenly spaced caret stops; accents stay with their base character.</p>
 <p class="eyebrow">SHAPED ARABIC / LABEL PREVIEW</p><p class="arabic">مرحباً بالعالم</p>
-<p class="muted">HarfBuzz joins glyphs in a single script run. Full bidirectional paragraph layout, RTL editing and font fallback are not implemented yet. Explore their limits in Text Lab.</p>
+<p class="muted">Caret coordinates follow the shaped font runs. Local font fallback is automatic; full bidirectional layout, RTL navigation and color emoji remain future work.</p>
 </section></div></section>
 </main>
 <footer class="card"><p class="eyebrow">LIVE EVENT LOG</p><p id="events">Ready</p><p class="muted">Tab / Shift+Tab: focus | Space / Enter: activate | Arrows: adjust / switch tabs | Wheel: scroll | F5: reload | F12: capture</p><button id="tooltip-edge" class="tooltip-probe" title="Tooltips stay inside the UI view, even beside its bottom and right edges. They do not take mouse focus. Open a dialog to block the interface beneath it.">?</button></footer>

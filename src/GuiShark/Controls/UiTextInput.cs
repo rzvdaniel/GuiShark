@@ -131,11 +131,11 @@ public sealed class UiTextInput
         var start = SelectionStart;
         Replace(start, SelectionLength, insert);
     }
-    internal bool Key(UiKey key, bool shift, bool command, IUiClipboard? clipboard, ITextMetrics metrics, bool wordNavigation)
+    internal bool Key(UiKey key, bool shift, bool command, IUiClipboard? clipboard, bool wordNavigation)
     {
         wordNavigation &= !IsPassword;
         if (command && HandleCommand(key, shift, clipboard)) return true;
-        if (HandleNavigation(key, shift, command, wordNavigation, metrics)) return true;
+        if (HandleNavigation(key, shift, command, wordNavigation)) return true;
         if (key == UiKey.Backspace) DeleteBackward();
         if (key == UiKey.Delete) DeleteForward();
         if (key == UiKey.Enter)
@@ -169,7 +169,7 @@ public sealed class UiTextInput
         clipboard.SetText(SelectedText);
         DeleteSelection();
     }
-    private bool HandleNavigation(UiKey key, bool shift, bool command, bool words, ITextMetrics metrics)
+    private bool HandleNavigation(UiKey key, bool shift, bool command, bool words)
     {
         var page = Math.Max(1, (int)(owner.ContentBounds.Height / owner.Style.LineHeight));
         switch (key)
@@ -178,10 +178,10 @@ public sealed class UiTextInput
             case UiKey.Right: MoveHorizontal(true, shift, words); break;
             case UiKey.Home: Move(IsMultiline && !command ? geometry.LineAt(caret).Start : 0, shift); break;
             case UiKey.End: MoveToEnd(shift, command); break;
-            case UiKey.Up: MoveVertical(-1, shift, metrics); break;
-            case UiKey.Down: MoveVertical(1, shift, metrics); break;
-            case UiKey.PageUp: MoveVertical(-page, shift, metrics); break;
-            case UiKey.PageDown: MoveVertical(page, shift, metrics); break;
+            case UiKey.Up: MoveVertical(-1, shift); break;
+            case UiKey.Down: MoveVertical(1, shift); break;
+            case UiKey.PageUp: MoveVertical(-page, shift); break;
+            case UiKey.PageDown: MoveVertical(page, shift); break;
             default: return false;
         }
         return true;
@@ -212,28 +212,28 @@ public sealed class UiTextInput
         if (ReadOnly || DeleteSelection() || caret >= value.Length) return;
         Replace(caret, Next(caret) - caret, "");
     }
-    internal void MovePointer(float x, float y, ITextMetrics metrics, bool extend)
+    internal void MovePointer(float x, float y, bool extend)
     {
-        var hit = geometry.Hit(x, y, metrics); Move(hit.Index, extend, hit.Upstream);
+        var hit = geometry.Hit(x, y); Move(hit.Index, extend, hit.Upstream);
     }
-    internal void SelectPointerWord(float x, float y, ITextMetrics metrics)
+    internal void SelectPointerWord(float x, float y)
     {
-        pointerWord = IsPassword ? (Start: 0, End: value.Length) : new TextWordBoundaries(value).At(geometry.HitWord(x, y, metrics));
+        pointerWord = IsPassword ? (Start: 0, End: value.Length) : new TextWordBoundaries(value).At(geometry.HitWord(x, y));
         Select(pointerWord.Start, pointerWord.End - pointerWord.Start);
     }
-    internal void DragPointerWord(float x, float y, ITextMetrics metrics)
+    internal void DragPointerWord(float x, float y)
     {
-        var word = IsPassword ? (Start: 0, End: value.Length) : new TextWordBoundaries(value).At(geometry.HitWord(x, y, metrics));
+        var word = IsPassword ? (Start: 0, End: value.Length) : new TextWordBoundaries(value).At(geometry.HitWord(x, y));
         if (word.Start < pointerWord.Start) { anchor = pointerWord.End; caret = word.Start; }
         else { anchor = pointerWord.Start; caret = Math.Max(pointerWord.End, word.End); }
         CaretUpstream = false;
         InvalidateCaret();
     }
-    private void MoveVertical(int rows, bool extend, ITextMetrics metrics)
+    private void MoveVertical(int rows, bool extend)
     {
         if (!IsMultiline) return;
-        var x = preferredX ?? geometry.CaretX(caret, metrics);
-        var target = geometry.Vertical(caret, rows, x, metrics);
+        var x = preferredX ?? geometry.CaretX(caret);
+        var target = geometry.Vertical(caret, rows, x);
         Move(target.Index, extend, target.Upstream);
         preferredX = x;
     }

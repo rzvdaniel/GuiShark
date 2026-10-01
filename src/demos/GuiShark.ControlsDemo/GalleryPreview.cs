@@ -8,6 +8,13 @@ internal static class GalleryPreview
         var document = view.Document;
         document.TabGroups[0].Select(document.GetElement($"tab-{options.Page}"));
         view.Update();
+        if (options.SelectLigature)
+        {
+            var sample = document.GetElement("ligature-text");
+            view.Input.Focus(sample);
+            sample.TextInput!.Select(2, 1);
+            view.Update();
+        }
         if (options.Compose)
         {
             view.Input.Focus(document.GetElement("multilingual-text"));

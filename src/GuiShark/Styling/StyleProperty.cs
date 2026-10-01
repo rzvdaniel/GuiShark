@@ -23,7 +23,7 @@ internal static class StyleProperty
         ["justify-content"] = (style, value) => { style.Justify = ParseChoice("justify-content", value, ("flex-start", MainAlignment.Start), ("center", MainAlignment.Center), ("flex-end", MainAlignment.End), ("space-between", MainAlignment.SpaceBetween)); },
         ["text-align"] = (style, value) => { style.TextAlign = ParseChoice("text-align", value, ("left", TextAlignment.Left), ("center", TextAlignment.Center), ("right", TextAlignment.Right)); },
         ["font-size"] = (style, value) => { style.FontSize = Math.Max(1, Nonnegative(value)); },
-        ["font-family"] = (style, value) => { style.FontFamily = FontFace.ParseFamily(value); },
+        ["font-family"] = (style, value) => { style.FontFamily = string.Join(", ", FontFamilyList.Parse(value)); },
         ["font-weight"] = (style, value) => { style.Bold = ParseChoice("font-weight", value, ("bold", true), ("600", true), ("700", true), ("normal", false), ("400", false)); },
         ["-guishark-accent-color"] = (style, value) => { style.AccentColor = UiColor.Parse(value); },
         ["color"] = (style, value) => { style.Color = UiColor.Parse(value); },

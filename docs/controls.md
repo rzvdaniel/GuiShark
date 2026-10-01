@@ -262,7 +262,7 @@ dotnet run --project src/demos/GuiShark.ControlsDemo -- --page=inventory --modal
 dotnet run --project src/demos/GuiShark.ControlsDemo -- --page=inventory --modal=name
 ```
 
-Skia + HarfBuzz is the default. Editing preserves Unicode graphemes; full bidi caret layout, font fallback and typing coalescing remain future work. The Multilingual tab demonstrates IME preedit. Runtime execution has been checked on Windows; Linux/macOS native behavior still needs verification. Managed regression tests cover the editing model.
+Skia + HarfBuzz is the default. Editing preserves Unicode graphemes; full bidi caret layout and typing coalescing remain future work. Local font fallback and shaped caret geometry are supported. The Multilingual tab demonstrates IME preedit. Runtime execution has been checked on Windows; Linux/macOS native behavior still needs verification. Managed regression tests cover the editing model.
 
 ![Character naming with a text selection](controls-text-input.png)
 

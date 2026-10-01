@@ -7,6 +7,7 @@ internal sealed class TextInputGeometry(UiElement owner, UiTextInput input)
 {
     private readonly TextEditLayout layout = new();
     private float horizontal;
+    private TextCaretMap[] maps = [new("", [0])];
     public UiRect TextBounds { get; private set; }
     public UiRect CaretBounds { get; private set; }
     public IReadOnlyList<UiRect> SelectionRects { get; private set; } = [];
@@ -19,30 +20,31 @@ internal sealed class TextInputGeometry(UiElement owner, UiTextInput input)
         return input.CaretUpstream && position == input.Caret && row > 0 && layout.Lines[row - 1].End == position ? row - 1 : row;
     }
     public TextEditLine LineAt(int position) => layout.Lines[Row(position)];
-    public float CaretX(int position, ITextMetrics metrics)
+    public float CaretX(int position)
     {
         var line = LineAt(position);
-        return Measure(input.DisplayValue[line.Start..Math.Min(position, line.End)], metrics);
+        return maps[Row(position)].X(Math.Min(position, line.End) - line.Start);
     }
-    private TextEditPosition Position(int row, float x, ITextMetrics metrics)
+    private TextEditPosition Position(int row, float x)
     {
         row = Math.Clamp(row, 0, layout.Lines.Count - 1);
-        var index = layout.Nearest(row, x, text => Measure(text, metrics));
+        var index = layout.Lines[row].Start + maps[row].Nearest(x);
         return new(index, row + 1 < layout.Lines.Count && index == layout.Lines[row + 1].Start);
     }
-    public TextEditPosition Vertical(int position, int rows, float x, ITextMetrics metrics) => Position(Row(position) + rows, x, metrics);
-    public TextEditPosition Hit(float x, float y, ITextMetrics metrics)
+    public TextEditPosition Vertical(int position, int rows, float x) => Position(Row(position) + rows, x);
+    public TextEditPosition Hit(float x, float y)
     {
         var row = input.IsMultiline ? (int)MathF.Floor((y - owner.ContentBounds.Y + owner.Scroll.Offset) / owner.Style.LineHeight) : 0;
-        return Position(row, x - owner.ContentBounds.X + horizontal, metrics);
+        return Position(row, x - owner.ContentBounds.X + horizontal);
     }
-    public int HitWord(float x, float y, ITextMetrics metrics)
+    public int HitWord(float x, float y)
     {
         var row = input.IsMultiline ? (int)MathF.Floor((y - owner.ContentBounds.Y + owner.Scroll.Offset) / owner.Style.LineHeight) : 0;
-        var line = layout.Lines[Math.Clamp(row, 0, layout.Lines.Count - 1)];
+        row = Math.Clamp(row, 0, layout.Lines.Count - 1);
+        var line = layout.Lines[row];
         var local = x - owner.ContentBounds.X + horizontal;
-        var index = layout.Nearest(row, local, text => Measure(text, metrics));
-        if (index > line.Start && (index == line.End || local < Measure(input.Value[line.Start..index], metrics)))
+        var index = line.Start + maps[row].Nearest(local);
+        if (index > line.Start && (index == line.End || local < maps[row].X(index - line.Start)))
             index = line.Start + System.Globalization.StringInfo.ParseCombiningCharacters(line.Text).Last(i => line.Start + i < index);
         return index;
     }
@@ -50,6 +52,7 @@ internal sealed class TextInputGeometry(UiElement owner, UiTextInput input)
     {
         var content = owner.ContentBounds;
         layout.Arrange(input.DisplayValue, Math.Max(1, content.Width - 2), input.IsMultiline, text => Measure(text, metrics));
+        maps = layout.Lines.Select(line => CreateMap(line.Text, metrics)).ToArray();
         var display = layout;
         if (input.IsPlaceholder)
         {
@@ -58,12 +61,17 @@ internal sealed class TextInputGeometry(UiElement owner, UiTextInput input)
         }
         DisplayLines = input.IsMasked && !input.IsPlaceholder ? [owner.Text] : display.Lines.Select(l => l.Text).ToArray();
         var row = Row(input.DisplayCaret);
-        var x = CaretX(input.DisplayCaret, metrics);
+        var x = CaretX(input.DisplayCaret);
         var height = owner.Style.LineHeight;
         ArrangeViewport(content, row, x, height, reveal, metrics);
         CaretBounds = new(content.X + x - horizontal, TextBounds.Y + row * height, 1, Math.Min(height, content.Height));
-        SelectionRects = input.Composition == null ? Range(input.SelectionStart, input.SelectionLength, metrics, height) : [];
-        CompositionRects = input.Composition is { } composition ? Range(input.CompositionStart, composition.Text.Length, metrics, height) : [];
+        SelectionRects = input.Composition == null ? Range(input.SelectionStart, input.SelectionLength, height) : [];
+        CompositionRects = input.Composition is { } composition ? Range(input.CompositionStart, composition.Text.Length, height) : [];
+    }
+    private TextCaretMap CreateMap(string text, ITextMetrics metrics)
+    {
+        var map = metrics.CreateCaretMap(input.Mask(text), owner.Style.FontSize, owner.Style.Bold, owner.Style.FontFamily);
+        return input.IsMasked ? map.Remap(text) : map;
     }
     private void ArrangeViewport(UiRect content, int row, float x, float height, bool reveal, ITextMetrics metrics)
     {
@@ -96,7 +104,7 @@ internal sealed class TextInputGeometry(UiElement owner, UiTextInput input)
         TextBounds = content with { X = content.X - horizontal, Width = Math.Max(content.Width, width + 2) };
     }
 
-    private IReadOnlyList<UiRect> Range(int selectionStart, int selectionLength, ITextMetrics metrics, float height)
+    private IReadOnlyList<UiRect> Range(int selectionStart, int selectionLength, float height)
     {
         if (selectionLength == 0) return [];
         var rects = new List<UiRect>();
@@ -107,10 +115,10 @@ internal sealed class TextInputGeometry(UiElement owner, UiTextInput input)
             var start = Math.Max(selectionStart, line.Start);
             var stop = Math.Min(end, line.End);
             if (stop < start || start > end || line.Start >= end) continue;
-            var left = Measure(input.DisplayValue[line.Start..start], metrics);
-            var right = Measure(input.DisplayValue[line.Start..stop], metrics);
+            var left = maps[row].X(start - line.Start);
+            var right = maps[row].X(stop - line.Start);
             if (end > line.End && line.End < input.DisplayValue.Length && input.DisplayValue[line.End] == '\n') right += 6;
-            rects.Add(new(TextBounds.X + left, TextBounds.Y + row * height, right - left, height));
+            rects.Add(new(TextBounds.X + Math.Min(left, right), TextBounds.Y + row * height, Math.Abs(right - left), height));
         }
         return rects;
     }

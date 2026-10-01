@@ -55,9 +55,9 @@ view.Resize(logicalWidth, logicalHeight);
 renderer.Render(framebufferWidth, framebufferHeight);
 ```
 
-Fonts load directly from asset bytes at runtime. No download, OS font installation, prebuilt atlas or separate tool is needed. Paths resolve against the document's asset source. `FontBook.Load(document)` registers additional CSS families. Missing bold faces use the family's regular face; unknown families fail explicitly. Registered families are immutable; restart or create a new font book when font bytes change.
+Fonts load directly from asset bytes at runtime. No download, OS font installation, prebuilt atlas or separate tool is needed. Paths resolve against the document's asset source. `FontBook.Load(document)` registers additional CSS families. Missing bold faces use the family's regular face; a stack without any loaded family fails explicitly. Unavailable entries in an otherwise loaded stack are skipped. Registered families are immutable; restart or create a new font book when font bytes change.
 
-The current subset has no WOFF, italics, variable axes, remote URLs or font fallback lists. Multilingual demos link static regular-weight Noto font assets and their OFL licenses from `src/demos/SharedAssets/fonts`; [font provenance](../src/demos/SharedAssets/fonts/README.md).
+The current subset has no WOFF, italics, variable axes or remote URLs. Ordered local font fallback lists are supported. Multilingual demos link static regular-weight Noto font assets and their OFL licenses from `src/demos/SharedAssets/fonts`; [font provenance](../src/demos/SharedAssets/fonts/README.md).
 
 ## Configure the renderer
 
@@ -78,10 +78,14 @@ Use one backend per renderer: density, options and caches are mutable. Font book
 
 ## Shaping and editing limits
 
-HarfBuzz handles OpenType substitutions and positioning for a single font/script/direction run. It is not a complete paragraph engine. GuiShark does not yet segment or reorder bidi runs, resolve font fallback, implement color emoji, or map carets/selections through shaped glyph clusters. Logical prefix measurement can be imperfect around contextual forms and ligatures. Ordinary labels wrap at whitespace; textareas preserve graphemes when wrapping. See [multilingual input and composition](multilingual-input.md).
+HarfBuzz handles OpenType substitutions and positioning for a single font/script/direction run. It is not a complete paragraph engine. GuiShark does not yet segment or reorder bidi runs, implement color emoji, or provide RTL-aware navigation. Carets and selections use full-line cluster advances; internal ligature stops are evenly interpolated at grapheme boundaries rather than read from font ligature-caret tables. Ordinary labels wrap at whitespace; textareas preserve graphemes when wrapping. See [multilingual input and composition](multilingual-input.md).
 
 ## Platforms and migration
 
 SkiaSharp 4.153.0 and matching SkiaSharp.HarfBuzz 4.153.0 load native font/rasterization/shaping libraries. HarfBuzzSharp 14.2.1.300 supplies Win32/macOS native assets; the SDK explicitly references matching Linux native assets. Controls Gallery uses Silk.NET.SDL 2.23.0 with SDL 2.32.10; the other demos retain OpenTK. A desktop display, OpenGL 3.3 core driver and the chosen host's OS dependencies are required. Native Linux/macOS execution and real OS IME/HiDPI behavior remain unverified; [validation results](multilingual-validation.md).
 
 Applications using the default renderer need no initialization changes. Applications using retired classes (`FreeTypeTextBackend`, `MsdfTextBackend`, `MsdfAtlas`) must switch to Skia. The old `legacyBaseline` constructor option and the canvas `distanceRange` argument are removed; the optional second constructor argument is now `shaping`. Remove MSDF target imports and font-generation items from your projects. Gallery `--text` and Text Lab `baseline|freetype|msdf` modes have been removed.
+
+Editing backends can provide [complete-line caret maps](shaped-text-editing.md) through ITextMetrics.CreateCaretMap.
+
+See [local font fallback](font-fallback.md) for stack ordering, coverage checks, shared baselines and mixed-script examples.

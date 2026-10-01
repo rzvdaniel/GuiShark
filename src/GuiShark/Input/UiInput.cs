@@ -43,8 +43,8 @@ public sealed class UiInput
         }
         if (pressed != null)
         {
-            if (wordDrag) pressed.TextInput?.DragPointerWord(x, y, view.TextMetrics);
-            else pressed.TextInput?.MovePointer(x, y, view.TextMetrics, extend: true);
+            if (wordDrag) pressed.TextInput?.DragPointerWord(x, y);
+            else pressed.TextInput?.MovePointer(x, y, extend: true);
             SetPressed(pressed, HitTester.Interactive(hit) == pressed);
             if (HitTester.CanActivate(pressed)) ControlInteraction.Drag(pressed, x);
         }
@@ -88,8 +88,8 @@ public sealed class UiInput
         pressed = Focused!;
         SetPressed(pressed, true);
         wordDrag = doubleClick && !shift && pressed.TextInput != null;
-        if (wordDrag) pressed.TextInput!.SelectPointerWord(x, y, view.TextMetrics);
-        else pressed.TextInput?.MovePointer(x, y, view.TextMetrics, shift);
+        if (wordDrag) pressed.TextInput!.SelectPointerWord(x, y);
+        else pressed.TextInput?.MovePointer(x, y, shift);
         ControlInteraction.Drag(pressed, x);
     }
 
@@ -123,7 +123,7 @@ public sealed class UiInput
         var scoped = HandleScopeKey(key, shift, repeat);
         if (scoped.HasValue) return scoped.Value;
         if (Focused == null) return view.Modal.IsOpen;
-        if (Focused.TextInput is { } input) { var handled = input.Key(key, shift, command, Clipboard, view.TextMetrics, wordNavigation ?? command); consumedKeys.Add(key); return handled; }
+        if (Focused.TextInput is { } input) { var handled = input.Key(key, shift, command, Clipboard, wordNavigation ?? command); consumedKeys.Add(key); return handled; }
         if (navigation.AdvanceTab(key)) return true;
         if (navigation.AdvanceRadio(key)) return true;
         if (navigation.ScrollPage(key)) return true;

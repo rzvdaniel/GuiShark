@@ -11,7 +11,7 @@ Run commands from the repository root containing `Gui.Shark.sln`. On this Window
 cd C:\Work\GuiShark
 ```
 
-Use the actual checkout location on other machines. Install a stable .NET 10 SDK compatible with `global.json`. Demos need a desktop display and an OpenGL 3.3 core driver; the managed regression tests need no GL context. Solution coverage verification additionally needs Git and PowerShell 7 (`pwsh`).
+Use the actual checkout location on other machines. Install a stable .NET 10 SDK compatible with `global.json`. Demos need a desktop display and an OpenGL 3.3 core driver; the regression tests need no GL context. Shaping cases load the Skia/HarfBuzz native libraries restored with the test project. Solution coverage verification additionally needs Git and PowerShell 7 (`pwsh`).
 
 ## Build / compile
 

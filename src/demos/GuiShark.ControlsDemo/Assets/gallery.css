@@ -86,3 +86,5 @@ dialog button { width: 210px; }
 #multilingual-text, #indic-text { height: 48px; }
 #multilingual-notes { height: 110px; }
 #composition-events { height: 90px; font-size: 13px; color: #b6d3ed; }
+#ligature-text, #combining-text { height: 48px; font-size: 28px; }
+.font-stack { font-family: "Lato", "NotoJP", "NotoIndic", "NotoArabic"; font-size: 24px; height: 48px; }

@@ -46,8 +46,10 @@ SDL documents the event flow in its [text-input tutorial](https://wiki.libsdl.or
 
 Skia + HarfBuzz is the SDK default. HarfBuzz joins and positions glyphs in a single font/script/direction run; it is not a complete bidirectional paragraph engine. Its [buffer properties documentation](https://harfbuzz.github.io/setting-buffer-properties.html) describes these requirements.
 
-Arabic labels and Devanagari specimens demonstrate shaping. Mixed-direction specimens are deliberately diagnostic: there is no bidi run segmentation/reordering, RTL-aware caret/selection mapping, automatic font fallback or color-emoji implementation. Editing geometry still measures logical prefixes rather than using shaped glyph clusters; contextual ligatures and complex scripts can therefore have imperfect caret placement. Full RTL editing is not claimed. Textarea wrapping preserves graphemes; ordinary labels retain the existing whitespace-based wrapping.
+Arabic labels and Devanagari specimens demonstrate shaping. Mixed-direction specimens are deliberately diagnostic: there is no bidi run segmentation/reordering, RTL-aware navigation or color-emoji implementation. Local font fallback uses loaded @font-face families. Editing geometry now uses full-line shaped cluster advances for mouse placement, caret movement, selections and preedit. Ligatures spanning multiple graphemes use evenly spaced internal caret stops; font-provided ligature caret data is not read. Full RTL editing is not claimed. Textarea wrapping preserves graphemes; ordinary labels retain the existing whitespace-based wrapping.
 
 Bundled Noto font assets make the samples independent of installed system fonts. Skia and HarfBuzz have native assets for Windows, Linux and macOS; SDL adds the gallery's desktop host dependencies. Windows captures and managed regression results are recorded in [validation notes](multilingual-validation.md). Linux/macOS native execution, actual OS IME interaction and physical HiDPI candidate positioning still require manual verification.
 
 For Windows interaction evidence and the native conversion checklist, see [Windows IME checks](windows-ime-checks.md).
+
+See [shaped text editing](shaped-text-editing.md) for the caret-map contract, ligature approximation and gallery examples.

@@ -33,8 +33,12 @@ The permission profile briefly switched to a network-restricted sandbox during v
 
 ## Limits requiring manual verification
 
-Linux/macOS package contents were inspected, but their native applications were not executed. Real OS IME composition, candidate-window placement and physical HiDPI behavior were not automated. The capture flag exercises the portable SDK composition API, not an installed input method. Full bidirectional layout, RTL editing, shaped-cluster caret mapping, font fallback and color emoji remain unimplemented; see [the host contract and limits](multilingual-input.md).
+Linux/macOS package contents were inspected, but their native applications were not executed. Real OS IME composition, candidate-window placement and physical HiDPI behavior were not automated. The capture flag exercises the portable SDK composition API, not an installed input method. Full bidirectional layout, RTL editing and color emoji remain unimplemented; see [the host contract and limits](multilingual-input.md).
 
 ## Windows interaction follow-up
 
 Native gallery mouse checks confirmed preview, conversion, commit, cancellation and cancellation on focus change. The user confirmed physical Ctrl+Z and Tab behavior. See [Windows IME checks](windows-ime-checks.md) for the evidence and remaining native IME checklist. The event log now separates records with visible slashes instead of unsupported newline glyphs.
+
+## Shaped editing and font fallback follow-up
+
+Fresh Debug/Release builds still pass with zero errors and 64 warnings. All 69 tests pass in each configuration. The Multilingual tab now includes ligature selection, combining marks and a mixed English/Japanese/Devanagari field. See [shaped editing](shaped-text-editing.md) and [local font fallback](font-fallback.md) for implementation details, captures and remaining limits.
