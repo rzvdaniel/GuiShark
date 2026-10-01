@@ -28,7 +28,6 @@ internal static class QuadShaders
         uniform bool textured;
         uniform sampler2D image;
         uniform vec4 textureRect;
-        uniform float distanceRange;
         float roundedDistance(vec2 p, vec2 halfSize, float r) {
             vec2 q = abs(p) - halfSize + vec2(r);
             return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
@@ -41,16 +40,7 @@ internal static class QuadShaders
             if (textured) {
                 vec2 sampleUv = textureRect.xy + uv * textureRect.zw;
                 vec4 texel = texture(image, sampleUv);
-                if (distanceRange > 0.0) {
-                    float median = max(min(texel.r, texel.g), min(max(texel.r, texel.g), texel.b));
-                    vec2 unitRange = vec2(distanceRange) / vec2(textureSize(image, 0));
-                    vec2 screenSize = vec2(1.0) / fwidth(sampleUv);
-                    float screenRange = max(0.5 * dot(unitRange, screenSize), 1.0);
-                    float alpha = clamp(screenRange * (median - 0.5) + 0.5, 0.0, 1.0) * topColor.a;
-                    outputColor = vec4(topColor.rgb * alpha, alpha) * coverage;
-                } else {
-                    outputColor = vec4(texel.rgb * topColor.rgb * topColor.a, texel.a * topColor.a) * coverage;
-                }
+                outputColor = vec4(texel.rgb * topColor.rgb * topColor.a, texel.a * topColor.a) * coverage;
             } else {
                 vec4 fill = mix(topColor, bottomColor, uv.y);
                 float border = borderWidth > 0.0 ? smoothstep(-borderWidth-aa, -borderWidth+aa, d) : 0.0;

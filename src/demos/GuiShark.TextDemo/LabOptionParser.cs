@@ -9,6 +9,7 @@ internal static class LabOptionParser
     private static readonly IReadOnlyDictionary<string, Action<LabSettings, Func<string>>> Options =
         new Dictionary<string, Action<LabSettings, Func<string>>>(StringComparer.Ordinal)
     {
+        ["--sample"] = (settings, value) => settings.Script = LanguageSamples.Parse(value()),
         ["--density"] = (settings, value) => settings.Density = ParseDensity(value()),
         ["--font-size"] = (settings, value) => settings.Size = ParseSize(value()),
         ["--mode"] = (settings, value) => settings.Mode = ParseMode(value()),
@@ -38,7 +39,7 @@ internal static class LabOptionParser
         return size;
     }
     private static int ParseMode(string value) => value switch
-    { "compare" => 0, "baseline" => 1, "skia" => 2, "freetype" => 3, "msdf" => 4, _ => throw new ArgumentException("Unknown backend mode.") };
+    { "compare" => 0, "skia" => 1, "harfbuzz" => 2, _ => throw new ArgumentException("Unknown backend mode.") };
     private static TextHinting ParseHinting(string value) => value switch
     { "none" => TextHinting.None, "slight" => TextHinting.Slight, "normal" => TextHinting.Normal, "full" => TextHinting.Full, _ => throw new ArgumentException("Hinting: none, slight, normal, full.") };
     private static TextSampling ParseSampling(string value) => value switch

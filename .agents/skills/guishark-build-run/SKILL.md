@@ -47,11 +47,15 @@ dotnet run --no-build --project src/demos/GuiShark.Demo
 # Lantern Valley: balloon game with an HTML/CSS HUD
 dotnet run --no-build --project src/demos/GuiShark.Balloon
 
-# Text Lab: compare Skia, FreeType, and MSDF rendering
+# Text Lab: compare Skia with and without HarfBuzz shaping
 dotnet run --no-build --project src/demos/GuiShark.TextDemo
 
-# Controls Gallery: tabs, inputs, passwords, dialogs, and scrolling
+# Controls Gallery: tabs, passwords, dialogs, scrolling, and native IME input
 dotnet run --no-build --project src/demos/GuiShark.ControlsDemo
+
+# Multilingual page and Arabic shaping comparison
+dotnet run --no-build --project src/demos/GuiShark.ControlsDemo -- --page=multilingual
+dotnet run --no-build --project src/demos/GuiShark.TextDemo -- --sample arabic
 ```
 
 Close the window before running another command in the same terminal. To use Release binaries, add `-c Release` to `dotnet run` after building Release. `--no-build` uses existing binaries; rebuild after C# changes, or omit that flag to build as part of launching.

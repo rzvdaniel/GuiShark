@@ -6,7 +6,7 @@ Run from the repository root:
 dotnet run --project src/demos/GuiShark.ControlsDemo
 ```
 
-The gallery uses the same SDK rendering and input paths as an embedded game UI. Window hosting, application callbacks, and HTML/CSS assets have separate responsibilities. It includes five HTML-defined tab pages: Core controls, Dropdowns & scrolling, Quest log, Inventory & dialogs, and Journal & chat. The original controls stay on their own page. Settings show view-level dropdowns; quests demonstrate nested scrolling and retained scroll positions. A bounded event log remains visible on every page. F5 reloads HTML/CSS and resets state; pass `src/demos/GuiShark.ControlsDemo/Assets` as a demo argument to edit source assets directly. F12 captures the actual framebuffer. `--capture` saves a screenshot after 30 frames and exits.
+The gallery uses the same SDK rendering and input paths as an embedded game UI. Window hosting, application callbacks, and HTML/CSS assets have separate responsibilities. It includes six HTML-defined tab pages: Core controls, Dropdowns & scrolling, Quest log, Inventory & dialogs, Journal & chat, and Multilingual input. The original controls stay on their own page. Settings show view-level dropdowns; quests demonstrate nested scrolling and retained scroll positions. A bounded event log remains visible on every page. F5 reloads HTML/CSS and resets state; pass `src/demos/GuiShark.ControlsDemo/Assets` as a demo argument to edit source assets directly. F12 captures the actual framebuffer. `--capture` saves a screenshot after 30 frames and exits.
 
 ## Markup
 
@@ -258,11 +258,11 @@ The inventory page now includes live search by item name/rarity, read-only and d
 
 ```powershell
 dotnet run --project src/demos/GuiShark.ControlsDemo -- --page=inventory
-dotnet run --project src/demos/GuiShark.ControlsDemo -- --page=inventory --modal=name --text=freetype
-dotnet run --project src/demos/GuiShark.ControlsDemo -- --page=inventory --modal=name --text=msdf
+dotnet run --project src/demos/GuiShark.ControlsDemo -- --page=inventory --modal=name
+dotnet run --project src/demos/GuiShark.ControlsDemo -- --page=inventory --modal=name
 ```
 
-Skia remains the default. MSDF uses the bundled Lato atlas and its available character set. The editing model preserves Unicode graphemes, but this does not add text shaping, bidirectional layout or font fallback to the rendering backends. IME composition/preedit and typing coalescing remain future work. Runtime execution has been checked on Windows; Linux/macOS native behavior still needs verification. No unit or integration tests were added.
+Skia + HarfBuzz is the default. Editing preserves Unicode graphemes; full bidi caret layout, font fallback and typing coalescing remain future work. The Multilingual tab demonstrates IME preedit. Runtime execution has been checked on Windows; Linux/macOS native behavior still needs verification. Managed regression tests cover the editing model.
 
 ![Character naming with a text selection](controls-text-input.png)
 
@@ -275,9 +275,9 @@ Skia remains the default. MSDF uses the bundled Lato atlas and its available cha
 Follow the lanterns.</textarea>
 ```
 
-Textareas expose the same `UiElement.TextInput` / `UiTextInput` API as single-line fields. `IsMultiline` identifies the mode. Initial text comes from the HTML element's contents (rather than a value attribute), preserving spaces and line breaks. `rows` sets the natural height in lines, defaults to four, and accepts 1–1000; CSS height takes precedence. CSS fonts, colors, backgrounds, borders and focus states work as for text inputs. `readonly`, `disabled`, `maxlength`, `placeholder` and `autofocus` are supported. CRLF/CR line endings normalize to LF; other control characters, including tabs, are removed. Use spaces for indentation. Textareas always wrap and use vertical scrolling; resizing handles and wrap=off are not supported.
+Textareas expose the same `UiElement.TextInput` / `UiTextInput` API as single-line fields. `IsMultiline` identifies the mode. Initial text comes from the HTML element's contents (rather than a value attribute), preserving spaces and line breaks. `rows` sets the natural height in lines, defaults to four, and accepts 1â€“1000; CSS height takes precedence. CSS fonts, colors, backgrounds, borders and focus states work as for text inputs. `readonly`, `disabled`, `maxlength`, `placeholder` and `autofocus` are supported. CRLF/CR line endings normalize to LF; other control characters, including tabs, are removed. Use spaces for indentation. Textareas always wrap and use vertical scrolling; resizing handles and wrap=off are not supported.
 
-Visual lines preserve whitespace and wrap at spaces or complete graphemes for long words. A shared layout computes line ranges, caret coordinates, pointer hit positions and selection rectangles using the current backend's metrics. Skia rasterizes only the visible field dimensions; FreeType and MSDF draw the same visual lines under the field clip. MSDF still depends on the atlas character set, and this work does not add shaping/bidirectional text.
+Visual lines preserve whitespace and wrap at spaces or complete graphemes for long words. A shared layout computes line ranges, caret coordinates, pointer hit positions and selection rectangles using the current backend's metrics. Skia rasterizes only the visible field dimensions. HarfBuzz shapes a single script run; full bidirectional editing remains future work.
 
 Enter inserts a line break. Ctrl/Command+Enter raises `Submitted` for an application action such as sending a message. Tab/Shift+Tab move focus. Up/Down preserve the desired column, Home/End navigate the current visual line, Ctrl/Command+Home/End navigate the document, and Page Up/Down move by a viewport of lines. Shift extends selection. Mouse click/drag and Shift-click work across lines. Wheel scrolling and the scrollbar reuse `UiScroll`; moving/editing the caret brings it into view, while manual scrolling can move away from it. `SelectionRects` exposes all line rectangles (`SelectionBounds` retains the first rectangle for compatibility).
 
@@ -298,11 +298,11 @@ The fifth gallery tab, **Journal & chat**, provides editable notes with Undo/Red
 ```powershell
 dotnet run --project src/demos/GuiShark.ControlsDemo -- --page=journal
 dotnet run --project src/demos/GuiShark.ControlsDemo -- --page=journal --select-notes --capture
-dotnet run --project src/demos/GuiShark.ControlsDemo -- --page=journal --scroll --text=freetype --capture
-dotnet run --project src/demos/GuiShark.ControlsDemo -- --page=journal --text=msdf
+dotnet run --project src/demos/GuiShark.ControlsDemo -- --page=journal --scroll --capture
+dotnet run --project src/demos/GuiShark.ControlsDemo -- --page=journal
 ```
 
-The selection and scroll flags configure visual captures, not an automated input test suite. Windows OpenGL captures were reviewed for multiline rendering, selection and scrolling across Skia, FreeType and MSDF. Actual mouse/keyboard and clipboard interactions still need manual evaluation; Linux/macOS native execution remains unverified. No unit or integration tests were added. IME preedit, shaping and typing coalescing remain follow-up work.
+The selection and scroll flags configure visual captures, not an automated input test suite. Windows OpenGL captures were reviewed for multiline rendering, selection and scrolling. Actual mouse/keyboard and clipboard interactions still need manual evaluation; Linux/macOS native execution remains unverified. Managed regression tests cover editing and composition; typing coalescing remains follow-up work.
 
 ![Multiline selection in the journal](controls-journal.png)
 
@@ -336,7 +336,7 @@ view.Input.KeyDown(key, args.Shift, args.IsRepeat,
 <input id="password" type="password" placeholder="Camp password" maxlength="64">
 ```
 
-Password fields reuse single-line editing, selection, paste and undo/redo. Rendering displays one bullet per Unicode grapheme, with caret and selection widths measured from those bullets. Placeholder text remains readable. The default bullet is available in the bundled Lato MSDF atlas; custom atlases must include U+2022. The actual text stays in `TextInput.Value`; `UiElement.Text` and renderer display lines contain the mask while hidden.
+Password fields reuse single-line editing, selection, paste and undo/redo. Rendering displays one bullet per Unicode grapheme, with caret and selection widths measured from those bullets. Placeholder text remains readable. The bundled Lato font contains the default U+2022 bullet. The actual text stays in `TextInput.Value`; `UiElement.Text` and renderer display lines contain the mask while hidden.
 
 ```csharp
 var password = document.GetElement("password").TextInput!;
@@ -352,8 +352,16 @@ The inventory page displays an inline password field with Show password and Join
 dotnet run --project src/demos/GuiShark.ControlsDemo -- --page=inventory --modal=password
 ```
 
-Windows OpenGL password captures were reviewed with Skia, FreeType and MSDF. Native editing, clipboard and reveal interactions still need manual evaluation. No unit or integration tests added.
+Windows OpenGL password captures were reviewed with Skia. Native editing, clipboard and reveal interactions still need manual evaluation; managed tests cover password behavior.
 
 ![Masked password dialog](controls-password.png)
 
 The inline field and dialog keep independent values and reveal settings. Enter or Join camp submits the inline demo action, clears its field and hides the password again, without logging or sending its contents.
+
+## Multilingual input
+
+Run `dotnet run --project src/demos/GuiShark.ControlsDemo -- --page=multilingual` to try the sixth tab. The gallery now uses SDL for committed text, IME preedit, candidate-window placement, mouse input and clipboard integration. SDK APIs remain independent of SDL. All gallery pages use Skia + HarfBuzz; backend-selection flags have been removed.
+
+The tab includes Japanese input, wrapped CJK notes, Devanagari input, a shaped Arabic label and composition event diagnostics. Preview kana / Convert / Commit / Cancel provide a portable SDK exercise without installing an OS input method. Actual IME testing requires selecting an input method in your OS. `--page=multilingual --compose --capture` captures an underlined preedit through the SDK API; it does not verify the OS candidate window.
+
+See [composition contract, native hosting and limitations](multilingual-input.md).

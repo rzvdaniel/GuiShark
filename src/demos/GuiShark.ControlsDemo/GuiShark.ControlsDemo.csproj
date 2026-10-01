@@ -1,11 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup><OutputType>Exe</OutputType></PropertyGroup>
+  <PropertyGroup><OutputType>Exe</OutputType><AllowUnsafeBlocks>true</AllowUnsafeBlocks></PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../GuiShark.OpenGL/GuiShark.OpenGL.csproj" />
-    <PackageReference Include="OpenTK.Windowing.Desktop" Version="4.9.4" />
+    <PackageReference Include="Silk.NET.SDL" Version="2.23.0" />
+    <Content Include="../SharedAssets/fonts/**/*" Link="Assets/fonts/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../../licenses/SDL-zlib.txt" Link="licenses/SDL-zlib.txt" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Assets/**/*" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="../GuiShark.Demo/Assets/fonts/*.ttf" Link="Assets/fonts/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="../GuiShark.TextDemo/Assets/atlas/*" Link="Assets/atlas/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../GuiShark.Demo/Assets/fonts/*" Link="Assets/fonts/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Compile Include="../GuiShark.Demo/FrameCapture.cs" Link="FrameCapture.cs" />
   </ItemGroup>
 </Project>

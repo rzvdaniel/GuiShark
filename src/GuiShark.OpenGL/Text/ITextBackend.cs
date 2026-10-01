@@ -18,11 +18,11 @@ public interface ITextBackend : ITextMetrics, IDisposable
     void Draw(TextDrawRequest request, ITextCanvas canvas);
 }
 
-/// <summary>GPU adapter for premultiplied masks or raw RGB MSDF data.</summary>
+/// <summary>GPU adapter for premultiplied RGBA text masks.</summary>
 public interface ITextCanvas
 {
     void Draw(TextImage image, UiRect destination, UiRect source, UiColor color, float opacity,
-        TextSampling sampling = TextSampling.Linear, float distanceRange = 0);
+        TextSampling sampling = TextSampling.Linear);
 }
 
 /// <summary>RGBA8 image. Mutate pixels only on the render thread and call Changed after updates.</summary>

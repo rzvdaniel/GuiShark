@@ -4,7 +4,8 @@ namespace GuiShark.TextDemo;
 
 internal sealed class LabSettings
 {
-    public int Mode { get; set; } // 0 compares all; 1..4 select a backend.
+    public int Mode { get; set; } // 0 compares shaping modes; 1 unshaped; 2 HarfBuzz.
+    public int Script { get; set; }
     public float Size { get; set; } = 14;
     public float Density { get; set; } = 1;
     public bool Snap { get; set; } = true;

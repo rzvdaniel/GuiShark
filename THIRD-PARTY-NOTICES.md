@@ -11,9 +11,13 @@ NuGet dependencies retain their own licenses and notices:
 - [AngleSharp](https://github.com/AngleSharp/AngleSharp): MIT.
 - [OpenTK](https://github.com/opentk/opentk): MIT; its GLFW native dependency uses the zlib/libpng license.
 - [SkiaSharp](https://github.com/mono/SkiaSharp): MIT, with Skia and other native third-party notices distributed by its packages.
-- [FreeTypeSharp 3.1.0](https://github.com/ryancheung/FreeTypeSharp): MIT, Copyright 2024 ryancheung. Its patched FreeType 2.13.2 native binaries use the FreeType License. Portions of this software are copyright © 2023 The FreeType Project (www.freetype.org). All rights reserved. The [FreeType license](licenses/FreeType-FTL.txt) is copied beside application binaries.
-- [MSDFgen 1.13](https://github.com/Chlumsky/msdfgen) and [msdf-atlas-gen 1.4](https://github.com/Chlumsky/msdf-atlas-gen): MIT, Copyright (c) 2014–2025 Viktor Chlumsky. The MSDF shader follows the upstream reconstruction formula; [MSDFgen's license](licenses/MSDFgen-MIT.txt) is copied with application binaries. The [atlas generator license](licenses/MSDF-atlas-gen-MIT.txt) is retained for tool provenance; no generator executable is bundled.
 
-The Text Lab's regular and bold MSDF PNG/JSON atlases were generated from the bundled Lato fonts. They follow the font's SIL OFL license. The font files and OFL notice are copied into every demo's `Assets/fonts` directory. Reproduction instructions and the exact charset are in [text-rendering notes](docs/text-rendering.md).
 
 Keep the font license and review native dependency notices when redistributing an application.
+
+Controls Gallery and Text Lab bundle regular-weight static instances of Noto Sans JP, Noto Sans Arabic and Noto Sans Devanagari under SIL OFL 1.1. Their individual licenses are retained beside the fonts and copied into application assets. See [font provenance](src/demos/SharedAssets/fonts/README.md).
+
+- [SkiaSharp.HarfBuzz / HarfBuzzSharp](https://github.com/mono/SkiaSharp): MIT; native [HarfBuzz](https://github.com/harfbuzz/harfbuzz) uses MIT-style licenses listed in [COPYING](licenses/HarfBuzz-MIT.txt), copied with applications.
+- [Silk.NET.SDL](https://github.com/dotnet/Silk.NET): MIT; Ultz.Native.SDL bundles SDL 2.32.10. [SDL's zlib license](licenses/SDL-zlib.txt) is retained and copied with Controls Gallery.
+
+The former standalone FreeType and MSDF backends and their generated assets/tools have been removed. Their earlier source remains available in Git history.

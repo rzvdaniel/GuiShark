@@ -21,8 +21,8 @@ footer.card { padding: 14px; gap: 8px; height: 118px; }
 #events { height: 40px; font-size: 14px; }
 footer .muted { font-size: 11px; }
 
-.tab-strip { flex-direction: row; gap: 12px; }
-.tab-strip button { width: 196px; padding: 10px 12px; font-size: 14px; }
+.tab-strip { flex-direction: row; gap: 8px; }
+.tab-strip button { width: 170px; padding: 10px 8px; font-size: 13px; }
 .tab-strip button:selected { background: #315e83; border-color: #93c5fd; }
 #pages { height: 484px; }
 .page-scroll { height: 100%; overflow-y: auto; }
@@ -75,3 +75,14 @@ dialog button { width: 210px; }
 #lobby-password { height: 42px; font-size: 18px; }
 
 #inline-password { height: 42px; font-size: 18px; }
+
+@font-face { font-family: "NotoJP"; src: url("fonts/NotoSansJP.ttf"); }
+@font-face { font-family: "NotoArabic"; src: url("fonts/NotoSansArabic.ttf"); }
+@font-face { font-family: "NotoIndic"; src: url("fonts/NotoSansDevanagari.ttf"); }
+.japanese { font-family: "NotoJP"; font-size: 20px; }
+.indic { font-family: "NotoIndic"; font-size: 24px; }
+.arabic { font-family: "NotoArabic"; font-size: 30px; color: #b6e4cd; }
+.language-card { gap: 10px; padding: 18px; }
+#multilingual-text, #indic-text { height: 48px; }
+#multilingual-notes { height: 110px; }
+#composition-events { height: 90px; font-size: 13px; color: #b6d3ed; }

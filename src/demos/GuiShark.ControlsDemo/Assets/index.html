@@ -7,6 +7,7 @@
 <button id="tab-lists" role="tab" aria-controls="page-lists">Quest log</button>
 <button id="tab-inventory" role="tab" aria-controls="page-inventory">Inventory &amp; dialogs</button>
 <button id="tab-journal" role="tab" aria-controls="page-journal">Journal &amp; chat</button>
+<button id="tab-multilingual" role="tab" aria-controls="page-multilingual">Multilingual input</button>
 </div>
 <main id="pages">
 <section id="page-basics" role="tabpanel" class="page-scroll"><div class="columns">
@@ -71,6 +72,20 @@ Supplies: moonberries, warm tea, and one spare lantern.
 Next stop: the hidden clearing beyond the birch grove.</textarea><p id="journal-count" class="muted">Journal length</p><div class="row journal-actions"><button id="journal-undo">Undo</button><button id="journal-redo">Redo</button><button id="journal-add">Add field note</button></div><div class="row journal-actions"><button id="journal-save">Save note</button><button id="journal-restore">Restore saved</button></div><p id="journal-status" class="muted">Saved in memory for this demo session.</p></section>
 <section class="card journal-card"><p class="eyebrow">CAMPFIRE CONVERSATION</p><h2>A message for the keepers</h2><label for="chat-history">Local conversation / read-only</label><textarea id="chat-history" rows="6" readonly></textarea><label for="chat-compose">Compose a message</label><textarea id="chat-compose" rows="3" maxlength="280" placeholder="Tell the camp what you discovered..."></textarea><div class="row"><button id="chat-send">Send message</button><span class="muted">Ctrl / Command + Enter sends</span></div><p class="muted">Double-click selects a word. Ctrl / Option + Shift + arrows selects by word. Enter inserts a line break. Shift + arrows selects across lines. Ctrl / Command + Z undoes; Shift + Z or Y redoes. Tab moves to the next control.</p><p class="muted">Chat is local to this demo. No messages are sent over the network.</p></section>
 </div></section>
+<section id="page-multilingual" role="tabpanel" class="page-scroll"><div class="columns">
+<section class="card language-card"><h2>Write across languages</h2><p class="muted">Use your OS input method, or try the composition exercise below. Preedit is underlined; only committed text changes Value.</p>
+<label for="multilingual-text">Japanese / native IME</label><input id="multilingual-text" class="japanese" placeholder="ここに入力してください">
+<label for="multilingual-notes">CJK notes / wrap, select and copy</label><textarea id="multilingual-notes" class="japanese">緑の丘を越えて、灯りを探します。
+東京の空へ。こんにちは、世界！</textarea>
+<label for="indic-text">Devanagari / combining characters</label><input id="indic-text" class="indic" value="नमस्ते दुनिया">
+<p class="muted">Ctrl/Cmd+C/V and undo work on committed text. While composing, your input method owns navigation and Enter.</p></section>
+<section class="card language-card"><h2>Composition workshop</h2><p class="muted">No IME installed? These buttons exercise the same SDK API. Escape cancels a preedit without changing the field.</p>
+<div class="row"><button id="preedit-start">Preview kana</button><button id="preedit-convert">Convert</button></div>
+<div class="row"><button id="preedit-commit">Commit Tokyo</button><button id="preedit-cancel">Cancel</button></div>
+<p class="eyebrow">EVENTS / NO PREEDIT IN UNDO HISTORY</p><p id="composition-events">Ready.</p>
+<p class="eyebrow">SHAPED ARABIC / LABEL PREVIEW</p><p class="arabic">مرحباً بالعالم</p>
+<p class="muted">HarfBuzz joins glyphs in a single script run. Full bidirectional paragraph layout, RTL editing and font fallback are not implemented yet. Explore their limits in Text Lab.</p>
+</section></div></section>
 </main>
 <footer class="card"><p class="eyebrow">LIVE EVENT LOG</p><p id="events">Ready</p><p class="muted">Tab / Shift+Tab: focus | Space / Enter: activate | Arrows: adjust / switch tabs | Wheel: scroll | F5: reload | F12: capture</p><button id="tooltip-edge" class="tooltip-probe" title="Tooltips stay inside the UI view, even beside its bottom and right edges. They do not take mouse focus. Open a dialog to block the interface beneath it.">?</button></footer>
 <dialog id="password-dialog"><p class="eyebrow">PRIVATE WOODLAND CAMP</p><h2>A secret for the gatekeeper</h2><label for="lobby-password">Camp password</label><input id="lobby-password" type="password" value="lantern-demo" maxlength="64" placeholder="Enter the camp password..." autofocus><div class="row"><input id="show-password" type="checkbox"><label for="show-password">Show password</label></div><p class="muted">Paste is supported. Copy and cut are disabled, including while the password is visible.</p><p class="muted">Demo only: no authentication or network request. The field is cleared when this dialog closes.</p><div class="row"><button id="cancel-lobby">Cancel</button><button id="join-lobby">Join camp</button></div></dialog>

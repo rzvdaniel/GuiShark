@@ -100,8 +100,16 @@ public sealed class OpenGlUiRenderer : IDisposable
                 element.Style.ImageTint, opacity, element.Style.Radius, element.Style.ObjectFlip);
         if (element.Text.Length > 0 && content.Width > 0 && content.Height > 0)
             backend.Draw(new(element, opacity, scaleX, scaleY), text);
+        PaintComposition(element, opacity);
         if (element.IsFocused && element.TextInput is { } input && Environment.TickCount64 % 1000 < 600)
             painter.Solid(input.CaretBounds with { X = MathF.Round(input.CaretBounds.X * scaleX) / scaleX, Width = 1 / scaleX }, element.Style.Color, opacity);
+    }
+
+    private void PaintComposition(UiElement element, float opacity)
+    {
+        if (element.TextInput == null) return;
+        foreach (var rect in element.TextInput.CompositionRects)
+            painter.Solid(new(rect.X, rect.Bottom - 2, rect.Width, 1), element.Style.AccentColor, opacity);
     }
 
     private void PaintChrome(UiElement element, float opacity)

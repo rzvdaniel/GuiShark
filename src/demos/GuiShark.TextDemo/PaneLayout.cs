@@ -6,7 +6,7 @@ internal sealed record PaneLayout(int Index, UiRect Card, UiRect Sample, UiRect 
     {
         const int padding = 22, gap = 16, top = 244;
         var columns = mode == 0 ? 2 : 1;
-        var rows = mode == 0 ? 2 : 1;
+        const int rows = 1;
         var cardWidth = (width - padding * 2 - gap * (columns - 1)) / columns;
         var cardHeight = (height - top - 38 - gap * (rows - 1)) / rows;
         var result = new List<PaneLayout>();

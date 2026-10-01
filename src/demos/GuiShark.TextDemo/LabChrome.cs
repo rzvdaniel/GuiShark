@@ -12,19 +12,19 @@ internal sealed class LabChrome : IDisposable
     private readonly OpenGlUiRenderer renderer;
     private readonly LabSettings settings;
     private readonly Action changed;
-    private static readonly string[] modes = ["Compare all", "Skia baseline", "Skia aligned", "FreeType", "MSDF"];
+    private static readonly string[] modes = ["Compare shaping", "Skia / unshaped", "Skia + HarfBuzz"];
 
     public LabChrome(IAssetSource assets, FontBook fonts, LabSettings settings, int width, int height,
         IReadOnlyList<PaneLayout> layouts, IReadOnlyDictionary<int, string> errors, float nativeScale, Action changed)
     {
         this.settings = settings; this.changed = changed;
         var html = new StringBuilder("<html><head><link rel='stylesheet' href='chrome.css'></head><body>");
-        html.Append("<h1 class='title'>GuiShark / Text Lab</h1><p class='subtitle'>One font. Three portable approaches. An original baseline. Inspect the pixels and choose for your game.</p>");
+        html.Append("<h1 class='title'>GuiShark / Text Lab</h1><p class='subtitle'>One supported renderer. Compare shaping, inspect pixels and try multilingual font assets.</p>");
         html.Append("<div class='row' id='row1'>");
         for (var i = 0; i < modes.Length; i++) html.Append($"<button id='mode{i}'>{modes[i]}</button>");
         html.Append("<button id='smaller'>Size −</button><button id='larger'>Size +</button><button id='weight'></button></div>");
         html.Append("<div class='row' id='row2'><button id='density'></button><button id='snap'></button><button id='hint'></button><button id='filter'></button><button id='offset'></button></div>");
-        html.Append("<div class='row' id='row3'><button id='background'></button><button id='color'></button><button id='shadow'></button><button id='zoom'></button><button id='reset'>Reset</button><span id='readout' style='padding: 6px; font-size: 13px; color: #9fb2c8;'></span></div>");
+        html.Append("<div class='row' id='row3'><button id='background'></button><button id='color'></button><button id='shadow'></button><button id='zoom'></button><button id='script'></button><button id='reset'>Reset</button><span id='readout' style='padding: 6px; font-size: 13px; color: #9fb2c8;'></span></div>");
         foreach (var layout in layouts)
         {
             var c = layout.Card;
@@ -37,7 +37,7 @@ internal sealed class LabChrome : IDisposable
             if (errors.TryGetValue(layout.Index, out var error))
                 Label(html, "unavailable", "", "Unavailable: " + error, layout.Sample.X + 8, layout.Sample.Y + 10, layout.Sample.Width - 16, layout.Sample.Height - 20);
         }
-        html.Append($"<p class='footer'>Nearest pixel magnifier · Simulated density × native framebuffer scale {nativeScale:0.##} · Simple Latin layout; no complex shaping · F12 capture · Esc close</p></body></html>");
+        html.Append($"<p class='footer'>Nearest pixel magnifier · Simulated density × native framebuffer scale {nativeScale:0.##} · HarfBuzz single-run shaping; full bidi layout and RTL editing remain future work · F12 capture · Esc close</p></body></html>");
         View = new(HtmlLoader.Load(html.ToString(), assets), fonts);
         View.Resize(width, height);
         renderer = new(View, fonts);
@@ -64,11 +64,12 @@ internal sealed class LabChrome : IDisposable
         Bind("color", () => settings.Color = (settings.Color + 1) % 3);
         Bind("shadow", () => settings.Shadow = !settings.Shadow);
         Bind("zoom", () => settings.Zoom = settings.Zoom == 8 ? 2 : settings.Zoom * 2);
+        Bind("script", () => settings.Script = (settings.Script + 1) % LanguageSamples.All.Count);
         Bind("reset", () =>
         {
             settings.Size = 14; settings.Density = 1; settings.Snap = true; settings.Hinting = TextHinting.Normal;
             settings.Sampling = TextSampling.Linear; settings.Fractional = true; settings.Bold = settings.Shadow = false;
-            settings.Background = settings.Color = 0; settings.Zoom = 2;
+            settings.Background = settings.Color = settings.Script = 0; settings.Zoom = 2;
         });
     }
     private void Set(string id, string text) => View.Document.GetElement(id).Text = text;
@@ -82,7 +83,8 @@ internal sealed class LabChrome : IDisposable
         Set("offset", settings.Fractional ? "Origin: +½ device px" : "Origin: Integer");
         Set("background", "Background: " + settings.BackgroundName); Set("color", $"Color: {new[] { "Adaptive", "Gold", "Mint" }[settings.Color]}");
         Set("shadow", $"Shadow: {(settings.Shadow ? "On" : "Off")}"); Set("zoom", $"Magnifier: {settings.Zoom}×");
-        Set("readout", $"Lato TTF · {settings.Size:0.#}px selected");
+        Set("script", "Sample: " + LanguageSamples.All[settings.Script].Name);
+        Set("readout", $"{settings.Size:0.#}px");
     }
     public void Statistics(TextPane pane)
     {

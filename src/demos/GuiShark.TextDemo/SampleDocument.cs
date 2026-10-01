@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Net;
 
 namespace GuiShark.TextDemo;
 
@@ -13,7 +14,13 @@ internal static class SampleDocument
             : "<div class='column'><p class='tiny'>10: Café</p><p class='large'>Aa Gg</p></div>"
                 + "<div class='column'><p class='small'>12: 012345</p><p class='display'>Ag</p></div>"
                 + "<div class='column'><p class='normal'>14: naïve</p><p class='medium'>Aa Gg</p></div>";
+        var sample = LanguageSamples.All[settings.Script];
+        if (settings.Script != 0) matrix = LanguageMatrix(sample, compact);
         var html = assets.ReadText("sample.html")
+            .Replace("{{family}}", sample.Family)
+            .Replace("{{inspect}}", WebUtility.HtmlEncode(sample.Text))
+            .Replace("{{hint}}", WebUtility.HtmlEncode(sample.ShortText))
+            .Replace("{{specimen}}", settings.Script == 0 ? "Resume flight" : WebUtility.HtmlEncode(sample.ShortText))
             .Replace("{{matrix}}", matrix)
             .Replace("{{padding}}", compact ? "0" : "8")
             .Replace("{{color}}", settings.Foreground)
@@ -27,5 +34,10 @@ internal static class SampleDocument
             // Deliberately half a physical pixel, regardless of density.
             .Replace("{{offset}}", (settings.Fractional ? .5f / effectiveDensity : 0).ToString(CultureInfo.InvariantCulture));
         return HtmlLoader.Load(html, assets);
+    }
+    private static string LanguageMatrix(LanguageSample sample, bool compact)
+    {
+        var sizes = compact ? new[] { "tiny", "normal", "large" } : ["small", "medium", "display"];
+        return string.Concat(sizes.Select(size => $"<div class='column'><p class='{size}'>{WebUtility.HtmlEncode(sample.ShortText)}</p></div>"));
     }
 }
