@@ -13,7 +13,7 @@ internal sealed class OpenGlTextCanvas(QuadPainter painter) : ITextCanvas, IDisp
 
     public void Begin() { frame++; DrawCalls = Uploads = 0; }
     public void Draw(TextImage image, UiRect destination, UiRect source, UiColor color, float opacity,
-        TextSampling sampling = TextSampling.Linear, float distanceRange = 0)
+        TextSampling sampling = TextSampling.Linear)
     {
         if (!textures.TryGetValue(image, out var entry))
         {
@@ -26,7 +26,7 @@ internal sealed class OpenGlTextCanvas(QuadPainter painter) : ITextCanvas, IDisp
             Uploads++;
         }
         textures[image] = entry with { Revision = image.Revision, LastFrame = frame };
-        painter.Texture(destination, entry.Texture, color, opacity, source: source, sampling: sampling, distanceRange: distanceRange);
+        painter.Texture(destination, entry.Texture, color, opacity, source: source, sampling: sampling);
         DrawCalls++;
     }
 

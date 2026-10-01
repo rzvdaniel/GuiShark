@@ -12,8 +12,10 @@ public sealed class UiTextInput
     private int caret;
     private readonly TextEditHistory history = new();
     private readonly TextInputGeometry geometry;
+    private readonly TextComposition composition;
     private bool revealCaret = true;
     private bool showPassword;
+    private bool readOnly;
     private float? preferredX;
     private (int Start, int End) pointerWord;
     internal bool CaretUpstream { get; private set; }
@@ -26,22 +28,44 @@ public sealed class UiTextInput
         IsMultiline = multiline;
         IsPassword = password;
         geometry = new(owner, this);
+        composition = new(this);
     }
     public bool IsMultiline { get; }
     public bool IsPassword { get; }
+    public UiComposition? Composition => composition.State;
+    public event Action<UiTextInput>? CompositionChanged;
+    internal string DisplayValue => composition.DisplayValue;
+    internal int DisplayCaret => composition.DisplayCaret;
+    internal int CompositionStart => composition.Start;
+    public IReadOnlyList<UiRect> CompositionRects => geometry.CompositionRects;
+    internal void UpdateComposition(string text, int selectionStart, int selectionLength)
+    {
+        if (ReadOnly) return;
+        if (text.Length == 0) { CancelComposition(); return; }
+        composition.Update(text, selectionStart, selectionLength);
+        Refresh();
+        CompositionChanged?.Invoke(this);
+    }
+    public void CancelComposition()
+    {
+        if (!composition.Clear()) return;
+        Refresh();
+        CaretUpstream = composition.Upstream;
+        CompositionChanged?.Invoke(this);
+    }
     public bool ShowPassword
     {
         get => showPassword;
         set { if (showPassword != value) { showPassword = value; Refresh(); } }
     }
     internal bool IsMasked => IsPassword && !ShowPassword;
-    internal string Mask(string text) => IsMasked ? new string('•', StringInfo.ParseCombiningCharacters(text).Length) : text;
+    internal string Mask(string text) => IsMasked ? new string('â€¢', StringInfo.ParseCombiningCharacters(text).Length) : text;
     public int Rows { get; internal set; } = 4;
     public bool CanUndo => !ReadOnly && history.CanUndo;
     public bool CanRedo => !ReadOnly && history.CanRedo;
     private TextEditState State => new(value, anchor, caret, CaretUpstream);
-    public void Undo() { if (CanUndo) Restore(history.Undo(State)); }
-    public void Redo() { if (CanRedo) Restore(history.Redo(State)); }
+    public void Undo() { CancelComposition(); if (CanUndo) Restore(history.Undo(State)); }
+    public void Redo() { CancelComposition(); if (CanRedo) Restore(history.Redo(State)); }
     private void Restore(TextEditState state)
     {
         value = state.Value; anchor = state.Anchor; caret = state.Caret;
@@ -52,6 +76,7 @@ public sealed class UiTextInput
         get => value;
         set
         {
+            CancelComposition();
             var next = Clean(value ?? "");
             if (this.value == next) return;
             history.Clear();
@@ -63,7 +88,17 @@ public sealed class UiTextInput
         }
     }
     public string Placeholder { get => placeholder; set { placeholder = Clean(value ?? "", false); Refresh(); } }
-    public bool ReadOnly { get; set; }
+    public bool ReadOnly
+    {
+        get => readOnly;
+        set
+        {
+            if (readOnly == value) return;
+            readOnly = value;
+            if (readOnly) CancelComposition();
+            owner.Invalidate();
+        }
+    }
     /// <summary>Maximum UTF-16 length; insertion never splits a grapheme.</summary>
     public int MaximumLength
     {
@@ -74,11 +109,12 @@ public sealed class UiTextInput
     public int SelectionStart => Math.Min(anchor, caret);
     public int SelectionLength => Math.Abs(anchor - caret);
     public string SelectedText => value.Substring(SelectionStart, SelectionLength);
-    public bool IsPlaceholder => value.Length == 0;
-    public void SelectAll() { CaretUpstream = false; anchor = 0; caret = value.Length; InvalidateCaret(); }
+    public bool IsPlaceholder => value.Length == 0 && Composition == null;
+    public void SelectAll() { CancelComposition(); CaretUpstream = false; anchor = 0; caret = value.Length; InvalidateCaret(); }
     public void Select(int start, int length)
     {
         if (start < 0 || length < 0 || start > value.Length - length) throw new ArgumentOutOfRangeException(nameof(start));
+        CancelComposition();
         CaretUpstream = false; anchor = Boundary(start); caret = Boundary(start + length); InvalidateCaret();
     }
     /// <summary>Insert at the current selection as an undoable edit.</summary>
@@ -86,6 +122,7 @@ public sealed class UiTextInput
 
     internal void Insert(string text)
     {
+        CancelComposition();
         if (ReadOnly) return;
         var insert = Clean(text, false);
         var capacity = maximumLength - (value.Length - SelectionLength);
@@ -241,5 +278,5 @@ public sealed class UiTextInput
         var end = StringInfo.ParseCombiningCharacters(text).Where(i => i <= limit).DefaultIfEmpty(0).Last();
         return text[..end];
     }
-    private void Refresh() { CaretUpstream = false; owner.Text = IsPlaceholder ? placeholder : Mask(value); InvalidateCaret(); }
+    private void Refresh() { CaretUpstream = false; owner.Text = DisplayValue.Length == 0 ? placeholder : Mask(DisplayValue); InvalidateCaret(); }
 }

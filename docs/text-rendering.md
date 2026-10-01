@@ -1,67 +1,45 @@
 # GuiShark text rendering
 
-GuiShark now uses `ITextBackend` for both layout measurement and text drawing. The default is pixel-aligned Skia. Existing `OpenGlUiRenderer(view, fonts)` hosts get the improvement without adopting a new windowing library. The original Skia path is retained only as a selectable comparison backend.
+The supported implementation is **pixel-aligned Skia with HarfBuzz shaping**. `OpenGlUiRenderer(view, fonts)` uses it by default. Skia rasterizes transparent grayscale label masks at the device size; OpenGL composites these over the existing game framebuffer. `ITextBackend` remains the extension point for custom implementations.
+
+The standalone FreeType and MSDF backends, the old resampled baseline, their atlases, native package references and generation tools have been retired. Their earlier implementation is available in Git history at `e0b37ac`. There is no atlas-build prerequisite for fonts now.
 
 ## Run Text Lab
 
 ```powershell
 dotnet run --project src/demos/GuiShark.TextDemo
+dotnet run --project src/demos/GuiShark.TextDemo -- --sample arabic
+dotnet run --project src/demos/GuiShark.TextDemo -- --mode harfbuzz --sample indic
+dotnet run --project src/demos/GuiShark.TextDemo -- --density 1.25 --background hills --shadow
 ```
 
-Choose **Compare all** for a two-by-two comparison or select one backend. The controls change selected font size (8–48px), regular/bold weight, adaptive/gold/mint colors, density (1/1.25/1.5/2×), pixel snapping, hinting, linear/nearest filtering, half-device-pixel positioning, sharp shadows, and dark/light/moving hill backgrounds. The HTML specimen includes sizes 10, 12, 14, 18, 24 and 36px, Latin accents, digits and punctuation. A centered HTML button is shown when the pane has room. Compact panes use a single row of six size specimens instead of clipping the larger letters. Large selected sizes can wrap or clip within the specimen viewport; select one backend to give them more space.
+**Compare shaping** shows two panes using the same Skia rasterizer: direct glyph mapping and HarfBuzz shaping. The right pane represents the SDK default. Arabic makes joining and direction differences particularly visible. Use the Sample button to cycle Latin, CJK, Indic, Arabic and mixed RTL specimens. Mixed RTL is diagnostic: full bidirectional paragraph layout is not implemented.
 
-The magnifier samples a crop around the selected line at 2/4/8× using nearest filtering, so each source framebuffer pixel becomes a square. Larger magnifications deliberately show a smaller crop. Tab/Shift+Tab and Enter/Space operate the controls. F12 saves a screenshot; Escape clears UI focus, then closes.
+Controls adjust selected font size (8–48px), regular/bold weight, adaptive/gold/mint colors, simulated density (1/1.25/1.5/2×), pixel snapping, hinting, filtering, half-device-pixel positioning, shadows and backgrounds. The Latin matrix shows 10, 12, 14, 18, 24 and 36px samples; multilingual matrices show a smaller set of sizes for readability. Large specimens may clip within a comparison pane; select one rendering mode to give them more space. The bundled Noto families currently provide regular weight only, so Bold falls back to their regular face.
 
-Comparison panes draw into separate host-owned OpenGL framebuffers and composite **one-to-one**, without downsampling the text. Density multiplies the native framebuffer scale and changes each pane's logical dimensions. This is a density simulation, not verification of a physical HiDPI monitor. Chrome always uses default Skia and the native scale, independently of the specimen options. All panes share the same setting values and background time; metrics and spacing follow each actual backend.
+The magnifier enlarges actual framebuffer pixels at 2/4/8× using nearest filtering. This simulates density, not a physical HiDPI display. Each pane uses the same settings and background time, draws into its own host-owned framebuffer, and composites one-to-one. Text Lab chrome uses the default shaped Skia independently of the specimen options. Statistics show cache entries, GPU bytes, draws, uploads and CPU paint time; they exclude GPU completion time and are not a benchmark.
+
+CLI modes are `compare|skia|harfbuzz`; samples are `latin|cjk|indic|arabic|mixed`. Existing size, hinting and filter flags remain: `--font-size 8..48`, `--density 1|1.25|1.5|2`, `--hinting none|slight|normal|full`, `--filter linear|nearest`, `--no-snap`, `--integer`, `--bold`, `--shadow`, `--background dark|light|hills`, `--size WIDTHxHEIGHT` (minimum 1180×900), and `--assets DIR`.
 
 ```powershell
-dotnet run --project src/demos/GuiShark.TextDemo -- --capture artifacts/text-lab.png
-dotnet run --project src/demos/GuiShark.TextDemo -- --density 1.25 --background hills --shadow
-dotnet run --project src/demos/GuiShark.TextDemo -- --mode msdf --font-size 36 --bold
+dotnet run --project src/demos/GuiShark.TextDemo -- --sample arabic --capture artifacts/text-shaping.png
 ```
 
-Capture mode warms the renderer for 30 frames, saves the actual framebuffer, and closes. It freezes background time for review. Optional flags: `--assets DIR`, `--size WIDTHxHEIGHT` (minimum 1180×900), `--no-snap`, `--integer`, `--bold`, `--shadow`, `--background dark|light|hills`, `--hinting none|slight|normal|full` and `--filter linear|nearest`. Backend modes are `compare|baseline|skia|freetype|msdf`.
+Capture mode warms 30 frames, freezes background time, saves the framebuffer and closes. Tab/Shift+Tab and Enter/Space operate controls; F12 captures; Escape clears focus, then closes.
 
-![Four real text rendering paths at native size](text-lab.png)
-
-## Approaches and tradeoffs
-
-| Backend | Pipeline | Useful for | Limits |
-| --- | --- | --- | --- |
-| Skia baseline | Whole-label bitmap, original logical placement, linear sampling and resized texture width | Seeing the previous behavior | Deliberately ignores hint/snap/filter controls |
-| Skia pixel aligned | Grayscale rasterization at device size, explicit hinting, optional integer origins/baselines, exact texture dimensions | Small fixed-size menus and HUD labels; default | Re-rasterizes when size or density changes; whole-label textures |
-| FreeType glyph atlas | FreeTypeSharp 3.1.0; hinted grayscale glyphs packed into padded RGBA atlas pages | Reused glyphs, numbers and changing HUD labels | Integer device font sizes; native library needed; per-glyph draw calls |
-| MSDF scalable atlas | Baked multi-channel distance fields; derivative-based GLSL reconstruction | Large labels and scalable text without size-specific bitmaps | No hinting; linear filtering required; prebuilt font/charset; small text can appear lighter |
-
-These are three rendering approaches, rather than a guarantee of three unrelated underlying font engines. Skia can use platform-specific font implementations. The common contract allows another backend to be added without changing DOM/layout/input. Hinting names are not a promise of identical output: FreeType Slight selects LIGHT targeting, Normal uses the font's default hinter, Full forces auto-hinting, and None disables hinting. Skia uses its corresponding `SKFontHinting` setting. MSDF ignores hint/filter controls and states that in its pane description. [FreeType's glyph API](https://freetype.org/freetype2/docs/reference/ft2-glyph_retrieval.html) and [the atlas generator](https://github.com/Chlumsky/msdf-atlas-gen) describe those mechanisms.
-
-Observed draw calls, uploads, cache entries, GPU bytes, and CPU paint time appear per pane. They exclude chrome, host composition, background rendering, and GPU completion time. They are diagnostic observations, **not a benchmark**. The FreeType backend currently emits one draw per visible glyph (and another for its shadow); batching is a possible future optimization.
-
-## Why the old text looked soft
-
-The old label path rounded bitmap dimensions up but displayed them at the original logical width, introducing a small resize. Fractional UI coordinates, fractional baselines and linear sampling could interpolate those bitmap pixels again. The new Skia path preserves the bitmap's exact device dimensions, uses explicit hinting, and can align its origin and baselines to device pixels. Nearest sampling is available for comparison, rather than forced for all text or artwork.
-
-Pixel alignment improves fixed-size UI text; it cannot make every font, size, transform and display identical. Grayscale anti-aliasing remains necessary for curved glyph outlines. GuiShark does not implement LCD subpixel rendering: its transparent HUD can be composited onto arbitrary backgrounds and displays. Fractional size/density can legitimately produce different glyph weights and advances. Uniform host scaling is recommended; nonuniform scaling can resample bitmap glyphs.
+![Skia with and without HarfBuzz shaping](text-lab.png)
 
 ## Load fonts with CSS
 
-Copy `.ttf` or `.otf` files beneath your application's asset root and include them in the build output:
+Copy TTF/OTF files beneath your asset root and copy assets into the build output:
 
 ```xml
 <Content Include="Assets/**/*" CopyToOutputDirectory="PreserveNewest" />
 ```
 
 ```css
-@font-face {
-    font-family: "My UI";
-    src: url("fonts/MyUi-Regular.ttf");
-    font-weight: 400;
-}
-@font-face {
-    font-family: "My UI";
-    src: url("fonts/MyUi-Bold.ttf");
-    font-weight: 700;
-}
+@font-face { font-family: "My UI"; src: url("fonts/MyUi-Regular.ttf"); font-weight: 400; }
+@font-face { font-family: "My UI"; src: url("fonts/MyUi-Bold.ttf"); font-weight: 700; }
 body { font-family: "My UI"; font-size: 14px; }
 button { font-weight: bold; }
 ```
@@ -73,101 +51,37 @@ using var fonts = new FontBook(document, "My UI");
 using var view = new UiView(document, fonts);
 using var renderer = new OpenGlUiRenderer(view, fonts);
 view.Resize(logicalWidth, logicalHeight);
-// Inside your existing GL game loop, after drawing the scene:
+// After drawing your scene, on its OpenGL thread:
 renderer.Render(framebufferWidth, framebufferHeight);
 ```
 
-CSS paths resolve against the document's asset source, including declarations inside linked stylesheets. Nothing is downloaded or installed into the OS. `FontBook.Load(document)` adds CSS families to an existing host font book. A missing bold face uses the family's regular face; unknown families fail explicitly. Registered families are immutable: create a new font book to reload changed font bytes. The current subset has no WOFF, italics, font fallback lists, variable axes, or remote URLs.
+Fonts load directly from asset bytes at runtime. No download, OS font installation, prebuilt atlas or separate tool is needed. Paths resolve against the document's asset source. `FontBook.Load(document)` registers additional CSS families. Missing bold faces use the family's regular face; unknown families fail explicitly. Registered families are immutable; restart or create a new font book when font bytes change.
 
-Skia and FreeType load font bytes directly. **MSDF requires a matching prebuilt PNG/JSON atlas**, so merely replacing the TTF does not replace its glyph artwork. Its constructor takes regular/bold atlases and a family name; incompatible family selections fail explicitly. The caller must keep the atlases and the chosen font files consistent.
+The current subset has no WOFF, italics, variable axes, remote URLs or font fallback lists. Multilingual demos link static regular-weight Noto font assets and their OFL licenses from `src/demos/SharedAssets/fonts`; [font provenance](../src/demos/SharedAssets/fonts/README.md).
 
-## Select or implement a backend
+## Configure the renderer
+
+Pixel snapping and hinting are enabled by default. Bitmap dimensions match the physical texture size so the UI does not resample text to a fractional logical width. Curves still need grayscale antialiasing; alignment cannot make every font, size or display identical. Transparent HUDs do not use LCD subpixel rendering.
 
 ```csharp
-fonts.Load(document); // Before layout when using CSS font families.
-using var backend = new FreeTypeTextBackend(fonts);
+using var backend = new SkiaTextBackend(fonts); // HarfBuzz enabled.
+// For diagnostics only: new SkiaTextBackend(fonts, shaping: false).
 using var view = new UiView(document, backend);
 using var renderer = new OpenGlUiRenderer(view, backend); // Borrows backend.
-renderer.TextOptions = new(PixelSnap: true, Hinting: TextHinting.Normal);
+renderer.TextOptions = new(PixelSnap: true, Hinting: TextHinting.Normal,
+    Sampling: TextSampling.Linear);
 ```
 
-`renderer.SetTextBackend(nextBackend)` changes layout metrics and releases old GPU text textures. The caller owns borrowed backends; pass `ownsTextBackend: true` to transfer ownership. Use one backend per renderer because its raster scale and caches are mutable. Fonts may be shared. Dispose renderer, view, backend and font book before destroying the context.
+Use one backend per renderer: density, options and caches are mutable. Font books can be shared. `SetTextBackend` replaces layout metrics and releases old GPU text textures. Backends are borrowed unless `ownsTextBackend: true` transfers ownership. Dispose renderer, view, backend and font book before destroying the GL context.
 
-`ITextBackend` extends `ITextMetrics`. `Configure` establishes density/options and reports metric changes; `Draw` submits `TextImage` + source/destination rectangles to `ITextCanvas`. CPU font/rasterization code has no window/context dependency; `OpenGlTextCanvas` owns GPU textures and revision-based uploads. Atlas masks are premultiplied RGBA coverage; MSDF images contain raw RGB distance data in a non-sRGB RGBA8 texture. The shader generates premultiplied color for the existing UI blend path. Drawing preserves the existing framebuffer and host graphics-state behavior.
+`ITextBackend` combines measurement, configuration, cache diagnostics and drawing through `ITextCanvas`. Text images are premultiplied RGBA masks; the renderer preserves the existing framebuffer and host graphics state. Skia keeps up to 128 cached label images. GPU textures unused for more than two frames are released. HarfBuzz shapers are owned by the backend and borrow its font book's typefaces.
 
-Skia caches at most 128 label images. FreeType uses 1024² pages with gutters and a 16-page/64 MiB atlas budget; exceeding it fails clearly instead of invalidating live glyphs. Density/hint changes reset that atlas. GPU images unused for more than two frames are released. Image textures and font bytes are outside the displayed text cache totals.
+## Shaping and editing limits
 
-The comparison uses Unicode scalar enumeration for atlas paths, basic LTR word wrapping, and no pair kerning/ligatures. It is not a full typography engine: no complex-script shaping, bidi, emoji or font fallback. **HarfBuzz** is the portable shaping component to introduce before supporting Arabic/Indic scripts and advanced OpenType positioning; it is deliberately not presented as an implemented fourth rasterizer. [HarfBuzz's manual](https://harfbuzz.github.io/what-is-harfbuzz.html) explains its role.
+HarfBuzz handles OpenType substitutions and positioning for a single font/script/direction run. It is not a complete paragraph engine. GuiShark does not yet segment or reorder bidi runs, resolve font fallback, implement color emoji, or map carets/selections through shaped glyph clusters. Logical prefix measurement can be imperfect around contextual forms and ligatures. Ordinary labels wrap at whitespace; textareas preserve graphemes when wrapping. See [multilingual input and composition](multilingual-input.md).
 
-## Platforms and native assets
+## Platforms and migration
 
-There is no DirectWrite, GDI or other Windows-only text path. Skia and FreeType use cross-platform packages; MSDF needs no additional native rasterizer at runtime, although the SDK's image/font infrastructure still uses Skia. FreeTypeSharp 3.1.0 ships its patched FreeType 2.13.2; do not replace it with an arbitrary system library because its ABI must match the bindings. [FreeTypeSharp's source](https://github.com/ryancheung/FreeTypeSharp) identifies the patched build.
+SkiaSharp 4.153.0 and matching SkiaSharp.HarfBuzz 4.153.0 load native font/rasterization/shaping libraries. HarfBuzzSharp 14.2.1.300 supplies Win32/macOS native assets; the SDK explicitly references matching Linux native assets. Controls Gallery uses Silk.NET.SDL 2.23.0 with SDL 2.32.10; the other demos retain OpenTK. A desktop display, OpenGL 3.3 core driver and the chosen host's OS dependencies are required. Native Linux/macOS execution and real OS IME/HiDPI behavior remain unverified; [validation results](multilingual-validation.md).
 
-| Platform | FreeTypeSharp 3.1.0 package inspected here | Native rendering status |
-| --- | --- | --- |
-| Windows x64 | `freetype.dll`; also ships x86/ARM64 binaries | Windows x64 OpenGL captures reviewed |
-| Linux x64 | `libfreetype.so` | Packaging checked; native rendering unverified |
-| macOS x64 / Apple Silicon | `libfreetype.dylib`, universal x64/ARM64 Mach-O | Packaging checked; native rendering unverified |
-| Linux ARM64 | No matching FreeType native binary in this package | FreeType backend unavailable without a compatible build; other choices remain available |
-
-Text Lab displays an unavailable pane if a native dependency cannot load; it never silently substitutes Skia while calling it FreeType. A functioning OpenGL 3.3 core context and the host/window library's OS dependencies are still required. Release build passed; framework-dependent publishes for Windows x64, Linux x64, macOS x64 and macOS ARM64 contain the expected Skia/FreeType/GLFW native files. Windows captures were reviewed at 1×, 1.25×, 1.5× and 2× simulated density, including small-window, shadow, bold, bitmap and large MSDF specimens; Lantern Valley still renders with the improved default. The user confirmed Text Lab controls work. Native Linux/macOS execution and real HiDPI display behavior remain unverified. No unit or integration tests were added.
-
-## Generate MSDF atlases during build
-
-Text Lab imports the reusable [MSBuild targets](../tools/msdf/GuiShark.Msdf.targets). Configure a native **msdf-atlas-gen** executable for the build machine, then normal builds and publishes generate the atlases automatically:
-
-```powershell
-$env:GUISHARK_MSDF_GENERATOR = "C:\Tools\msdf-atlas-gen.exe"
-dotnet build src/demos/GuiShark.TextDemo
-dotnet publish src/demos/GuiShark.TextDemo
-```
-
-On Linux/macOS, use a generator compiled for that build host:
-
-```bash
-GUISHARK_MSDF_GENERATOR=/opt/msdf-atlas-gen dotnet build src/demos/GuiShark.TextDemo
-```
-
-Alternatively pass `-p:GuiSharkMsdfGenerator=/absolute/path/to/msdf-atlas-gen`. Providing a generator enables generation unless explicitly disabled with `-p:GuiSharkGenerateMsdfAtlases=false`. With no generator configured, Text Lab uses the committed atlases. Nothing is downloaded during the build, and no generator is copied into the application. Cross-publishing from Windows to Linux still uses a Windows generator; the resulting PNG/JSON assets are portable.
-
-For another application, import the helper and declare a font-folder glob once. Newly added TTF/OTF files are then discovered on the next build; CSS continues to choose the runtime font family:
-
-```xml
-<Import Project="path/to/GuiShark/tools/msdf/GuiShark.Msdf.targets" />
-<ItemGroup>
-  <GuiSharkMsdfFont Include="Assets/fonts/*.ttf;Assets/fonts/*.otf" />
-</ItemGroup>
-```
-
-Keep `GenerateMsdfAtlas.cs` beside the imported targets. This is an explicit project import, not an automatically installed NuGet build extension. Each font produces `FontFileName.png` and `FontFileName.json` under `obj/<configuration>/.../guishark-msdf/`, linked into `Assets/atlas` in the build and publish output. The source asset directory is not modified. Runtime `MsdfAtlas` instances still need to select those matching files and the correct family name; CSS declarations do not generate an atlas registry.
-
-| Setting | Default |
-| --- | --- |
-| `GuiSharkMsdfAssetPath` | `Assets/atlas`, the output/publish asset path |
-| `GuiSharkMsdfCharset` | `[0x20,0x17f], [0x2010,0x2026]` |
-| `GuiSharkMsdfEmSize` | `48` pixels/em |
-| `GuiSharkMsdfDistanceRange` | `4` atlas pixels |
-
-Per-font metadata `AtlasName`, `Charset`, `EmSize` and `DistanceRange` override these defaults. `AtlasName` defaults to the font filename without its extension and must be unique. The charset must contain `?` for the runtime's missing-glyph fallback. Generation uses MSDF PNGs, bottom-origin JSON and no pair kerning, matching the runtime loader.
-
-MSBuild checks font files, generator timestamps, helper files and a settings fingerprint per font. Unchanged atlases are skipped; changed settings or missing outputs regenerate them. Private staging directories keep generator failures from overwriting previously successful assets; a completion marker prevents failed generations from being treated as current. Enabled generation fails with a clear build error if the tool or font is missing. `dotnet clean` does not require the generator, and disabling generation restores the bundled assets even when generated copies are newer. The targets use MSBuild's cross-platform [Roslyn task factory](https://learn.microsoft.com/en-us/visualstudio/msbuild/msbuild-roslyncodetaskfactory) and [incremental target batching](https://learn.microsoft.com/en-us/visualstudio/msbuild/incremental-builds).
-
-Windows verification covered first generation, an unchanged incremental build, changed atlas size, a generator path containing spaces, build/publish asset copying, rendering the generated atlas, and restoring bundled assets. Clean and the normal Release solution build passed. Native Linux/macOS build execution remains unverified; no unit or integration tests were added.
-
-## Rebuild the bundled MSDF assets manually
-
-The included atlases use **msdf-atlas-gen 1.4 / MSDFgen 1.13**, bundled Lato Regular/Bold, 48 pixels/em, a 4-pixel distance range, bottom-origin metadata, and no pair kerning. The requested charset is U+0020–017F plus U+2010–2026. Each font supplies 338 glyphs; controls U+007F–009F and U+2011/2023/2024/2025 are absent. Unsupported scalars render `?` in the atlas backends; this is visible fallback, not full Unicode coverage.
-
-Download the official generator release or build it from source, then run with PowerShell 7 on any supported platform:
-
-```powershell
-./tools/generate-text-atlases.ps1 -Generator /path/to/msdf-atlas-gen
-```
-
-The equivalent command per font is:
-
-```text
-msdf-atlas-gen -font Lato-Regular.ttf -chars "[0x20,0x17f], [0x2010,0x2026]" -type msdf -format png -size 48 -pxrange 4 -yorigin bottom -nokerning -imageout Lato-Regular.png -json Lato-Regular.json
-```
-
-Keep the font OFL notice when redistributing the derived atlases. MSDFgen's shader formula and generator licenses are retained under `licenses/`; see [third-party notices](../THIRD-PARTY-NOTICES.md).
+Applications using the default renderer need no initialization changes. Applications using retired classes (`FreeTypeTextBackend`, `MsdfTextBackend`, `MsdfAtlas`) must switch to Skia. The old `legacyBaseline` constructor option and the canvas `distanceRange` argument are removed; the optional second constructor argument is now `shaping`. Remove MSDF target imports and font-generation items from your projects. Gallery `--text` and Text Lab `baseline|freetype|msdf` modes have been removed.

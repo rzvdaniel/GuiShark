@@ -18,35 +18,20 @@ internal static class TextPlacement
     }
 
     public static void Draw(ITextCanvas canvas, TextImage image, UiRect bounds, UiRect uv,
-        TextDrawRequest request, TextRenderOptions options, float range = 0)
+        TextDrawRequest request, TextRenderOptions options)
     {
         if (request.Element.Style.TextShadow is { } shadow)
-            Shadow(canvas, image, bounds, uv, shadow, request, options, range);
-        canvas.Draw(image, bounds, uv, Color(request.Element), request.Opacity, options.Sampling, range);
-    }
-
-    public static void DrawGlyphs(ITextCanvas canvas, IReadOnlyList<TextGlyphDraw> glyphs,
-        TextDrawRequest request, TextRenderOptions options, float range = 0)
-    {
-        // Paint the whole shadow layer first so an overlapping glyph's shadow cannot darken earlier ink.
-        if (request.Element.Style.TextShadow is { } shadow)
-            foreach (var glyph in glyphs)
-                Shadow(canvas, glyph.Image, glyph.Bounds, glyph.Source, shadow, request, options, range);
-        foreach (var glyph in glyphs)
-            canvas.Draw(glyph.Image, glyph.Bounds, glyph.Source, Color(request.Element),
-                request.Opacity, options.Sampling, range);
+            Shadow(canvas, image, bounds, uv, shadow, request, options);
+        canvas.Draw(image, bounds, uv, Color(request.Element), request.Opacity, options.Sampling);
     }
 
     private static UiColor Color(UiElement element) => element.TextInput?.IsPlaceholder == true ? element.Style.Color with { A = element.Style.Color.A * .55f } : element.Style.Color;
 
     private static void Shadow(ITextCanvas canvas, TextImage image, UiRect bounds, UiRect uv,
-        TextShadow shadow, TextDrawRequest request, TextRenderOptions options, float range)
+        TextShadow shadow, TextDrawRequest request, TextRenderOptions options)
     {
-        // Preserve fractional MSDF bearings; snap the displacement rather than each glyph's plane bounds.
         var x = bounds.X + Snap(shadow.X, request.ScaleX, options.PixelSnap);
         var y = bounds.Y + Snap(shadow.Y, request.ScaleY, options.PixelSnap);
-        canvas.Draw(image, bounds with { X = x, Y = y }, uv, shadow.Color, request.Opacity, options.Sampling, range);
+        canvas.Draw(image, bounds with { X = x, Y = y }, uv, shadow.Color, request.Opacity, options.Sampling);
     }
 }
-
-internal readonly record struct TextGlyphDraw(TextImage Image, UiRect Bounds, UiRect Source);

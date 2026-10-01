@@ -19,7 +19,7 @@ internal sealed class TextLabWindow : GameWindow
     private LabChrome? chrome;
     private IReadOnlyList<PaneLayout> layouts = [];
     private bool rebuild = true, capture;
-    private int previousMode = -1, frames;
+    private int previousMode = -1, previousScript = -1, frames;
     private Vector2i previousFramebuffer;
     private double elapsed, statisticsTime;
 
@@ -34,11 +34,11 @@ internal sealed class TextLabWindow : GameWindow
     {
         base.OnLoad(); VSync = VSyncMode.On;
         assets = new(launch.Assets);
-        // CSS is the source of truth for sample fonts, including the atlas backend's family name.
+        // CSS is the source of truth for the sample fonts.
         fonts = new(SampleDocument.Create(assets, settings, 1), "Lato");
-        catalog = new(fonts, assets); painter = new();
+        catalog = new(fonts); painter = new();
         Console.WriteLine($"OpenGL {GL.GetString(StringName.Version)} / {GL.GetString(StringName.Renderer)}");
-        Console.WriteLine("Text Lab: compare portable Skia, FreeType and MSDF. Tab/Enter operate controls. F12 saves PNG.");
+        Console.WriteLine("Text Lab: compare Skia with and without HarfBuzz shaping. Tab/Enter operate controls. F12 saves PNG.");
     }
 
     private UiRect Pixels(UiRect rect)
@@ -65,14 +65,19 @@ internal sealed class TextLabWindow : GameWindow
                 Console.Error.WriteLine($"{BackendCatalog.Name(layout.Index)} unavailable: {error}");
             }
         }
-        if (chrome == null || settings.Mode != previousMode || FramebufferSize != previousFramebuffer || errors.Count > 0)
+        if (NeedsChrome(errors.Count))
         {
             chrome?.Dispose();
             chrome = new(assets, fonts, settings, ClientSize.X, ClientSize.Y, layouts, errors, nativeScale, () => rebuild = true);
         }
         previousMode = settings.Mode; previousFramebuffer = FramebufferSize;
-        chrome.Refresh(); rebuild = false;
+        previousScript = settings.Script;
+        chrome!.Refresh(); rebuild = false;
     }
+
+    private bool NeedsChrome(int errors) => chrome == null || settings.Mode != previousMode
+        || settings.Script != previousScript
+        || FramebufferSize != previousFramebuffer || errors > 0;
 
     protected override void OnRenderFrame(FrameEventArgs args)
     {

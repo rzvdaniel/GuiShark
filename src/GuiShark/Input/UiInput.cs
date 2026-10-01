@@ -53,7 +53,7 @@ public sealed class UiInput
 
     public bool PointerDown(float x, float y, bool shift = false)
     {
-        view.Update();
+        PreparePointerPress();
         view.Tooltips.Hide();
         wordDrag = false;
         if (view.Popup.IsOpen)
@@ -75,6 +75,12 @@ public sealed class UiInput
         else if (!view.Modal.IsOpen) SetFocus(null);
         if (button != null && Focused == button) BeginPress(x, y, shift, doubleClick);
         return hovered != null || view.Modal.IsOpen;
+    }
+
+    private void PreparePointerPress()
+    {
+        Focused?.TextInput?.CancelComposition();
+        view.Update();
     }
 
     private void BeginPress(float x, float y, bool shift, bool doubleClick)
@@ -113,6 +119,7 @@ public sealed class UiInput
         view.Update();
         view.Tooltips.Hide();
         textClicks.Reset();
+        if (HandleCompositionKey(key)) return true;
         var scoped = HandleScopeKey(key, shift, repeat);
         if (scoped.HasValue) return scoped.Value;
         if (Focused == null) return view.Modal.IsOpen;
@@ -123,6 +130,25 @@ public sealed class UiInput
         if (Focused.Select != null && key is UiKey.Up or UiKey.Down) { consumedKeys.Add(key); view.Popup.Open(Focused); return true; }
         if (ControlInteraction.Key(Focused, key)) return true;
         return HandleActivation(key, repeat);
+    }
+
+    private bool HandleCompositionKey(UiKey key)
+    {
+        if (Focused?.TextInput is not { Composition: not null } input) return false;
+        if (key == UiKey.Tab) { input.CancelComposition(); return false; }
+        if (key == UiKey.Escape) input.CancelComposition();
+        consumedKeys.Add(key);
+        return true;
+    }
+
+    /// <summary>Forward host IME preedit updates. Offsets are UTF-16; empty text cancels preedit.</summary>
+    public bool UpdateComposition(string text, int selectionStart = 0, int selectionLength = 0)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        view.Update();
+        if (Focused?.TextInput is not { ReadOnly: false } input || !CanFocus(Focused)) return view.Modal.IsOpen;
+        input.UpdateComposition(text, selectionStart, selectionLength);
+        return true;
     }
 
     private bool? HandleScopeKey(UiKey key, bool shift, bool repeat)
@@ -176,6 +202,7 @@ public sealed class UiInput
 
     public void Cancel()
     {
+        Focused?.TextInput?.CancelComposition();
         if (pressed != null) SetPressed(pressed, false);
         if (keyboardPressed != null) SetPressed(keyboardPressed, false);
         pressed = keyboardPressed = null;
@@ -196,6 +223,7 @@ public sealed class UiInput
 
     internal void ValidateTargets()
     {
+        if (Focused?.TextInput is { ReadOnly: true } input) input.CancelComposition();
         if (Focused != null && !CanFocus(Focused)) Cancel();
         if (view.Modal.Active is { } dialog && Focused == null) FocusFirst(dialog.Element);
         if (scrollDrag.Active && !scrollDrag.IsVisible) scrollDrag.Cancel();
@@ -257,6 +285,7 @@ public sealed class UiInput
         keyboardPressed = null;
         activationKey = null;
         if (Focused != null) Focused.IsFocused = false;
+        Focused?.TextInput?.CancelComposition();
         Focused = element;
         if (Focused != null) { Focused.IsFocused = true; Focused.TextInput?.RevealCaret(); }
         view.Invalidate();

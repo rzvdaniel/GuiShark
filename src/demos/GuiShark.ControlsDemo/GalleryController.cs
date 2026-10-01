@@ -14,6 +14,7 @@ internal sealed class GalleryController
         Inventory = new(view, Log);
         _ = new TextEntryController(view, Log);
         _ = new PasswordController(view, Log);
+        _ = new MultilingualController(view);
         journal = new(view, Log);
         foreach (var element in document.Root.DescendantsAndSelf())
         {

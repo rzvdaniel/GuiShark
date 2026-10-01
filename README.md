@@ -2,7 +2,7 @@
 
 Define a small interface in HTML and CSS, render it in an existing OpenGL application, and bind buttons to C# code.
 
-The SDK is in `src/GuiShark` and `src/GuiShark.OpenGL`; all examples live in `src/demos`. It uses **.NET 10**, **AngleSharp 1.8.2**, **OpenTK 4.9.4**, **SkiaSharp 4.153.0**, and **FreeTypeSharp 3.1.0**. Shapes, borders, rounded corners, and gradients are drawn by OpenGL shaders. Pluggable text backends draw label bitmaps or glyph atlases; the engine does not render the whole UI to a bitmap. There is no embedded browser or JavaScript runtime.
+The SDK is in `src/GuiShark` and `src/GuiShark.OpenGL`; all examples live in `src/demos`. It uses **.NET 10**, **AngleSharp 1.8.2**, **OpenTK 4.9.4**, **SkiaSharp 4.153.0**, and **SkiaSharp.HarfBuzz 4.153.0**. Shapes, borders, rounded corners, and gradients are drawn by OpenGL shaders. The Skia text backend draws shaped label bitmaps; the engine does not render the whole UI to a bitmap. There is no embedded browser or JavaScript runtime.
 
 ![GuiShark's HTML/CSS playground rendered by OpenGL](docs/preview.png)
 
@@ -41,7 +41,7 @@ Click the landscape to fly, scroll to zoom, and use **Find the next lantern** fo
 
 ## Text Lab
 
-Compare **pixel-aligned Skia**, **FreeType glyph atlases**, and **MSDF scalable text** through the same SDK interface, with the original Skia path as a reference. Switch backends or view all four together; adjust size, weight, color, hinting, filtering, pixel snapping, fractional positioning, density, backgrounds and shadows. A nearest-pixel magnifier shows the actual framebuffer pixels.
+Compare **pixel-aligned Skia with and without HarfBuzz shaping** through the same SDK interface. Try Latin, CJK, Devanagari, Arabic and mixed-direction samples; adjust size, weight, color, hinting, filtering, pixel snapping, fractional positioning, density, backgrounds and shadows. A nearest-pixel magnifier shows the actual framebuffer pixels.
 
 ```powershell
 dotnet run --project src/demos/GuiShark.TextDemo
@@ -49,19 +49,19 @@ dotnet run --project src/demos/GuiShark.TextDemo
 
 TTF/OTF files can be copied into your asset directory and loaded using CSS `@font-face` and `font-family`. See [text rendering, font loading and platform notes](docs/text-rendering.md).
 
-MSDF atlases can also be generated during build/publish: configure `GUISHARK_MSDF_GENERATOR` with the native atlas generator's path, then build Text Lab normally. Generation is incremental and stays out of the shipped application. See [build-time setup for your own application](docs/text-rendering.md#generate-msdf-atlases-during-build).
+The SDK defaults to Skia + HarfBuzz. Fonts load from assets at runtime; no atlas generation step is needed. FreeType and MSDF implementations were retired to simplify maintenance; the common `ITextBackend` extension point remains.
 
-![GuiShark Text Lab comparing four rendering paths](docs/text-lab.png)
+![GuiShark Text Lab comparing shaping modes](docs/text-lab.png)
 
 ## Controls Gallery
 
-Try buttons, checkboxes, grouped radio buttons, sliders, labels, progress bars, dropdowns, vertical scrolling, modal dialogs, and tooltips, text fields, and textareas across five HTML-defined tab pages. Compare the optional neutral theme with an emerald CSS skin, inspect disabled/focus states, and watch C# value-change events in the live log.
+Try buttons, checkboxes, grouped radio buttons, sliders, labels, progress bars, dropdowns, vertical scrolling, modal dialogs, and tooltips, text fields, and textareas across six HTML-defined tab pages. Compare the optional neutral theme with an emerald CSS skin, inspect disabled/focus states, and watch C# value-change events in the live log.
 
 ```powershell
 dotnet run --project src/demos/GuiShark.ControlsDemo
 ```
 
-See [HTML controls, themes and input forwarding](docs/controls.md). Dropdowns render above clipped content; nested scroll areas and off-screen keyboard focus are demonstrated in a quest log. An inventory page demonstrates HTML item tooltips, Equip/Discard confirmations, trapped modal focus and popup integration. Text editing remains future work.
+See [HTML controls, themes and input forwarding](docs/controls.md). Dropdowns render above clipped content; nested scroll areas and off-screen keyboard focus are demonstrated in a quest log. An inventory page demonstrates HTML item tooltips, Equip/Discard confirmations, trapped modal focus and popup integration. The Multilingual input tab includes native SDL IME events and a portable composition exercise. See [multilingual input and shaping](docs/multilingual-input.md).
 
 ![GuiShark Controls Gallery rendered in OpenGL](docs/controls-gallery.png)
 
@@ -87,10 +87,10 @@ document.GetElement("increment").Clicked += button =>
 };
 ```
 
-This is an intentionally small retained UI engine. It has no text editing, full inline layout, flex wrapping, animation system, or accessibility bridge. Windows rendering and interaction have been manually checked; Linux/macOS are not yet verified. No unit or integration tests have been added.
+This is an intentionally small retained UI engine. It supports single-line and multiline editing, selections, passwords, undo/redo and IME preedit. Full bidirectional editing, inline layout, flex wrapping, animation and an accessibility bridge remain future work. Windows rendering and interaction have been manually checked; Linux/macOS are not yet verified. Managed regression tests run without a GL context.
 
-Code and project artwork use the repository's MIT license. Woodland asset provenance and generation prompts are in [artwork notes](docs/woodland-artwork.md). Bundled Lato fonts use the SIL Open Font License; see [third-party notices](THIRD-PARTY-NOTICES.md).
+Code and project artwork use the repository's MIT license. Woodland asset provenance and generation prompts are in [artwork notes](docs/woodland-artwork.md). Bundled Lato and Noto fonts use the SIL Open Font License; see [third-party notices](THIRD-PARTY-NOTICES.md).
 
-Controls Gallery also includes inventory search and a character-name dialog using portable single-line text editing. Use `--page=inventory --modal=name` to open it, and `--text=skia|freetype|msdf` to choose the whole-view text backend. See [text input and host integration](docs/controls.md#single-line-text-input).
+Controls Gallery also includes inventory search and a character-name dialog using portable single-line text editing. Use `--page=inventory --modal=name` to open it; the entire view uses Skia + HarfBuzz. See [text input and host integration](docs/controls.md#single-line-text-input).
 
 The **Journal & chat** gallery tab demonstrates wrapped textareas, multiline selection, scrolling, and undo/redo for both textareas and single-line fields. Run with `--page=journal`; [editor API and shortcuts](docs/controls.md#textareas-and-edit-history).

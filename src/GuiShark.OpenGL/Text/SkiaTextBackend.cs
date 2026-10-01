@@ -4,14 +4,15 @@ using SkiaSharp;
 namespace GuiShark.OpenGL;
 
 /// <summary>Whole-label grayscale rasterization. Borrows FontBook; dispose it after this backend.</summary>
-public sealed class SkiaTextBackend(FontBook fonts, bool legacyBaseline = false) : ITextBackend
+public sealed class SkiaTextBackend(FontBook fonts, bool shaping = true) : ITextBackend
 {
+    private readonly SkiaTextShaper? shaper = shaping ? new() : null;
     private readonly record struct Key(string Text, float Width, float Size, bool Bold, string Family, TextAlignment Align, float Offset, bool Editable, float OffsetY, float Height, bool Multiline);
     private readonly Dictionary<Key, TextImage> images = new();
     private float scale = 1;
     private TextRenderOptions options = new();
-    public TextBackendInfo Info { get; } = new(legacyBaseline ? "Skia baseline" : "Skia pixel aligned",
-        legacyBaseline ? "Original fractional placement + resized label texture" : "Grayscale bitmap at device size; exact texel mapping", !legacyBaseline, !legacyBaseline);
+    public TextBackendInfo Info { get; } = new(shaping ? "Skia + HarfBuzz" : "Skia pixel aligned",
+        shaping ? "Single-run HarfBuzz shaping; device-size grayscale bitmap" : "Grayscale bitmap at device size; exact texel mapping", true, true);
     public TextCacheStatistics Cache => new(images.Count, images.Values.Sum(i => (long)i.Pixels.Length));
 
     public bool Configure(float rasterScale, TextRenderOptions next)
@@ -27,29 +28,33 @@ public sealed class SkiaTextBackend(FontBook fonts, bool legacyBaseline = false)
     public float MeasureWidth(string text, float size, bool bold) => MeasureWidth(text, size, bold, "");
     public float MeasureWidth(string text, float size, bool bold, string family)
     {
-        using var font = fonts.CreateFont(legacyBaseline ? size : size * scale, bold, family, legacyBaseline ? null : options);
-        return font.MeasureText(text) / (legacyBaseline ? 1 : scale);
+        using var font = fonts.CreateFont(size * scale, bold, family, options);
+        return MeasureLine(text, font) / scale;
+    }
+
+    private float MeasureLine(string text, SKFont font) => shaper?.Measure(text, font) ?? font.MeasureText(text);
+    private void DrawLine(SKCanvas canvas, string line, float x, float baseline, SKFont font, SKPaint paint)
+    {
+        if (shaper != null) shaper.Draw(canvas, line, x, baseline, font, paint);
+        else canvas.DrawText(line, x, baseline, SKTextAlign.Left, font, paint);
     }
 
     public void Draw(TextDrawRequest request, ITextCanvas canvas)
     {
         var element = request.Element;
-        var style = element.Style;
         var key = CreateKey(element);
         if (!images.TryGetValue(key, out var image))
         {
             if (images.Count >= 128) images.Remove(images.First().Key);
             images[key] = image = Rasterize(element);
         }
-        var top = legacyBaseline
-            ? element.TextBounds.Y + (element.IsButton ? Math.Max(0, (element.TextBounds.Height - image.Height / scale) / 2) : 0)
-            : TextPlacement.Top(request, TextLayout.Lines(element, key.Width, this).Count);
+        var top = TextPlacement.Top(request, TextLayout.Lines(element, key.Width, this).Count);
         var bounds = new UiRect(
-            TextPlacement.Snap(element.TextInput != null ? element.ContentBounds.X : element.TextBounds.X, request.ScaleX, !legacyBaseline && options.PixelSnap),
-            TextPlacement.Snap(element.TextInput?.IsMultiline == true ? element.ContentBounds.Y : top, request.ScaleY, !legacyBaseline && options.PixelSnap),
-            legacyBaseline ? key.Width : image.Width / scale, image.Height / scale);
+            TextPlacement.Snap(element.TextInput != null ? element.ContentBounds.X : element.TextBounds.X, request.ScaleX, options.PixelSnap),
+            TextPlacement.Snap(element.TextInput?.IsMultiline == true ? element.ContentBounds.Y : top, request.ScaleY, options.PixelSnap),
+            image.Width / scale, image.Height / scale);
         TextPlacement.Draw(canvas, image, bounds, new(0, 0, 1, 1), request,
-            legacyBaseline ? new(false, TextHinting.Normal, TextSampling.Linear) : options);
+            options);
     }
 
     private static Key CreateKey(UiElement element)
@@ -73,18 +78,17 @@ public sealed class SkiaTextBackend(FontBook fonts, bool legacyBaseline = false)
             Math.Max(1, (int)Math.Ceiling((element.TextInput?.IsMultiline == true ? element.ContentBounds.Height : lines.Count * style.LineHeight) * scale)), SKColorType.Rgba8888, SKAlphaType.Premul);
         using var canvas = new SKCanvas(bitmap);
         canvas.Clear(SKColors.Transparent);
-        if (legacyBaseline) canvas.Scale(scale);
-        var unit = legacyBaseline ? 1 : scale;
-        using var font = fonts.CreateFont(style.FontSize * unit, style.Bold, style.FontFamily, legacyBaseline ? null : options);
+        var unit = scale;
+        using var font = fonts.CreateFont(style.FontSize * unit, style.Bold, style.FontFamily, options);
         using var paint = new SKPaint { Color = SKColors.White, IsAntialias = true };
         var baseline = (style.LineHeight * unit - (font.Metrics.Descent - font.Metrics.Ascent)) / 2 - font.Metrics.Ascent
             + (element.TextInput?.IsMultiline == true ? (element.TextBounds.Y - element.ContentBounds.Y) * unit : 0);
         foreach (var line in lines)
         {
-            var x = TextPlacement.Align(width * unit, font.MeasureText(line), style.TextAlign)
+            var x = TextPlacement.Align(width * unit, MeasureLine(line, font), style.TextAlign)
                 + (element.TextInput != null ? (element.TextBounds.X - element.ContentBounds.X) * unit : 0);
-            canvas.DrawText(line, !legacyBaseline && options.PixelSnap ? MathF.Round(x) : x,
-                !legacyBaseline && options.PixelSnap ? MathF.Round(baseline) : baseline, SKTextAlign.Left, font, paint);
+            DrawLine(canvas, line, options.PixelSnap ? MathF.Round(x) : x,
+                options.PixelSnap ? MathF.Round(baseline) : baseline, font, paint);
             baseline += style.LineHeight * unit;
         }
         canvas.Flush();
@@ -93,5 +97,5 @@ public sealed class SkiaTextBackend(FontBook fonts, bool legacyBaseline = false)
         return result;
     }
 
-    public void Dispose() => images.Clear();
+    public void Dispose() { images.Clear(); shaper?.Dispose(); }
 }
