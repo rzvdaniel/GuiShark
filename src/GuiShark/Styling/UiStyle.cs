@@ -60,7 +60,7 @@ public sealed class UiStyle
         TextShadow = parent?.TextShadow,
         Bold = parent?.Bold ?? false,
         PointerEvents = element.Role == "tooltip" ? false : parent?.PointerEvents ?? true,
-        ScrollY = element.Dialog != null,
+        ScrollY = element.Dialog != null || element.TextInput?.IsMultiline == true,
         MaxWidth = element.IsOverlay ? CssLength.Parse("90%") : CssLength.Auto,
         Gap = element.IsOverlay ? 12 : 0,
         TextAlign = element.TextInput != null ? TextAlignment.Left : element.Role == "tooltip" ? TextAlignment.Left : element.IsButton ? TextAlignment.Center : parent?.TextAlign ?? TextAlignment.Left,

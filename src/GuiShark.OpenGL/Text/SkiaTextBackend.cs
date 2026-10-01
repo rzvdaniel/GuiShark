@@ -6,7 +6,7 @@ namespace GuiShark.OpenGL;
 /// <summary>Whole-label grayscale rasterization. Borrows FontBook; dispose it after this backend.</summary>
 public sealed class SkiaTextBackend(FontBook fonts, bool legacyBaseline = false) : ITextBackend
 {
-    private readonly record struct Key(string Text, float Width, float Size, bool Bold, string Family, TextAlignment Align, float Offset, bool SingleLine);
+    private readonly record struct Key(string Text, float Width, float Size, bool Bold, string Family, TextAlignment Align, float Offset, bool Editable, float OffsetY, float Height, bool Multiline);
     private readonly Dictionary<Key, TextImage> images = new();
     private float scale = 1;
     private TextRenderOptions options = new();
@@ -35,7 +35,7 @@ public sealed class SkiaTextBackend(FontBook fonts, bool legacyBaseline = false)
     {
         var element = request.Element;
         var style = element.Style;
-        var key = new Key(element.Text, element.TextInput != null ? element.ContentBounds.Width : element.TextBounds.Width, style.FontSize, style.Bold, style.FontFamily, style.TextAlign, element.TextInput != null ? element.TextBounds.X - element.ContentBounds.X : 0, element.TextInput != null);
+        var key = CreateKey(element);
         if (!images.TryGetValue(key, out var image))
         {
             if (images.Count >= 128) images.Remove(images.First().Key);
@@ -46,10 +46,22 @@ public sealed class SkiaTextBackend(FontBook fonts, bool legacyBaseline = false)
             : TextPlacement.Top(request, TextLayout.Lines(element, key.Width, this).Count);
         var bounds = new UiRect(
             TextPlacement.Snap(element.TextInput != null ? element.ContentBounds.X : element.TextBounds.X, request.ScaleX, !legacyBaseline && options.PixelSnap),
-            TextPlacement.Snap(top, request.ScaleY, !legacyBaseline && options.PixelSnap),
+            TextPlacement.Snap(element.TextInput?.IsMultiline == true ? element.ContentBounds.Y : top, request.ScaleY, !legacyBaseline && options.PixelSnap),
             legacyBaseline ? key.Width : image.Width / scale, image.Height / scale);
         TextPlacement.Draw(canvas, image, bounds, new(0, 0, 1, 1), request,
             legacyBaseline ? new(false, TextHinting.Normal, TextSampling.Linear) : options);
+    }
+
+    private static Key CreateKey(UiElement element)
+    {
+        var style = element.Style;
+        var editable = element.TextInput != null;
+        var multiline = element.TextInput?.IsMultiline == true;
+        return new(element.Text, editable ? element.ContentBounds.Width : element.TextBounds.Width,
+            style.FontSize, style.Bold, style.FontFamily, style.TextAlign,
+            editable ? element.TextBounds.X - element.ContentBounds.X : 0, editable,
+            multiline ? element.TextBounds.Y - element.ContentBounds.Y : 0,
+            multiline ? element.ContentBounds.Height : 0, multiline);
     }
 
     private TextImage Rasterize(UiElement element)
@@ -58,14 +70,15 @@ public sealed class SkiaTextBackend(FontBook fonts, bool legacyBaseline = false)
         var width = element.TextInput != null ? element.ContentBounds.Width : element.TextBounds.Width;
         var lines = TextLayout.Lines(element, width, this);
         using var bitmap = new SKBitmap(Math.Max(1, (int)Math.Ceiling(width * scale)),
-            Math.Max(1, (int)Math.Ceiling(lines.Count * style.LineHeight * scale)), SKColorType.Rgba8888, SKAlphaType.Premul);
+            Math.Max(1, (int)Math.Ceiling((element.TextInput?.IsMultiline == true ? element.ContentBounds.Height : lines.Count * style.LineHeight) * scale)), SKColorType.Rgba8888, SKAlphaType.Premul);
         using var canvas = new SKCanvas(bitmap);
         canvas.Clear(SKColors.Transparent);
         if (legacyBaseline) canvas.Scale(scale);
         var unit = legacyBaseline ? 1 : scale;
         using var font = fonts.CreateFont(style.FontSize * unit, style.Bold, style.FontFamily, legacyBaseline ? null : options);
         using var paint = new SKPaint { Color = SKColors.White, IsAntialias = true };
-        var baseline = (style.LineHeight * unit - (font.Metrics.Descent - font.Metrics.Ascent)) / 2 - font.Metrics.Ascent;
+        var baseline = (style.LineHeight * unit - (font.Metrics.Descent - font.Metrics.Ascent)) / 2 - font.Metrics.Ascent
+            + (element.TextInput?.IsMultiline == true ? (element.TextBounds.Y - element.ContentBounds.Y) * unit : 0);
         foreach (var line in lines)
         {
             var x = TextPlacement.Align(width * unit, font.MeasureText(line), style.TextAlign)

@@ -1,6 +1,6 @@
 namespace GuiShark.ControlsDemo;
 
-internal sealed record GalleryOptions(bool Capture, string Page, string? Dropdown, bool Scrolled, string? AssetsPath, string? Modal, string? Tooltip, string TextBackend)
+internal sealed record GalleryOptions(bool Capture, string Page, string? Dropdown, bool Scrolled, string? AssetsPath, string? Modal, string? Tooltip, string TextBackend, bool SelectNotes)
 {
     public static GalleryOptions Parse(string[] args)
     {
@@ -9,9 +9,11 @@ internal sealed record GalleryOptions(bool Capture, string Page, string? Dropdow
         var backend = "skia";
         string? dropdown = null, assets = null, modal = null, tooltip = null;
         var scrolled = false;
+        var selectNotes = false;
         foreach (var arg in args)
         {
             if (arg == "--capture") capture = true;
+            else if (arg == "--select-notes") selectNotes = true;
             else if (arg == "--scroll") scrolled = true;
             else if (arg.StartsWith("--page=", StringComparison.Ordinal)) page = arg[7..];
             else if (arg.StartsWith("--text=", StringComparison.Ordinal)) backend = arg[7..];
@@ -21,8 +23,8 @@ internal sealed record GalleryOptions(bool Capture, string Page, string? Dropdow
             else if (!arg.StartsWith("--", StringComparison.Ordinal) && assets == null) assets = arg;
             else throw new ArgumentException($"Unknown gallery argument: {arg}");
         }
-        if (page is not ("basics" or "settings" or "lists" or "inventory")) throw new ArgumentException("Page must be basics, settings, lists or inventory.");
+        if (page is not ("basics" or "settings" or "lists" or "inventory" or "journal")) throw new ArgumentException("Page must be basics, settings, lists, inventory or journal.");
         if (backend is not ("skia" or "freetype" or "msdf")) throw new ArgumentException("Text backend must be skia, freetype or msdf.");
-        return new(capture, page, dropdown, scrolled, assets, modal, tooltip, backend);
+        return new(capture, page, dropdown, scrolled, assets, modal, tooltip, backend, selectNotes);
     }
 }

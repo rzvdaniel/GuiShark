@@ -27,7 +27,7 @@ internal sealed class LayoutEngine(ITextMetrics text)
         width = Math.Clamp(width, 0, Math.Max(0, s.MaxWidth.Resolve(availableWidth, availableWidth)));
         var innerWidth = Math.Max(0, width - s.Padding.Horizontal - 2 * s.BorderWidth - (s.ScrollY ? 12 : 0));
         var children = VisibleChildren(element);
-        var height = element.TextInput != null ? s.LineHeight : TextLayout.Wrap(element.Text, innerWidth, s, text).Count * s.LineHeight;
+        var height = element.TextInput != null ? s.LineHeight * (element.TextInput.IsMultiline ? element.TextInput.Rows : 1) : TextLayout.Wrap(element.Text, innerWidth, s, text).Count * s.LineHeight;
         if (children.Length > 0)
         {
             var sizes = MeasureChildren(element, innerWidth, availableHeight);
@@ -87,7 +87,7 @@ internal sealed class LayoutEngine(ITextMetrics text)
         if (element.Style.Justify == MainAlignment.SpaceBetween && children.Length > 1) gap += free / (children.Length - 1);
         var contentHeight = row ? sizes.Select((size, i) => size.Height + children[i].Style.Margin.Vertical).DefaultIfEmpty(0).Max()
             : occupied + gap * Math.Max(0, children.Length - 1);
-        element.Scroll.Arrange(contentHeight);
+        if (element.TextInput == null) element.Scroll.Arrange(contentHeight);
         var cursor = (row ? content.X : content.Y - element.Scroll.Offset) + offset;
         for (var i = 0; i < children.Length; i++)
         {

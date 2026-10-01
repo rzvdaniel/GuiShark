@@ -85,7 +85,8 @@ public sealed class OpenGlUiRenderer : IDisposable
         painter.Clip(element.Clip.Intersect(content));
         controls.Draw(element, opacity);
         if (element.IsFocused && element.TextInput is { SelectionLength: > 0 } selection)
-            painter.Solid(selection.SelectionBounds, new UiColor(.22f, .48f, .72f, .65f), opacity);
+            foreach (var rectangle in selection.SelectionRects)
+                painter.Solid(rectangle, new UiColor(.22f, .48f, .72f, .65f), opacity);
         if (element.ImageSource != null && content.Width > 0 && content.Height > 0)
             imagePainter.Draw(content, images.Get(element.ImageSource), element.Style.ObjectFit,
                 element.Style.ImageTint, opacity, element.Style.Radius, element.Style.ObjectFlip);

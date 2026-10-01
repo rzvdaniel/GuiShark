@@ -13,6 +13,7 @@ internal sealed class StyleResolver(IEnumerable<CssRule> rules, UiTheme theme)
         Apply(style, element.InlineStyle);
         // Editable fields currently use a left aligned caret coordinate system.
         if (element.TextInput != null) style.TextAlign = TextAlignment.Left;
+        if (element.TextInput?.IsMultiline == true) style.ScrollY = true;
         style.Hidden |= element.Hidden || element.Dialog is { IsOpen: false };
         element.Style = style;
         foreach (var child in element.Children) Resolve(child, style);

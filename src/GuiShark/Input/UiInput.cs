@@ -13,6 +13,8 @@ public sealed class UiInput
     private readonly HashSet<UiKey> consumedKeys = [];
     private UiElement? popupPressed;
     private bool swallowPointerUp;
+    private readonly TextClickTracker textClicks = new();
+    private bool wordDrag;
     public IUiClipboard? Clipboard { get; set; }
     public UiElement? Focused { get; private set; }
     public bool HasPointerCapture => pressed != null || scrollDrag.Active || view.Popup.IsOpen || swallowPointerUp || view.Modal.IsOpen;
@@ -26,6 +28,7 @@ public sealed class UiInput
 
     public bool PointerMove(float x, float y)
     {
+        textClicks.Move(x, y);
         view.Update();
         if (view.Popup.IsOpen) { view.Popup.Hover(x, y); return true; }
         if (scrollDrag.Active) { scrollDrag.Move(y); return true; }
@@ -40,7 +43,8 @@ public sealed class UiInput
         }
         if (pressed != null)
         {
-            pressed.TextInput?.MovePointer(x, view.TextMetrics, extend: true);
+            if (wordDrag) pressed.TextInput?.DragPointerWord(x, y, view.TextMetrics);
+            else pressed.TextInput?.MovePointer(x, y, view.TextMetrics, extend: true);
             SetPressed(pressed, HitTester.Interactive(hit) == pressed);
             if (HitTester.CanActivate(pressed)) ControlInteraction.Drag(pressed, x);
         }
@@ -51,8 +55,10 @@ public sealed class UiInput
     {
         view.Update();
         view.Tooltips.Hide();
+        wordDrag = false;
         if (view.Popup.IsOpen)
         {
+            textClicks.Reset();
             popupPressed = view.Popup.Hit(x, y);
             swallowPointerUp = true;
             if (popupPressed == null) view.Popup.Close();
@@ -62,15 +68,18 @@ public sealed class UiInput
         pressed = null;
         PointerMove(x, y);
         view.Tooltips.Hide();
-        if (scrollDrag.Begin(hovered, x, y)) return true;
+        if (scrollDrag.Begin(hovered, x, y)) { textClicks.Reset(); return true; }
         var button = HitTester.Interactive(hovered);
+        var doubleClick = textClicks.Down(button != null && CanFocus(button) ? button : null, x, y);
         if (button != null && CanFocus(button) && HitTester.CanActivate(button)) SetFocus(button);
         else if (!view.Modal.IsOpen) SetFocus(null);
         if (button != null && Focused == button)
         {
             pressed = Focused;
             SetPressed(pressed, true);
-            pressed.TextInput?.MovePointer(x, view.TextMetrics, shift);
+            wordDrag = doubleClick && !shift && pressed.TextInput != null;
+            if (wordDrag) pressed.TextInput!.SelectPointerWord(x, y, view.TextMetrics);
+            else pressed.TextInput?.MovePointer(x, y, view.TextMetrics, shift);
             ControlInteraction.Drag(pressed, x);
         }
         return hovered != null || view.Modal.IsOpen;
@@ -90,16 +99,18 @@ public sealed class UiInput
         PointerMove(x, y);
         var target = pressed;
         pressed = null;
+        wordDrag = false;
         if (target == null) return hovered != null || view.Modal.IsOpen;
         SetPressed(target, false);
         if (target.TextInput == null && HitTester.Interactive(hovered) == target && HitTester.CanActivate(target)) Activate(target);
         return true;
     }
 
-    public bool KeyDown(UiKey key, bool shift = false, bool repeat = false, bool command = false)
+    public bool KeyDown(UiKey key, bool shift = false, bool repeat = false, bool command = false, bool? wordNavigation = null)
     {
         view.Update();
         view.Tooltips.Hide();
+        textClicks.Reset();
         if (key == UiKey.Escape && repeat && consumedKeys.Contains(key)) return true;
         if (key == UiKey.Tab) { view.Popup.Close(); if (!repeat) navigation.AdvanceFocus(shift); return Focused != null || view.Modal.IsOpen; }
         if (view.Popup.IsOpen) { consumedKeys.Add(key); return view.Popup.Key(key); }
@@ -111,7 +122,7 @@ public sealed class UiInput
         }
         if (key == UiKey.Escape) { var consumed = Focused != null || HasPointerCapture; Cancel(); return consumed; }
         if (Focused == null) return view.Modal.IsOpen;
-        if (Focused.TextInput is { } input) { var handled = input.Key(key, shift, command, Clipboard); consumedKeys.Add(key); return handled; }
+        if (Focused.TextInput is { } input) { var handled = input.Key(key, shift, command, Clipboard, view.TextMetrics, wordNavigation ?? command); consumedKeys.Add(key); return handled; }
         if (navigation.AdvanceTab(key)) return true;
         if (navigation.AdvanceRadio(key)) return true;
         if (navigation.ScrollPage(key)) return true;
@@ -154,6 +165,8 @@ public sealed class UiInput
         if (pressed != null) SetPressed(pressed, false);
         if (keyboardPressed != null) SetPressed(keyboardPressed, false);
         pressed = keyboardPressed = null;
+        wordDrag = false;
+        textClicks.Reset();
         scrollDrag.Cancel();
         view.Tooltips.Hide();
         view.Popup.Close();
@@ -179,6 +192,7 @@ public sealed class UiInput
         if (!float.IsFinite(delta)) throw new ArgumentOutOfRangeException(nameof(delta));
         view.Update();
         view.Tooltips.Hide();
+        textClicks.Reset();
         if (view.Popup.IsOpen) { view.Popup.Wheel(delta); return true; }
         var hit = Hit(x, y);
         for (var node = hit; node != null; node = node.Parent)
@@ -230,7 +244,7 @@ public sealed class UiInput
         activationKey = null;
         if (Focused != null) Focused.IsFocused = false;
         Focused = element;
-        if (Focused != null) Focused.IsFocused = true;
+        if (Focused != null) { Focused.IsFocused = true; Focused.TextInput?.RevealCaret(); }
         view.Invalidate();
         if (Focused != null) navigation.Reveal(Focused);
     }

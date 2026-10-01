@@ -66,13 +66,29 @@ internal sealed class GalleryWindow : GameWindow
         controller = new(view);
         document.TabGroups[0].Select(document.GetElement($"tab-{options.Page}"));
         view.Update();
-        if (options.Scrolled)
+        if (options.SelectNotes)
+        {
+            var notes = document.GetElement("journal-notes");
+            view.Input.Focus(notes);
+            var start = notes.TextInput!.Value.IndexOf("The valley", StringComparison.Ordinal);
+            var end = notes.TextInput.Value.IndexOf("Remember:", StringComparison.Ordinal) + "Remember:".Length;
+            notes.TextInput.Select(start, end - start);
+            view.Update();
+        }
+        if (options.Scrolled && options.Page == "journal")
+        {
+            var scroll = document.GetElement("journal-notes").Scroll;
+            scroll.Offset = scroll.Maximum;
+            view.Update();
+        }
+        else if (options.Scrolled)
         {
             document.GetElement("quest-scroll").Scroll.Offset = 380;
             document.GetElement("nested-inner").Scroll.Offset = 150;
             view.Update();
         }
-        if (options.Modal == "name")
+        if (options.Modal == "password") document.GetElement("password-dialog").Dialog!.ShowModal();
+        else if (options.Modal == "name")
         {
             document.GetElement("name-dialog").Dialog!.ShowModal();
             document.GetElement("character-name").TextInput!.SelectAll();
@@ -151,7 +167,8 @@ internal sealed class GalleryWindow : GameWindow
     protected override void OnKeyDown(KeyboardKeyEventArgs args)
     {
         base.OnKeyDown(args);
-        if (MapKey(args.Key) is { } key && view.Input.KeyDown(key, args.Shift, args.IsRepeat, args.Control || args.Command)) return;
+        if (MapKey(args.Key) is { } key && view.Input.KeyDown(key, args.Shift, args.IsRepeat, args.Control || args.Command,
+            wordNavigation: OperatingSystem.IsMacOS() ? args.Alt : args.Control)) return;
         if (view.Input.WantsKeyboard && args.Key != Keys.F5 && args.Key != Keys.F12) return;
         if (args.Key == Keys.Escape) Close();
         if (args.Key == Keys.F12) capture = true;
@@ -178,7 +195,7 @@ internal sealed class GalleryWindow : GameWindow
         Keys.Left => UiKey.Left, Keys.Right => UiKey.Right, Keys.Up => UiKey.Up, Keys.Down => UiKey.Down,
         Keys.Home => UiKey.Home, Keys.End => UiKey.End,
         Keys.Backspace => UiKey.Backspace, Keys.Delete => UiKey.Delete,
-        Keys.A => UiKey.A, Keys.C => UiKey.C, Keys.X => UiKey.X, Keys.V => UiKey.V,
+        Keys.Z => UiKey.Z, Keys.Y => UiKey.Y, Keys.A => UiKey.A, Keys.C => UiKey.C, Keys.X => UiKey.X, Keys.V => UiKey.V,
         Keys.PageUp => UiKey.PageUp, Keys.PageDown => UiKey.PageDown, _ => null
     };
 
