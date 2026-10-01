@@ -1,5 +1,7 @@
 # Analyzer enforcement validation
 
+This records the initial enforcement baseline. [Stricter checks](strict-checks.md) subsequently add compiler enforcement, regex timeouts, solution coverage verification and permanent regression tests; the current warning count is 87.
+
 Validated on 2026-10-01 with .NET SDK 10.0.401 / MSBuild 18.9.11, Windows x64. See [the pre-change baseline](analyzer-baseline.md).
 
 ## Configuration and coverage

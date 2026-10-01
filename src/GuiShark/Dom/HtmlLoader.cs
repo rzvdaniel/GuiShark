@@ -23,7 +23,7 @@ public static class HtmlLoader
     {
         if (source.LocalName is not ("body" or "div" or "section" or "main" or "header" or "footer" or "p" or "span" or "h1" or "h2" or "h3" or "button" or "img" or "input" or "progress" or "label" or "select" or "option" or "dialog" or "textarea"))
             throw new FormatException($"Unsupported HTML element: <{source.LocalName}>");
-        var text = Regex.Replace(string.Concat(source.ChildNodes.Where(n => n.NodeType == NodeType.Text).Select(n => n.TextContent)), @"\s+", " ").Trim();
+        var text = Regex.Replace(string.Concat(source.ChildNodes.Where(n => n.NodeType == NodeType.Text).Select(n => n.TextContent)), @"\s+", " ", RegexOptions.None, ParserLimits.RegexTimeout).Trim();
         if (text.Length > 0 && source.Children.Length > 0)
             throw new FormatException("Mixed inline text and child elements are not supported. Wrap text in a span.");
         var element = CreateElement(source, text);

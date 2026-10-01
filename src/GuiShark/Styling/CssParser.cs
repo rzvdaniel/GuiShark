@@ -9,16 +9,16 @@ internal static class CssParser
     // A deliberately bounded grammar: flat rules, simple selectors and plain declaration values.
     public static List<CssRule> Parse(string css, List<FontFace> fonts)
     {
-        css = Regex.Replace(css, @"/\*.*?\*/", "", RegexOptions.Singleline);
+        css = Regex.Replace(css, @"/\*.*?\*/", "", RegexOptions.Singleline, ParserLimits.RegexTimeout);
         css = Regex.Replace(css, @"@font-face\s*\{([^{}]*)\}", match =>
         {
             fonts.Add(FontFaceParser.Parse(match.Groups[1].Value));
             return "";
-        });
+        }, RegexOptions.None, ParserLimits.RegexTimeout);
         if (css.Contains('@')) throw new FormatException("CSS at-rules are not supported.");
         var rules = new List<CssRule>();
         var consumed = 0;
-        foreach (Match match in Regex.Matches(css, @"([^{}]+)\{([^{}]*)\}"))
+        foreach (Match match in Regex.Matches(css, @"([^{}]+)\{([^{}]*)\}", RegexOptions.None, ParserLimits.RegexTimeout))
         {
             if (!string.IsNullOrWhiteSpace(css[consumed..match.Index])) throw new FormatException("Malformed CSS rule.");
             var declarations = ParseDeclarations(match.Groups[2].Value);
