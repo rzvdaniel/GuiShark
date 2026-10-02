@@ -262,7 +262,7 @@ dotnet run --project src/demos/GuiShark.ControlsDemo -- --page=inventory --modal
 dotnet run --project src/demos/GuiShark.ControlsDemo -- --page=inventory --modal=name
 ```
 
-Skia + HarfBuzz is the default. Editing preserves Unicode graphemes; full bidi caret layout and typing coalescing remain future work. Local font fallback and shaped caret geometry are supported. The Multilingual tab demonstrates IME preedit. Runtime execution has been checked on Windows; Linux/macOS native behavior still needs verification. Managed regression tests cover the editing model.
+Skia + HarfBuzz is the default. Editing preserves Unicode graphemes and supports bidirectional caret layout; typing coalescing remains future work. Local font fallback and shaped caret geometry are supported. The Multilingual tab demonstrates IME preedit. Runtime execution has been checked on Windows; Linux/macOS native behavior still needs verification. Managed regression tests cover the editing model.
 
 ![Character naming with a text selection](controls-text-input.png)
 
@@ -277,7 +277,7 @@ Follow the lanterns.</textarea>
 
 Textareas expose the same `UiElement.TextInput` / `UiTextInput` API as single-line fields. `IsMultiline` identifies the mode. Initial text comes from the HTML element's contents (rather than a value attribute), preserving spaces and line breaks. `rows` sets the natural height in lines, defaults to four, and accepts 1–1000; CSS height takes precedence. CSS fonts, colors, backgrounds, borders and focus states work as for text inputs. `readonly`, `disabled`, `maxlength`, `placeholder` and `autofocus` are supported. CRLF/CR line endings normalize to LF; other control characters, including tabs, are removed. Use spaces for indentation. Textareas always wrap and use vertical scrolling; resizing handles and wrap=off are not supported.
 
-Visual lines preserve whitespace and wrap at spaces or complete graphemes for long words. A shared layout computes line ranges, caret coordinates, pointer hit positions and selection rectangles using the current backend's metrics. Skia rasterizes only the visible field dimensions. HarfBuzz shapes a single script run; full bidirectional editing remains future work.
+Visual lines preserve whitespace and wrap at spaces or complete graphemes for long words. A shared layout computes line ranges, caret coordinates, pointer hit positions and selection rectangles using the current backend's metrics. Skia rasterizes only the visible field dimensions. Paragraph direction and visual editing use the [bidirectional text contract](bidirectional-text.md).
 
 Enter inserts a line break. Ctrl/Command+Enter raises `Submitted` for an application action such as sending a message. Tab/Shift+Tab move focus. Up/Down preserve the desired column, Home/End navigate the current visual line, Ctrl/Command+Home/End navigate the document, and Page Up/Down move by a viewport of lines. Shift extends selection. Mouse click/drag and Shift-click work across lines. Wheel scrolling and the scrollbar reuse `UiScroll`; moving/editing the caret brings it into view, while manual scrolling can move away from it. `SelectionRects` exposes all line rectangles (`SelectionBounds` retains the first rectangle for compatibility).
 

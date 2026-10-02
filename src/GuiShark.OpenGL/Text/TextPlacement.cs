@@ -3,12 +3,6 @@ namespace GuiShark.OpenGL;
 internal static class TextPlacement
 {
     public static float Snap(float value, float scale, bool enabled) => enabled ? MathF.Round(value * scale) / scale : value;
-    public static float Align(float width, float advance, TextAlignment alignment) => alignment switch
-    {
-        TextAlignment.Center => (width - advance) / 2,
-        TextAlignment.Right => width - advance,
-        _ => 0
-    };
 
     public static float Top(TextDrawRequest request, int lines)
     {

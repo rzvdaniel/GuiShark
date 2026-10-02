@@ -13,7 +13,7 @@ dotnet run --project src/demos/GuiShark.TextDemo -- --mode harfbuzz --sample ind
 dotnet run --project src/demos/GuiShark.TextDemo -- --density 1.25 --background hills --shadow
 ```
 
-**Compare shaping** shows two panes using the same Skia rasterizer: direct glyph mapping and HarfBuzz shaping. The right pane represents the SDK default. Arabic makes joining and direction differences particularly visible. Use the Sample button to cycle Latin, CJK, Indic, Arabic and mixed RTL specimens. Mixed RTL is diagnostic: full bidirectional paragraph layout is not implemented.
+**Compare shaping** shows two panes using the same Skia rasterizer: direct glyph mapping and HarfBuzz shaping. The right pane represents the SDK default. Arabic makes joining and direction differences particularly visible. Use the Sample button to cycle Latin, CJK, Indic, Arabic and mixed RTL specimens. Both panes resolve bidirectional paragraph ordering; the unshaped pane remains diagnostic and does not join Arabic letters.
 
 Controls adjust selected font size (8–48px), regular/bold weight, adaptive/gold/mint colors, simulated density (1/1.25/1.5/2×), pixel snapping, hinting, filtering, half-device-pixel positioning, shadows and backgrounds. The Latin matrix shows 10, 12, 14, 18, 24 and 36px samples; multilingual matrices show a smaller set of sizes for readability. Large specimens may clip within a comparison pane; select one rendering mode to give them more space. The bundled Noto families currently provide regular weight only, so Bold falls back to their regular face.
 
@@ -78,7 +78,7 @@ Use one backend per renderer: density, options and caches are mutable. Font book
 
 ## Shaping and editing limits
 
-HarfBuzz handles OpenType substitutions and positioning for a single font/script/direction run. It is not a complete paragraph engine. GuiShark does not yet segment or reorder bidi runs, implement color emoji, or provide RTL-aware navigation. Carets and selections use full-line cluster advances; internal ligature stops are evenly interpolated at grapheme boundaries rather than read from font ligature-caret tables. Ordinary labels wrap at whitespace; textareas preserve graphemes when wrapping. See [multilingual input and composition](multilingual-input.md).
+HarfBuzz handles OpenType substitutions and positioning for a single font/script/direction run. It is not a complete paragraph engine. GuiShark resolves bidi runs with Unicode.Bidi and provides visual navigation; color emoji remain unsupported. See [bidirectional text](bidirectional-text.md). Carets and selections use full-line cluster advances; internal ligature stops are evenly interpolated at grapheme boundaries rather than read from font ligature-caret tables. Ordinary labels wrap at whitespace; textareas preserve graphemes when wrapping. See [multilingual input and composition](multilingual-input.md).
 
 ## Platforms and migration
 

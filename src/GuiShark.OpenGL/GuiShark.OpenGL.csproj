@@ -9,9 +9,11 @@
     <PackageReference Include="OpenTK.Graphics" Version="4.9.4" />
     <PackageReference Include="SkiaSharp" Version="4.153.0" />
     <PackageReference Include="SkiaSharp.HarfBuzz" Version="4.153.0" />
+    <PackageReference Include="Unicode.Bidi" Version="0.3.18" />
     <PackageReference Include="HarfBuzzSharp.NativeAssets.Linux" Version="14.2.1.300" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="4.153.0" />
     <Content Include="../../licenses/HarfBuzz-MIT.txt" Link="licenses/HarfBuzz-MIT.txt" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../licenses/Unicode-Bidi-*.txt" Link="licenses/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
 

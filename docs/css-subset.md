@@ -110,3 +110,5 @@ The demo's macOS-inspired buttons use CSS gradients, borders, rounded corners, a
 Text inputs support `type="text"` (also the default type), `value`, `placeholder`, `maxlength`, `readonly`, `disabled` and `autofocus`. Fields inherit CSS fonts/colors, use left aligned single-line text, and horizontally scroll to the caret. See [text input integration](controls.md#single-line-text-input).
 
 `textarea` supports initial text contents, `rows`, `maxlength`, `placeholder`, `readonly`, `disabled` and `autofocus`. It uses whitespace-preserving wrapped lines, left aligned text, and vertical scrolling. CSS height overrides rows. See [textareas and edit history](controls.md#textareas-and-edit-history).
+
+Text direction is set through HTML `dir="ltr|rtl|auto"` and inherited by child elements. CSS `text-align` accepts `left`, `center`, `right`, `start` and `end`; `start` is the default for ordinary text and editable fields. This affects text ordering/alignment, not child layout. See [bidirectional text](bidirectional-text.md).

@@ -8,9 +8,9 @@ public sealed class SkiaTextBackend(FontBook fonts, bool shaping = true) : IText
 {
     private readonly FontRunRenderer runs = new(fonts, shaping);
     private int fontRevision = fonts.Revision;
-    private readonly record struct Key(string Text, float Width, float Size, bool Bold, string Family, TextAlignment Align, float Offset, bool Editable, float OffsetY, float Height, bool Multiline);
+    private readonly record struct Key(string Text, float Width, float Size, bool Bold, string Family, TextAlignment Align, float Offset, bool Editable, float OffsetY, float Height, bool Multiline, UiTextDirection Direction);
     private readonly Dictionary<Key, TextImage> images = new();
-    private readonly Dictionary<(string Text, float Size, bool Bold, string Family), TextCaretMap> caretMaps = new();
+    private readonly Dictionary<(TextLineContext Context, float Size, bool Bold, string Family), TextCaretMap> caretMaps = new();
     private float scale = 1;
     private TextRenderOptions options = new();
     public TextBackendInfo Info { get; } = new(shaping ? "Skia + HarfBuzz" : "Skia pixel aligned",
@@ -28,19 +28,23 @@ public sealed class SkiaTextBackend(FontBook fonts, bool shaping = true) : IText
         return true;
     }
 
-    public float MeasureWidth(string text, float size, bool bold) => MeasureWidth(text, size, bold, "");
-    public float MeasureWidth(string text, float size, bool bold, string family)
+    public float MeasureWidth(string text, float fontSize, bool bold) => MeasureWidth(text, fontSize, bold, "");
+    public float MeasureWidth(string text, float fontSize, bool bold, string family) =>
+        MeasureWidth(TextLineContext.Whole(text, UiTextDirection.Auto), fontSize, bold, family);
+    public float MeasureWidth(TextLineContext context, float fontSize, bool bold, string family)
     {
         SynchronizeFonts();
-        return runs.Measure(text, new(size * scale, bold, family, options)) / scale;
+        return runs.Measure(context, new(fontSize * scale, bold, family, options)) / scale;
     }
 
-    public TextCaretMap CreateCaretMap(string text, float fontSize, bool bold, string family)
+    public TextCaretMap CreateCaretMap(string text, float fontSize, bool bold, string family) =>
+        CreateCaretMap(TextLineContext.Whole(text, UiTextDirection.Auto), fontSize, bold, family);
+    public TextCaretMap CreateCaretMap(TextLineContext context, float fontSize, bool bold, string family)
     {
         SynchronizeFonts();
-        var key = (text, fontSize, bold, family);
+        var key = (context, fontSize, bold, family);
         if (caretMaps.TryGetValue(key, out var map)) return map;
-        map = runs.Carets(text, new(fontSize * scale, bold, family, options), scale);
+        map = runs.Carets(context, new(fontSize * scale, bold, family, options), scale);
         if (caretMaps.Count >= 128) caretMaps.Remove(caretMaps.First().Key);
         caretMaps[key] = map;
         return map;
@@ -81,14 +85,14 @@ public sealed class SkiaTextBackend(FontBook fonts, bool shaping = true) : IText
             style.FontSize, style.Bold, style.FontFamily, style.TextAlign,
             editable ? element.TextBounds.X - element.ContentBounds.X : 0, editable,
             multiline ? element.TextBounds.Y - element.ContentBounds.Y : 0,
-            multiline ? element.ContentBounds.Height : 0, multiline);
+            multiline ? element.ContentBounds.Height : 0, multiline, element.TextDirection);
     }
 
     private TextImage Rasterize(UiElement element)
     {
         var style = element.Style;
         var width = element.TextInput != null ? element.ContentBounds.Width : element.TextBounds.Width;
-        var lines = TextLayout.Lines(element, width, this);
+        var lines = TextLayout.Contexts(element, width, this);
         using var bitmap = new SKBitmap(Math.Max(1, (int)Math.Ceiling(width * scale)),
             Math.Max(1, (int)Math.Ceiling((element.TextInput?.IsMultiline == true ? element.ContentBounds.Height : lines.Count * style.LineHeight) * scale)), SKColorType.Rgba8888, SKAlphaType.Premul);
         using var canvas = new SKCanvas(bitmap);
@@ -101,7 +105,10 @@ public sealed class SkiaTextBackend(FontBook fonts, bool shaping = true) : IText
             + (element.TextInput?.IsMultiline == true ? (element.TextBounds.Y - element.ContentBounds.Y) * unit : 0);
         foreach (var line in lines)
         {
-            var x = TextPlacement.Align(width * unit, runs.Measure(line, runStyle), style.TextAlign)
+            var advance = runs.Measure(line, runStyle);
+            var rtl = CreateCaretMap(line, style.FontSize, style.Bold, style.FontFamily).RightToLeft;
+            var alignedWidth = element.TextInput != null ? Math.Max(width * unit, advance) : width * unit;
+            var x = TextAlignmentLayout.Offset(alignedWidth, advance, style.TextAlign, rtl)
                 + (element.TextInput != null ? (element.TextBounds.X - element.ContentBounds.X) * unit : 0);
             runs.Draw(canvas, line, options.PixelSnap ? MathF.Round(x) : x,
                 options.PixelSnap ? MathF.Round(baseline) : baseline, runStyle, paint);

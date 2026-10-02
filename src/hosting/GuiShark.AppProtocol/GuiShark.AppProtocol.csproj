@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><Description>Messages exchanged by optional GuiShark application hosts and child processes.</Description></PropertyGroup>
+</Project>

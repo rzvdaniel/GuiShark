@@ -8,7 +8,7 @@ Password geometry shapes bullets and remaps their coordinates to the original UT
 
 Existing metrics implementations remain source-compatible: the default interface method measures prefixes. A custom shaping backend should implement `CreateCaretMap` and supply one finite coordinate for each `StringInfo` grapheme boundary, including the end. `TextCaretMap` copies the supplied coordinates and exposes `X(index)` and `Nearest(x)`.
 
-This does not implement bidirectional paragraph layout, RTL visual navigation or color emoji. Local font fallback uses the same run boundaries for drawing and caret geometry. A single RTL run can supply descending coordinates, but complete RTL editing is not claimed.
+Local font fallback uses the same run boundaries for drawing and caret geometry. [Bidirectional text](bidirectional-text.md) extends the caret-map contract with leading/trailing affinity and disjoint highlight spans. Color emoji remain unsupported.
 
 ## Try it
 

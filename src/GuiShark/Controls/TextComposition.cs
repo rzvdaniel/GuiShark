@@ -6,6 +6,7 @@ internal sealed class TextComposition(UiTextInput input)
     public int Start { get; private set; }
     public int ReplacedLength { get; private set; }
     public bool Upstream { get; private set; }
+    public bool Trailing { get; private set; }
     public string DisplayValue => State is { } state
         ? input.Value.Remove(Start, ReplacedLength).Insert(Start, state.Text) : input.Value;
     public int DisplayCaret => State is { } state ? Start + state.SelectionStart + state.SelectionLength : input.Caret;
@@ -21,6 +22,7 @@ internal sealed class TextComposition(UiTextInput input)
             Start = input.SelectionStart;
             ReplacedLength = input.SelectionLength;
             Upstream = input.CaretUpstream;
+            Trailing = input.CaretTrailing;
         }
         State = new(text, selectionStart, selectionLength);
     }

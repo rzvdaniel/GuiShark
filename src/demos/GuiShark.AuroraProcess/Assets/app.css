@@ -1,0 +1,10 @@
+body { padding: 28px; gap: 18px; background: #153e62; color: #e7f7ff; font-size: 15px; }
+.eyebrow { font-size: 10px; font-weight: bold; color: #94e7e9; }
+h1 { font-size: 31px; font-weight: bold; color: #ffffff; }
+p { color: #c6e2ed; }
+.card { width: 310px; padding: 18px; gap: 9px; background: #0a283d; border: 1px solid #72bfd4; border-radius: 10px; }
+.label { font-size: 11px; font-weight: bold; color: #9ccad7; }
+#count { font-size: 48px; font-weight: bold; color: #84edff; }
+button { height: 40px; color: #092c42; background: #a0eceb; border: 1px solid #d0ffff; border-radius: 6px; }
+button:hover { background: #cbffff; }
+#message { color: #a7e9be; }

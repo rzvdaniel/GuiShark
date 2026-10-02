@@ -3,7 +3,7 @@ namespace GuiShark;
 public enum FlowDirection { Column, Row }
 public enum CrossAlignment { Stretch, Start, Center, End }
 public enum MainAlignment { Start, Center, End, SpaceBetween }
-public enum TextAlignment { Left, Center, Right }
+public enum TextAlignment { Left, Center, Right, Start, End }
 public enum ElementPosition { Flow, Absolute }
 public enum ImageFit { Fill, Contain, Cover }
 [Flags]
@@ -21,7 +21,7 @@ public sealed class UiStyle
     public FlowDirection Direction { get; internal set; }
     public CrossAlignment Align { get; internal set; } = CrossAlignment.Stretch;
     public MainAlignment Justify { get; internal set; }
-    public TextAlignment TextAlign { get; internal set; }
+    public TextAlignment TextAlign { get; internal set; } = TextAlignment.Start;
     public float FontSize { get; internal set; } = 14;
     public string FontFamily { get; internal set; } = "";
     public bool Bold { get; internal set; }
@@ -62,7 +62,7 @@ public sealed class UiStyle
             TextShadow = parent?.TextShadow,
             Bold = parent?.Bold ?? false,
             PointerEvents = parent?.PointerEvents ?? true,
-            TextAlign = parent?.TextAlign ?? TextAlignment.Left
+            TextAlign = parent?.TextAlign ?? TextAlignment.Start
         };
         ApplyElementDefaults(element, style);
         return style;
@@ -79,7 +79,7 @@ public sealed class UiStyle
         if (element.Role == "tooltip")
         {
             style.PointerEvents = false;
-            style.TextAlign = TextAlignment.Left;
+            style.TextAlign = TextAlignment.Start;
             style.Width = CssLength.Parse("280px");
         }
         if (element.Dialog != null) { style.ScrollY = true; style.Width = CssLength.Parse("480px"); }
@@ -93,7 +93,7 @@ public sealed class UiStyle
         if (element.Select != null) style.Padding = new(8, 30, 8, 12);
         if (element.TextInput != null)
         {
-            style.TextAlign = TextAlignment.Left;
+            style.TextAlign = TextAlignment.Start;
             style.Padding = new(8, 12, 8, 12);
             style.ScrollY |= element.TextInput.IsMultiline;
         }

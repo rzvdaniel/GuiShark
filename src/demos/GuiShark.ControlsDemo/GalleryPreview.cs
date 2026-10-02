@@ -8,6 +8,7 @@ internal static class GalleryPreview
         var document = view.Document;
         document.TabGroups[0].Select(document.GetElement($"tab-{options.Page}"));
         view.Update();
+        if (options.Bidi) PreviewBidi(view);
         if (options.SelectLigature)
         {
             var sample = document.GetElement("ligature-text");
@@ -56,5 +57,15 @@ internal static class GalleryPreview
             var bounds = document.GetElement(options.Tooltip).Bounds;
             view.Input.PointerMove(bounds.X + bounds.Width / 2, bounds.Y + bounds.Height / 2);
         }
+    }
+    private static void PreviewBidi(UiView view)
+    {
+        var sample = view.Document.GetElement("arabic-chat");
+        view.Input.Focus(sample);
+        sample.TextInput!.Select(0, 10);
+        view.Update();
+        var page = view.Document.GetElement("page-multilingual");
+        page.Scroll.Offset += sample.Bounds.Y - page.ContentBounds.Y - 80;
+        view.Update();
     }
 }

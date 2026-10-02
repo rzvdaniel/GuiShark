@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <OutputType Condition="'$(OS)' == 'Windows_NT'">WinExe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../hosting/GuiShark.AppProtocol/GuiShark.AppProtocol.csproj" />
+    <ProjectReference Include="../../GuiShark.OpenGL/GuiShark.OpenGL.csproj" />
+    <PackageReference Include="OpenTK.Windowing.Desktop" Version="4.9.4" />
+    <Content Include="app.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets/**/*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../GuiShark.Demo/Assets/fonts/Lato-Regular.ttf" Link="Assets/fonts/Lato-Regular.ttf" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../GuiShark.Demo/Assets/fonts/Lato-Bold.ttf" Link="Assets/fonts/Lato-Bold.ttf" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

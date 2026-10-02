@@ -16,7 +16,9 @@ public static class HtmlLoader
             var css = node.LocalName == "style" ? node.TextContent : assets.ReadText(node.GetAttribute("href") ?? "");
             rules.AddRange(CssParser.Parse(css, fonts));
         }
-        return new UiDocument(Convert(dom.Body ?? throw new FormatException("Missing body.")), rules, assets, fonts, theme);
+        var root = Convert(dom.Body ?? throw new FormatException("Missing body."));
+        root.Direction ??= ParseDirection(dom.DocumentElement?.GetAttribute("dir"));
+        return new UiDocument(root, rules, assets, fonts, theme);
     }
 
     private static UiElement Convert(IElement source)
@@ -43,6 +45,7 @@ public static class HtmlLoader
         return new UiElement(source.LocalName, source.Id ?? "", text, source.ClassName ?? "", source.HasAttribute("disabled"))
         {
             ImageSource = source.GetAttribute("src"),
+            Direction = ParseDirection(source.GetAttribute("dir")),
             Role = source.GetAttribute("role"),
             AutoFocus = source.HasAttribute("autofocus"),
             TooltipText = source.GetAttribute("title"),
@@ -54,6 +57,15 @@ public static class HtmlLoader
             InlineStyle = CssParser.ParseDeclarations(source.GetAttribute("style") ?? "")
         };
     }
+
+    private static UiTextDirection? ParseDirection(string? value) => value?.Trim().ToLowerInvariant() switch
+    {
+        null or "" => null,
+        "ltr" => UiTextDirection.LeftToRight,
+        "rtl" => UiTextDirection.RightToLeft,
+        "auto" => UiTextDirection.Auto,
+        _ => throw new FormatException("dir accepts ltr, rtl or auto.")
+    };
 
     private static void LoadSelect(UiElement element, IElement source)
     {

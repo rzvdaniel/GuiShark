@@ -17,7 +17,7 @@ Unavailable stack entries are skipped. A stack with no loaded entries fails clea
 
 Coverage checks ignore format controls and variation selectors that need not have their own glyph. Whitespace and punctuation stay with the preceding font when it covers them. A grapheme is never divided across fonts. If no loaded font covers the entire grapheme, its primary font renders the missing glyph; GuiShark does not download or silently substitute OS fonts. This makes font choice deterministic across machines with the same assets.
 
-All font runs share the primary font's baseline and requested size. Supply sufficient `line-height` for fonts with tall accents or marks. Fallback is based on character coverage, not proof of support for every OpenType sequence or variation. There is no script itemization within a single font, bidirectional paragraph reordering, RTL visual navigation or color emoji support yet. Mixed Latin/Japanese/Devanagari is demonstrated; mixed Arabic/Latin is still diagnostic.
+All font runs share the primary font's baseline and requested size. Allow sufficient control height for tall accents or marks; line height is currently derived from font size. Fallback is based on character coverage, not proof of support for every OpenType sequence or variation. There is no script itemization within a single font or color emoji support yet. Paragraph reordering and visual editing are described in [bidirectional text](bidirectional-text.md).
 
 Font books own their typefaces and bounded coverage caches. Backends borrow the book and invalidate image/caret caches when new fonts are loaded. Existing font registrations are immutable; create a new book when changing their bytes. Keep the existing disposal order: renderer/backend before font book, and graphics resources before the OpenGL context.
 
@@ -33,6 +33,6 @@ The **One field / automatic local font fallback** specimen combines English, Jap
 
 Windows x64, .NET SDK 10.0.401: fresh Debug and Release builds cover all seven C# projects with zero errors and the unchanged 64 analyzer warnings. All 69 tests pass in each configuration, including 21 new fallback and asset-path cases beyond the shaped-editing milestone. Tests cover explicit and automatic font selection, missing bold faces, whole-grapheme fallback, caret/selection consistency at 1.5x raster scale, font-load cache invalidation, malformed stacks and asset-directory containment. Both shaped and unshaped backends are exercised.
 
-A native Windows OpenGL capture was visually inspected for the English/Japanese/Devanagari field and common baseline. Linux/macOS native execution, full bidi editing and real IME candidate placement were not verified here.
+A native Windows OpenGL capture was visually inspected for the English/Japanese/Devanagari field and common baseline. Linux/macOS native execution, bidi editing and real IME candidate placement were not verified in that milestone. Later bidi results are in [bidirectional validation](bidirectional-text.md#validation).
 
 ![One editable field using local fallback fonts](font-fallback-gallery.png)

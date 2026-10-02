@@ -67,6 +67,8 @@ See [HTML controls, themes and input forwarding](docs/controls.md). Dropdowns re
 
 ## Architecture
 
+The HTML/CSS rendering foundation remains the core. Rich widgets and desktop hosting belong in separate optional projects that embed it. See [architecture and extension boundaries](docs/architecture.md) for the design direction and review criteria.
+
 | Project | Responsibility |
 | --- | --- |
 | `GuiShark` | HTML loading, bounded CSS cascade, element state, layout, hit testing, input |
@@ -75,6 +77,7 @@ See [HTML controls, themes and input forwarding](docs/controls.md). Dropdowns re
 | `GuiShark.Balloon` | Independent 3D balloon game, procedural landscape, mouse steering, HTML menus/HUD |
 | `GuiShark.ControlsDemo` | Interactive controls gallery, CSS skin examples and live state/event diagnostics |
 | `GuiShark.TextDemo` | Backend comparison, density simulation, pixel magnification and observed cache/draw statistics |
+| `GuiShark.ThreadedHost` | Shared-context, separate-thread graphical app hosted in a GuiShark panel; [prototype and limits](docs/threaded-host-prototype.md) |
 
 The SDK does not own a window, swap buffers, clear the host framebuffer, or run a game loop. It can be used with another window/input library. See [embedding in your game](docs/embedding.md) and [the CSS subset](docs/css-subset.md).
 
@@ -87,10 +90,14 @@ document.GetElement("increment").Clicked += button =>
 };
 ```
 
-This is an intentionally small retained UI engine. It supports single-line and multiline editing, selections, passwords, undo/redo and IME preedit. Full bidirectional editing, inline layout, flex wrapping, animation and an accessibility bridge remain future work. Windows rendering and interaction have been manually checked; Linux/macOS are not yet verified. Managed regression tests run without a GL context.
+This is an intentionally small retained UI engine. It supports single-line and multiline editing, selections, passwords, undo/redo and IME preedit. Arabic/Hebrew bidirectional ordering and visual caret navigation are supported. Inline layout, flex wrapping, animation and an accessibility bridge remain future work. See [bidirectional text](docs/bidirectional-text.md). Windows rendering and interaction have been manually checked; Linux/macOS are not yet verified. Managed regression tests run without a GL context.
 
 Code and project artwork use the repository's MIT license. Woodland asset provenance and generation prompts are in [artwork notes](docs/woodland-artwork.md). Bundled Lato and Noto fonts use the SIL Open Font License; see [third-party notices](THIRD-PARTY-NOTICES.md).
 
 Controls Gallery also includes inventory search and a character-name dialog using portable single-line text editing. Use `--page=inventory --modal=name` to open it; the entire view uses Skia + HarfBuzz. See [text input and host integration](docs/controls.md#single-line-text-input).
 
 The **Journal & chat** gallery tab demonstrates wrapped textareas, multiline selection, scrolling, and undo/redo for both textareas and single-line fields. Run with `--page=journal`; [editor API and shortcuts](docs/controls.md#textareas-and-edit-history).
+
+# Separate-process application hosting
+
+The [process workspace prototype](docs/process-host-prototype.md) loads a published GuiShark app by manifest path. The app runs in its own process while the host renders its HTML/CSS panel and exchanges events and state over a named pipe.

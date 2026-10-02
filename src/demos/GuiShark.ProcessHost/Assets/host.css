@@ -1,0 +1,21 @@
+body { padding: 22px; gap: 14px; background: #0d1521; color: #e4f1fc; font-size: 14px; }
+header, .toolbar, main, footer, .panel-footer { flex-direction: row; align-items: center; justify-content: space-between; }
+header { height: 48px; }
+.eyebrow { font-size: 10px; font-weight: bold; color: #88c8d8; }
+h1 { font-size: 24px; font-weight: bold; color: #ffffff; }
+#clock { color: #9bdab4; font-size: 11px; }
+.toolbar { gap: 10px; justify-content: flex-start; padding: 10px; background: #1b2c3b; border: 1px solid #3a596e; border-radius: 8px; }
+button { height: 34px; padding: 0px 12px; color: #f1fbff; background: #2a718e; border: 1px solid #69a7bb; border-radius: 5px; }
+button:hover { background: #398fac; }
+#status { color: #b8d4d9; }
+main { gap: 12px; align-items: stretch; }
+.app-shell { width: 70%; background: #172536; border: 1px solid #4b7189; border-radius: 8px; }
+.tab { height: 38px; padding: 10px 14px; background: #253b50; color: #f4fcff; font-weight: bold; }
+.tag { color: #9bdbc0; font-size: 10px; margin: 0px 0px 0px 16px; }
+#app-panel { width: 100%; height: 430px; background: #0a192b; }
+.panel-footer { height: 34px; padding: 6px 12px; color: #b6cbd8; font-size: 11px; }
+.side { width: 28%; height: 502px; padding: 20px; gap: 14px; background: #1a2a3a; border: 1px solid #38546c; border-radius: 8px; }
+h2 { font-size: 19px; font-weight: bold; }
+p { color: #b4cbd7; }
+.note { padding: 14px; gap: 8px; background: #102233; border: 1px solid #3b6074; border-radius: 7px; }
+footer { color: #829eaf; font-size: 11px; }

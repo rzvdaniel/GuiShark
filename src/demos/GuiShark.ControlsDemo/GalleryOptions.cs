@@ -1,6 +1,6 @@
 namespace GuiShark.ControlsDemo;
 
-internal sealed record GalleryOptions(bool Capture, string Page, string? Dropdown, bool Scrolled, string? AssetsPath, string? Modal, string? Tooltip, bool SelectNotes, bool Compose, bool SelectLigature)
+internal sealed record GalleryOptions(bool Capture, string Page, string? Dropdown, bool Scrolled, string? AssetsPath, string? Modal, string? Tooltip, bool SelectNotes, bool Compose, bool SelectLigature, bool Bidi)
 {
     public static GalleryOptions Parse(string[] args)
     {
@@ -11,9 +11,11 @@ internal sealed record GalleryOptions(bool Capture, string Page, string? Dropdow
         var selectNotes = false;
         var compose = false;
         var selectLigature = false;
+        var bidi = false;
         foreach (var arg in args)
         {
             if (arg == "--capture") capture = true;
+            else if (arg == "--bidi") { bidi = true; page = "multilingual"; }
             else if (arg == "--compose") compose = true;
             else if (arg == "--select-ligature") selectLigature = true;
             else if (arg == "--select-notes") selectNotes = true;
@@ -26,7 +28,7 @@ internal sealed record GalleryOptions(bool Capture, string Page, string? Dropdow
             else throw new ArgumentException($"Unknown gallery argument: {arg}");
         }
         Validate(page);
-        return new(capture, page, dropdown, scrolled, assets, modal, tooltip, selectNotes, compose, selectLigature);
+        return new(capture, page, dropdown, scrolled, assets, modal, tooltip, selectNotes, compose, selectLigature, bidi);
     }
 
     private static void Validate(string page)

@@ -19,6 +19,8 @@ public sealed class UiTextInput
     private float? preferredX;
     private (int Start, int End) pointerWord;
     internal bool CaretUpstream { get; private set; }
+    internal bool CaretTrailing { get; private set; }
+    internal bool DisplayCaretTrailing => Composition is { } state ? state.SelectionStart + state.SelectionLength > 0 : CaretTrailing;
     private int maximumLength = int.MaxValue;
     public event Action<UiTextInput>? Changed;
     public event Action<UiTextInput>? Submitted;
@@ -50,7 +52,7 @@ public sealed class UiTextInput
     {
         if (!composition.Clear()) return;
         Refresh();
-        CaretUpstream = composition.Upstream;
+        CaretUpstream = composition.Upstream; CaretTrailing = composition.Trailing;
         CompositionChanged?.Invoke(this);
     }
     public bool ShowPassword
@@ -63,13 +65,13 @@ public sealed class UiTextInput
     public int Rows { get; internal set; } = 4;
     public bool CanUndo => !ReadOnly && history.CanUndo;
     public bool CanRedo => !ReadOnly && history.CanRedo;
-    private TextEditState State => new(value, anchor, caret, CaretUpstream);
+    private TextEditState State => new(value, anchor, caret, CaretUpstream, CaretTrailing);
     public void Undo() { CancelComposition(); if (CanUndo) Restore(history.Undo(State)); }
     public void Redo() { CancelComposition(); if (CanRedo) Restore(history.Redo(State)); }
     private void Restore(TextEditState state)
     {
         value = state.Value; anchor = state.Anchor; caret = state.Caret;
-        Refresh(); CaretUpstream = state.Upstream; Changed?.Invoke(this);
+        Refresh(); CaretUpstream = state.Upstream; CaretTrailing = state.Trailing; Changed?.Invoke(this);
     }
     public string Value
     {
@@ -110,12 +112,12 @@ public sealed class UiTextInput
     public int SelectionLength => Math.Abs(anchor - caret);
     public string SelectedText => value.Substring(SelectionStart, SelectionLength);
     public bool IsPlaceholder => value.Length == 0 && Composition == null;
-    public void SelectAll() { CancelComposition(); CaretUpstream = false; anchor = 0; caret = value.Length; InvalidateCaret(); }
+    public void SelectAll() { CancelComposition(); CaretUpstream = false; CaretTrailing = false; anchor = 0; caret = value.Length; InvalidateCaret(); }
     public void Select(int start, int length)
     {
         if (start < 0 || length < 0 || start > value.Length - length) throw new ArgumentOutOfRangeException(nameof(start));
         CancelComposition();
-        CaretUpstream = false; anchor = Boundary(start); caret = Boundary(start + length); InvalidateCaret();
+        CaretUpstream = false; CaretTrailing = false; anchor = Boundary(start); caret = Boundary(start + length); InvalidateCaret();
     }
     /// <summary>Insert at the current selection as an undoable edit.</summary>
     public void InsertText(string text) { ArgumentNullException.ThrowIfNull(text); Insert(text); }
@@ -176,8 +178,8 @@ public sealed class UiTextInput
         {
             case UiKey.Left: MoveHorizontal(false, shift, words); break;
             case UiKey.Right: MoveHorizontal(true, shift, words); break;
-            case UiKey.Home: Move(IsMultiline && !command ? geometry.LineAt(caret).Start : 0, shift); break;
-            case UiKey.End: MoveToEnd(shift, command); break;
+            case UiKey.Home: MoveToEdge(false, shift, command); break;
+            case UiKey.End: MoveToEdge(true, shift, command); break;
             case UiKey.Up: MoveVertical(-1, shift); break;
             case UiKey.Down: MoveVertical(1, shift); break;
             case UiKey.PageUp: MoveVertical(-page, shift); break;
@@ -188,19 +190,14 @@ public sealed class UiTextInput
     }
     private void MoveHorizontal(bool right, bool shift, bool words)
     {
-        if (!shift && SelectionLength > 0) { Move(right ? SelectionStart + SelectionLength : SelectionStart, false); return; }
-        var position = right ? Next(caret) : Previous(caret);
-        if (words)
-        {
-            var boundaries = new TextWordBoundaries(value);
-            position = right ? boundaries.Next(caret) : boundaries.Previous(caret);
-        }
-        Move(position, shift);
+        if (!shift && SelectionLength > 0) { Move(geometry.SelectionEdge(right), false); return; }
+        var position = new TextEditPosition(caret, CaretUpstream, CaretTrailing);
+        Move(words ? geometry.Word(position, right) : geometry.Horizontal(position, right), shift);
     }
-    private void MoveToEnd(bool shift, bool command)
+    private void MoveToEdge(bool right, bool shift, bool command)
     {
-        var end = IsMultiline && !command ? geometry.LineAt(caret).End : value.Length;
-        Move(end, shift, IsMultiline && !command && end < value.Length && value[end] != '\n');
+        if (command) Move(right ? value.Length : 0, shift);
+        else Move(geometry.Edge(caret, right), shift);
     }
     private void DeleteBackward()
     {
@@ -214,7 +211,7 @@ public sealed class UiTextInput
     }
     internal void MovePointer(float x, float y, bool extend)
     {
-        var hit = geometry.Hit(x, y); Move(hit.Index, extend, hit.Upstream);
+        var hit = geometry.Hit(x, y); Move(hit, extend);
     }
     internal void SelectPointerWord(float x, float y)
     {
@@ -226,7 +223,7 @@ public sealed class UiTextInput
         var word = IsPassword ? (Start: 0, End: value.Length) : new TextWordBoundaries(value).At(geometry.HitWord(x, y));
         if (word.Start < pointerWord.Start) { anchor = pointerWord.End; caret = word.Start; }
         else { anchor = pointerWord.Start; caret = Math.Max(pointerWord.End, word.End); }
-        CaretUpstream = false;
+        CaretUpstream = false; CaretTrailing = false;
         InvalidateCaret();
     }
     private void MoveVertical(int rows, bool extend)
@@ -234,7 +231,7 @@ public sealed class UiTextInput
         if (!IsMultiline) return;
         var x = preferredX ?? geometry.CaretX(caret);
         var target = geometry.Vertical(caret, rows, x);
-        Move(target.Index, extend, target.Upstream);
+        Move(target, extend);
         preferredX = x;
     }
     internal void Arrange(ITextMetrics metrics)
@@ -247,9 +244,11 @@ public sealed class UiTextInput
     public UiRect SelectionBounds => SelectionRects.FirstOrDefault();
     public IReadOnlyList<UiRect> SelectionRects => geometry.SelectionRects;
     public IReadOnlyList<string> DisplayLines => geometry.DisplayLines;
+    public IReadOnlyList<TextLineContext> DisplayContexts => geometry.DisplayContexts;
     internal void RevealCaret() { revealCaret = true; owner.Invalidate(); }
     private void InvalidateCaret() { preferredX = null; RevealCaret(); }
-    private void Move(int position, bool extend, bool upstream = false) { CaretUpstream = upstream; caret = position; if (!extend) anchor = caret; InvalidateCaret(); }
+    private void Move(TextEditPosition position, bool extend) => Move(position.Index, extend, position.Upstream, position.Trailing);
+    private void Move(int position, bool extend, bool upstream = false, bool trailing = false) { CaretTrailing = trailing; CaretUpstream = upstream; caret = position; if (!extend) anchor = caret; InvalidateCaret(); }
     private bool DeleteSelection() { if (SelectionLength == 0) return false; Replace(SelectionStart, SelectionLength, ""); return true; }
     private void Replace(int start, int length, string insert)
     {
@@ -278,5 +277,5 @@ public sealed class UiTextInput
         var end = StringInfo.ParseCombiningCharacters(text).Where(i => i <= limit).DefaultIfEmpty(0).Last();
         return text[..end];
     }
-    private void Refresh() { CaretUpstream = false; owner.Text = DisplayValue.Length == 0 ? placeholder : Mask(DisplayValue); InvalidateCaret(); }
+    private void Refresh() { CaretUpstream = false; CaretTrailing = false; owner.Text = DisplayValue.Length == 0 ? placeholder : Mask(DisplayValue); InvalidateCaret(); }
 }

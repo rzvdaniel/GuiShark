@@ -33,7 +33,7 @@ The permission profile briefly switched to a network-restricted sandbox during v
 
 ## Limits requiring manual verification
 
-Linux/macOS package contents were inspected, but their native applications were not executed. Real OS IME composition, candidate-window placement and physical HiDPI behavior were not automated. The capture flag exercises the portable SDK composition API, not an installed input method. Full bidirectional layout, RTL editing and color emoji remain unimplemented; see [the host contract and limits](multilingual-input.md).
+Linux/macOS package contents were inspected, but their native applications were not executed. Real OS IME composition, candidate-window placement and physical HiDPI behavior were not automated. The capture flag exercises the portable SDK composition API, not an installed input method. At that milestone, bidirectional layout and RTL editing were not implemented. They are now covered in [bidirectional validation](bidirectional-text.md#validation); color emoji remain unsupported.
 
 ## Windows interaction follow-up
 
