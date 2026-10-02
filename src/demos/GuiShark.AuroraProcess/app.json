@@ -1,0 +1,8 @@
+{
+  "protocolVersion": 1,
+  "id": "guishark.aurora",
+  "title": "Aurora Monitor",
+  "entryAssembly": "GuiShark.AuroraProcess.dll",
+  "assetsDirectory": "Assets",
+  "document": "app.html"
+}

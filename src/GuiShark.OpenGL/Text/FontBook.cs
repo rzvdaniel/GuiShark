@@ -7,6 +7,8 @@ public sealed class FontBook : ITextMetrics, IDisposable
 {
     private readonly Dictionary<(string Family, bool Bold), FontAsset> faces = new();
     private bool disposed;
+    private readonly Dictionary<(string Family, bool Bold), FontAsset[]> candidates = new();
+    internal int Revision { get; private set; }
 
     /// <summary>Loads the CSS font faces and chooses the host's default family, without duplicating file paths in C#.</summary>
     public FontBook(UiDocument document, string defaultFamily)
@@ -55,20 +57,59 @@ public sealed class FontBook : ITextMetrics, IDisposable
     {
         using var data = SKData.CreateCopy(bytes);
         var typeface = SKTypeface.FromData(data) ?? throw new IOException($"Cannot load font '{family}'.");
-        faces.Add((Normalize(family), bold), new(bytes, typeface));
+        FontAsset? asset = null;
+        try
+        {
+            asset = new(bytes, typeface);
+            faces.Add((Normalize(family), bold), asset);
+        }
+        catch
+        {
+            if (asset != null) asset.Dispose();
+            else typeface.Dispose();
+            throw;
+        }
+        candidates.Clear();
+        Revision++;
     }
 
     internal FontAsset Resolve(string family, bool bold)
     {
         ObjectDisposedException.ThrowIf(disposed, this);
+        return Candidates(family, bold)[0];
+    }
+
+    private FontAsset? Find(string family, bool bold)
+    {
         var key = Normalize(family);
         if (faces.TryGetValue((key, bold), out var exact)) return exact;
         if (faces.TryGetValue((key, false), out var regular)) return regular;
-        throw new InvalidOperationException($"Font family '{family}' is not loaded. Declare @font-face and call FontBook.Load(document).");
+        return null;
     }
 
+    private FontAsset[] Candidates(string family, bool bold)
+    {
+        ObjectDisposedException.ThrowIf(disposed, this);
+        var key = (family, bold);
+        if (candidates.TryGetValue(key, out var cached)) return cached;
+        var names = family.Length == 0 ? [""] : FontFamilyList.Parse(family);
+        var preferred = names.Select(name => Find(name, bold)).OfType<FontAsset>().ToArray();
+        if (preferred.Length == 0)
+            throw new InvalidOperationException($"Font family '{family}' is not loaded. Declare @font-face and call FontBook.Load(document).");
+        var remaining = faces.Keys.Select(k => k.Family).Distinct().Select(name => Find(name, bold)).OfType<FontAsset>();
+        var result = preferred.Concat(remaining).Distinct().ToArray();
+        if (candidates.Count >= 128) candidates.Remove(candidates.First().Key);
+        candidates[key] = result;
+        return result;
+    }
+
+    internal IReadOnlyList<FontRun> Runs(string text, string family, bool bold) => FontFallback.Select(text, Candidates(family, bold));
+
     internal SKFont CreateFont(float size, bool bold, string family = "", TextRenderOptions? options = null) =>
-        new(Resolve(family, bold).Typeface, size)
+        CreateFont(Resolve(family, bold), size, options);
+
+    internal static SKFont CreateFont(FontAsset face, float size, TextRenderOptions? options = null) =>
+        new(face.Typeface, size)
         {
             Edging = SKFontEdging.Antialias,
             Subpixel = options == null || !options.PixelSnap,
@@ -84,18 +125,22 @@ public sealed class FontBook : ITextMetrics, IDisposable
     public float MeasureWidth(string text, float fontSize, bool bold) => MeasureWidth(text, fontSize, bold, "");
     public float MeasureWidth(string text, float fontSize, bool bold, string family)
     {
-        using var font = CreateFont(fontSize, bold, family);
-        return font.MeasureText(text);
+        var width = 0f;
+        foreach (var run in Runs(text, family, bold))
+        {
+            using var font = CreateFont(run.Font, fontSize);
+            width += font.MeasureText(run.Text);
+        }
+        return width;
     }
 
     private static string Normalize(string family) => family.Trim().ToUpperInvariant();
     public void Dispose()
     {
         if (disposed) return;
-        foreach (var face in faces.Values.Distinct()) face.Typeface.Dispose();
+        foreach (var face in faces.Values.Distinct()) face.Dispose();
         faces.Clear();
+        candidates.Clear();
         disposed = true;
     }
 }
-
-internal sealed record FontAsset(byte[] Bytes, SKTypeface Typeface);

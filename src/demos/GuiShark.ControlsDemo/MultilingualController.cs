@@ -10,7 +10,7 @@ internal sealed class MultilingualController
     {
         this.view = view;
         field = view.Document.GetElement("multilingual-text");
-        foreach (var id in new[] { "multilingual-text", "multilingual-notes", "indic-text" })
+        foreach (var id in new[] { "multilingual-text", "multilingual-notes", "indic-text", "fallback-text" })
         {
             var element = view.Document.GetElement(id);
             element.TextInput!.CompositionChanged += edit => Log(edit.Composition is { } state
@@ -22,6 +22,15 @@ internal sealed class MultilingualController
         Bind("preedit-convert", () => Preview("東京"));
         Bind("preedit-commit", () => { view.Input.Focus(field); view.Input.TextInput("東京"); });
         Bind("preedit-cancel", () => field.TextInput!.CancelComposition());
+        Bind("ligature-select", () => SelectLigature(false));
+        Bind("ligature-reset", () => SelectLigature(true));
+    }
+    private void SelectLigature(bool reset)
+    {
+        var sample = view.Document.GetElement("ligature-text");
+        view.Input.Focus(sample);
+        if (reset) sample.TextInput!.Value = "office affine efficient";
+        sample.TextInput!.Select(2, 1);
     }
     private void Preview(string text)
     {

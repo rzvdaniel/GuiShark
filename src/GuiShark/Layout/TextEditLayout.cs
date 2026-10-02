@@ -8,7 +8,7 @@ internal readonly record struct TextEditLine(int Start, int End, string Text);
 internal sealed class TextEditLayout
 {
     public IReadOnlyList<TextEditLine> Lines { get; private set; } = [new(0, 0, "")];
-    public void Arrange(string value, float width, bool multiline, Func<string, float> measure)
+    public void Arrange(string value, float width, bool multiline, Func<int, int, float> measure)
     {
         if (!multiline) { Lines = [new(0, value.Length, value)]; return; }
         var lines = new List<TextEditLine>();
@@ -24,7 +24,7 @@ internal sealed class TextEditLayout
             {
                 lines.Add(new(start, at, value[start..at])); start = end = next; breakAt = -1; continue;
             }
-            if (end > start && measure(value[start..next]) > Math.Max(1, width))
+            if (end > start && measure(start, next - start) > Math.Max(1, width))
             {
                 var split = breakAt > start ? breakAt : at;
                 lines.Add(new(start, split, value[start..split]));
@@ -42,11 +42,5 @@ internal sealed class TextEditLayout
     {
         for (var i = Lines.Count - 1; i >= 0; i--) if (position >= Lines[i].Start) return i;
         return 0;
-    }
-    public int Nearest(int row, float x, Func<string, float> measure)
-    {
-        var line = Lines[Math.Clamp(row, 0, Lines.Count - 1)];
-        return line.Start + StringInfo.ParseCombiningCharacters(line.Text).Append(line.Text.Length)
-            .MinBy(i => Math.Abs(measure(line.Text[..i]) - x));
     }
 }

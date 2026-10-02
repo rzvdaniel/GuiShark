@@ -17,6 +17,6 @@ dotnet test --solution Gui.Shark.sln -c Release --no-build --no-restore
 git diff --check
 ```
 
-The coverage check compares tracked C# projects with solution entries and Debug/Release build inclusion. Stage new project files before running it. Regression tests in `src/tests/GuiShark.Tests` use xUnit and the .NET 10 Microsoft Testing Platform runner selected by `global.json`; they need no native graphics libraries or GL context. See [xUnit's runner documentation](https://xunit.net/docs/getting-started/v3/microsoft-testing-platform).
+The coverage check compares tracked C# projects with solution entries and Debug/Release build inclusion. Stage new project files before running it. Regression tests in `src/tests/GuiShark.Tests` use xUnit and the .NET 10 Microsoft Testing Platform runner selected by `global.json`; they need no window or GL context. Shaping regression cases load the Skia/HarfBuzz native libraries restored with the test project. See [xUnit's runner documentation](https://xunit.net/docs/getting-started/v3/microsoft-testing-platform).
 
 Exercise graphics changes in the affected demos on a desktop with OpenGL 3.3. The recorded baseline, initial enforcement and stricter validation are in [docs/analyzer-baseline.md](docs/analyzer-baseline.md), [docs/analyzer-enforcement.md](docs/analyzer-enforcement.md) and [docs/strict-checks.md](docs/strict-checks.md).

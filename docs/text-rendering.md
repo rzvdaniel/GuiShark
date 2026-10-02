@@ -13,7 +13,7 @@ dotnet run --project src/demos/GuiShark.TextDemo -- --mode harfbuzz --sample ind
 dotnet run --project src/demos/GuiShark.TextDemo -- --density 1.25 --background hills --shadow
 ```
 
-**Compare shaping** shows two panes using the same Skia rasterizer: direct glyph mapping and HarfBuzz shaping. The right pane represents the SDK default. Arabic makes joining and direction differences particularly visible. Use the Sample button to cycle Latin, CJK, Indic, Arabic and mixed RTL specimens. Mixed RTL is diagnostic: full bidirectional paragraph layout is not implemented.
+**Compare shaping** shows two panes using the same Skia rasterizer: direct glyph mapping and HarfBuzz shaping. The right pane represents the SDK default. Arabic makes joining and direction differences particularly visible. Use the Sample button to cycle Latin, CJK, Indic, Arabic and mixed RTL specimens. Both panes resolve bidirectional paragraph ordering; the unshaped pane remains diagnostic and does not join Arabic letters.
 
 Controls adjust selected font size (8–48px), regular/bold weight, adaptive/gold/mint colors, simulated density (1/1.25/1.5/2×), pixel snapping, hinting, filtering, half-device-pixel positioning, shadows and backgrounds. The Latin matrix shows 10, 12, 14, 18, 24 and 36px samples; multilingual matrices show a smaller set of sizes for readability. Large specimens may clip within a comparison pane; select one rendering mode to give them more space. The bundled Noto families currently provide regular weight only, so Bold falls back to their regular face.
 
@@ -55,9 +55,9 @@ view.Resize(logicalWidth, logicalHeight);
 renderer.Render(framebufferWidth, framebufferHeight);
 ```
 
-Fonts load directly from asset bytes at runtime. No download, OS font installation, prebuilt atlas or separate tool is needed. Paths resolve against the document's asset source. `FontBook.Load(document)` registers additional CSS families. Missing bold faces use the family's regular face; unknown families fail explicitly. Registered families are immutable; restart or create a new font book when font bytes change.
+Fonts load directly from asset bytes at runtime. No download, OS font installation, prebuilt atlas or separate tool is needed. Paths resolve against the document's asset source. `FontBook.Load(document)` registers additional CSS families. Missing bold faces use the family's regular face; a stack without any loaded family fails explicitly. Unavailable entries in an otherwise loaded stack are skipped. Registered families are immutable; restart or create a new font book when font bytes change.
 
-The current subset has no WOFF, italics, variable axes, remote URLs or font fallback lists. Multilingual demos link static regular-weight Noto font assets and their OFL licenses from `src/demos/SharedAssets/fonts`; [font provenance](../src/demos/SharedAssets/fonts/README.md).
+The current subset has no WOFF, italics, variable axes or remote URLs. Ordered local font fallback lists are supported. Multilingual demos link static regular-weight Noto font assets and their OFL licenses from `src/demos/SharedAssets/fonts`; [font provenance](../src/demos/SharedAssets/fonts/README.md).
 
 ## Configure the renderer
 
@@ -78,10 +78,14 @@ Use one backend per renderer: density, options and caches are mutable. Font book
 
 ## Shaping and editing limits
 
-HarfBuzz handles OpenType substitutions and positioning for a single font/script/direction run. It is not a complete paragraph engine. GuiShark does not yet segment or reorder bidi runs, resolve font fallback, implement color emoji, or map carets/selections through shaped glyph clusters. Logical prefix measurement can be imperfect around contextual forms and ligatures. Ordinary labels wrap at whitespace; textareas preserve graphemes when wrapping. See [multilingual input and composition](multilingual-input.md).
+HarfBuzz handles OpenType substitutions and positioning for a single font/script/direction run. It is not a complete paragraph engine. GuiShark resolves bidi runs with Unicode.Bidi and provides visual navigation; color emoji remain unsupported. See [bidirectional text](bidirectional-text.md). Carets and selections use full-line cluster advances; internal ligature stops are evenly interpolated at grapheme boundaries rather than read from font ligature-caret tables. Ordinary labels wrap at whitespace; textareas preserve graphemes when wrapping. See [multilingual input and composition](multilingual-input.md).
 
 ## Platforms and migration
 
 SkiaSharp 4.153.0 and matching SkiaSharp.HarfBuzz 4.153.0 load native font/rasterization/shaping libraries. HarfBuzzSharp 14.2.1.300 supplies Win32/macOS native assets; the SDK explicitly references matching Linux native assets. Controls Gallery uses Silk.NET.SDL 2.23.0 with SDL 2.32.10; the other demos retain OpenTK. A desktop display, OpenGL 3.3 core driver and the chosen host's OS dependencies are required. Native Linux/macOS execution and real OS IME/HiDPI behavior remain unverified; [validation results](multilingual-validation.md).
 
 Applications using the default renderer need no initialization changes. Applications using retired classes (`FreeTypeTextBackend`, `MsdfTextBackend`, `MsdfAtlas`) must switch to Skia. The old `legacyBaseline` constructor option and the canvas `distanceRange` argument are removed; the optional second constructor argument is now `shaping`. Remove MSDF target imports and font-generation items from your projects. Gallery `--text` and Text Lab `baseline|freetype|msdf` modes have been removed.
+
+Editing backends can provide [complete-line caret maps](shaped-text-editing.md) through ITextMetrics.CreateCaretMap.
+
+See [local font fallback](font-fallback.md) for stack ordering, coverage checks, shared baselines and mixed-script examples.

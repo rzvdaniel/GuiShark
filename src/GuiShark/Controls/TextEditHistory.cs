@@ -1,6 +1,6 @@
 namespace GuiShark;
 
-internal readonly record struct TextEditState(string Value, int Anchor, int Caret, bool Upstream);
+internal readonly record struct TextEditState(string Value, int Anchor, int Caret, bool Upstream, bool Trailing);
 
 /// <summary>Bounded edit snapshots; selection and scroll alone do not create history entries.</summary>
 internal sealed class TextEditHistory

@@ -11,7 +11,7 @@ Run commands from the repository root containing `Gui.Shark.sln`. On this Window
 cd C:\Work\GuiShark
 ```
 
-Use the actual checkout location on other machines. Install a stable .NET 10 SDK compatible with `global.json`. Demos need a desktop display and an OpenGL 3.3 core driver; the managed regression tests need no GL context. Solution coverage verification additionally needs Git and PowerShell 7 (`pwsh`).
+Use the actual checkout location on other machines. Install a stable .NET 10 SDK compatible with `global.json`. Demos need a desktop display and an OpenGL 3.3 core driver; the regression tests need no GL context. Shaping cases load the Skia/HarfBuzz native libraries restored with the test project. Solution coverage verification additionally needs Git and PowerShell 7 (`pwsh`).
 
 ## Build / compile
 
@@ -21,7 +21,7 @@ Build the complete solution once before launching demos:
 dotnet build Gui.Shark.sln
 ```
 
-This restores dependencies and compiles both SDK libraries, all four demos, and the regression tests in Debug. For an individual project, use its project path:
+This restores dependencies and compiles both SDK libraries, the demos, the app-hosting protocol, and the regression tests in Debug. For an individual project, use its project path:
 
 ```powershell
 dotnet build src/GuiShark/GuiShark.csproj -c Debug
@@ -55,7 +55,21 @@ dotnet run --no-build --project src/demos/GuiShark.ControlsDemo
 
 # Multilingual page and Arabic shaping comparison
 dotnet run --no-build --project src/demos/GuiShark.ControlsDemo -- --page=multilingual
+# Arabic/Hebrew visual editing specimens
+dotnet run --no-build --project src/demos/GuiShark.ControlsDemo -- --bidi
 dotnet run --no-build --project src/demos/GuiShark.TextDemo -- --sample arabic
+
+# Shared-context threaded app host; --verify runs its bounded freeze/error check
+dotnet run --no-build --project src/demos/GuiShark.ThreadedHost
+dotnet run --no-build --project src/demos/GuiShark.ThreadedHost -- --verify
+
+# Separate-process app workspace; --verify exercises click/freeze/crash/restart
+dotnet run --no-build --project src/demos/GuiShark.ProcessHost
+dotnet run --no-build --project src/demos/GuiShark.ProcessHost -- --verify
+
+# Aurora independently, in its own OpenGL window
+dotnet run --no-build --project src/demos/GuiShark.AuroraProcess
+dotnet run --no-build --project src/demos/GuiShark.AuroraProcess -- --verify-standalone
 ```
 
 Close the window before running another command in the same terminal. To use Release binaries, add `-c Release` to `dotnet run` after building Release. `--no-build` uses existing binaries; rebuild after C# changes, or omit that flag to build as part of launching.

@@ -27,7 +27,7 @@ internal sealed class LayoutEngine(ITextMetrics text)
         width = Math.Clamp(width, 0, Math.Max(0, s.MaxWidth.Resolve(availableWidth, availableWidth)));
         var innerWidth = Math.Max(0, width - s.Padding.Horizontal - 2 * s.BorderWidth - (s.ScrollY ? 12 : 0));
         var children = VisibleChildren(element);
-        var height = element.TextInput != null ? s.LineHeight * (element.TextInput.IsMultiline ? element.TextInput.Rows : 1) : TextLayout.Wrap(element.Text, innerWidth, s, text).Count * s.LineHeight;
+        var height = element.TextInput != null ? s.LineHeight * (element.TextInput.IsMultiline ? element.TextInput.Rows : 1) : TextLayout.Lines(element, innerWidth, text).Count * s.LineHeight;
         if (children.Length > 0)
         {
             var sizes = MeasureChildren(element, innerWidth, availableHeight);

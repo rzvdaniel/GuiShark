@@ -21,3 +21,6 @@ Controls Gallery and Text Lab bundle regular-weight static instances of Noto San
 - [Silk.NET.SDL](https://github.com/dotnet/Silk.NET): MIT; Ultz.Native.SDL bundles SDL 2.32.10. [SDL's zlib license](licenses/SDL-zlib.txt) is retained and copied with Controls Gallery.
 
 The former standalone FreeType and MSDF backends and their generated assets/tools have been removed. Their earlier source remains available in Git history.
+
+- [Unicode.Bidi](https://github.com/erikbra/unicode-bidi-net): MIT. The upstream license and third-party notices (including the Rust unicode-bidi attribution) are retained in `licenses/Unicode-Bidi-*.txt` and copied with applications.
+- Noto Sans Hebrew is bundled under SIL OFL 1.1; its license is retained beside the font in `src/demos/SharedAssets/fonts`.

@@ -1,0 +1,10 @@
+body { padding: 28px; gap: 20px; color: #ecfcff; background: #133c62; font-size: 15px; }
+.title { font-size: 30px; font-weight: bold; color: #ffffff; }
+p { color: #c2e1ef; }
+.card { width: 310px; padding: 18px; gap: 8px; background: #09253c; border: 1px solid #6fc4dc; border-radius: 10px; }
+h2 { font-size: 46px; font-weight: bold; color: #8ee9ff; }
+button { height: 42px; padding: 0px 12px; color: #07283e; background: #8be5e6; border: 1px solid #ccffff; border-radius: 7px; }
+button:hover { background: #bcffff; }
+#state { color: #9ee3b9; }
+.alternate body { background: #3a3269; }
+.alternate .card { background: #291e50; border-color: #c3a4f2; }

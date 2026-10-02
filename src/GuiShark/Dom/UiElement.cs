@@ -7,6 +7,7 @@ public sealed class UiElement
     private bool disabled;
     private bool hidden;
     private string? tooltipText;
+    private UiTextDirection? direction;
     private readonly HashSet<string> classes;
     internal event Action? Changed;
 
@@ -21,6 +22,8 @@ public sealed class UiElement
     }
 
     public string Tag { get; }
+    public UiTextDirection? Direction { get => direction; set { if (direction != value) { direction = value; Invalidate(); } } }
+    public UiTextDirection TextDirection => Direction ?? Parent?.TextDirection ?? UiTextDirection.LeftToRight;
     public string Id { get; }
     public string Text { get => text; set { if (text != value) { text = value; Invalidate(); } } }
     public bool Disabled { get => disabled; set { if (disabled != value) { disabled = value; Invalidate(); } } }
