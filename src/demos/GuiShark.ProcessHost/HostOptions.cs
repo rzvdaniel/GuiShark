@@ -1,3 +1,4 @@
+using GuiShark.ProcessHosting;
 namespace GuiShark.ProcessHost;
 
 internal sealed record HostOptions(string ManifestPath, bool Verify, bool Capture)

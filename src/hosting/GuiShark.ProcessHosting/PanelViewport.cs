@@ -1,8 +1,8 @@
 using OpenTK.Mathematics;
 
-namespace GuiShark.ProcessHost;
+namespace GuiShark.ProcessHosting;
 
-internal readonly record struct PanelViewport(UiRect Bounds, int Left, int Top, int Right, int Bottom)
+public readonly record struct PanelViewport(UiRect Bounds, int Left, int Top, int Right, int Bottom)
 {
     public int PixelWidth => Right - Left;
     public int PixelHeight => Bottom - Top;
@@ -12,6 +12,12 @@ internal readonly record struct PanelViewport(UiRect Bounds, int Left, int Top, 
     {
         view.Update();
         var bounds = view.Document.GetElement("app-panel").ContentBounds;
+        if (client.X <= 0 || client.Y <= 0) return default;
+        return FromBounds(bounds, client, framebuffer);
+    }
+
+    public static PanelViewport FromBounds(UiRect bounds, Vector2i client, Vector2i framebuffer)
+    {
         if (client.X <= 0 || client.Y <= 0) return default;
         var x = (float)framebuffer.X / client.X;
         var y = (float)framebuffer.Y / client.Y;

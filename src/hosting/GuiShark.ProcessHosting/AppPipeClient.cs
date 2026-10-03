@@ -4,9 +4,9 @@ using System.Text;
 using System.Threading.Channels;
 using GuiShark.AppProtocol;
 
-namespace GuiShark.AuroraProcess;
+namespace GuiShark.ProcessHosting;
 
-internal sealed class AuroraPipeClient : IDisposable
+public sealed class AppPipeClient : IDisposable
 {
     private NamedPipeClientStream pipe = null!;
     private readonly CancellationTokenSource stop = new();
@@ -16,12 +16,7 @@ internal sealed class AuroraPipeClient : IDisposable
         SingleReader = true,
         SingleWriter = true
     });
-    private readonly Channel<AppMessage> controls = Channel.CreateBounded<AppMessage>(new BoundedChannelOptions(16)
-    {
-        FullMode = BoundedChannelFullMode.DropOldest,
-        SingleReader = true,
-        SingleWriter = true
-    });
+    private readonly Channel<AppMessage> controls = Channel.CreateUnbounded<AppMessage>(new UnboundedChannelOptions { SingleReader = true, SingleWriter = true });
     private readonly Channel<byte> signal = Channel.CreateBounded<byte>(new BoundedChannelOptions(1)
     {
         FullMode = BoundedChannelFullMode.DropWrite,
@@ -29,9 +24,9 @@ internal sealed class AuroraPipeClient : IDisposable
         SingleWriter = false
     });
 
-    public AuroraPipeClient() { }
+    public AppPipeClient() { }
 
-    public void Run(AuroraWindow window, string pipeName)
+    public void Run(ProcessAppWindow window, string pipeName)
     {
         pipe = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
         pipe.Connect(10_000);
@@ -73,7 +68,7 @@ internal sealed class AuroraPipeClient : IDisposable
         catch (IOException error) { Debug.WriteLine(error); }
     }
 
-    private static async Task ReceiveAsync(StreamReader reader, AuroraWindow window, CancellationToken token)
+    private static async Task ReceiveAsync(StreamReader reader, ProcessAppWindow window, CancellationToken token)
     {
         while (await reader.ReadLineAsync(token) is { } line)
             window.Enqueue(AppMessage.Parse(line));

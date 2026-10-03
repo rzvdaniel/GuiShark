@@ -1,4 +1,4 @@
-body { padding: 28px; gap: 18px; background: #153e62; color: #e7f7ff; font-size: 15px; }
+body { overflow-y: auto; padding: 28px; gap: 18px; background: #153e62; color: #e7f7ff; font-size: 15px; }
 .eyebrow { font-size: 10px; font-weight: bold; color: #94e7e9; }
 h1 { font-size: 31px; font-weight: bold; color: #ffffff; }
 p { color: #c6e2ed; }

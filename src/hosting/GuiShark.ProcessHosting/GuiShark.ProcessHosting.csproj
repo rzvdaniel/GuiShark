@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="OpenTK.Windowing.Desktop" Version="4.9.4" />
+    <ProjectReference Include="../../GuiShark.OpenGL/GuiShark.OpenGL.csproj" />
+    <ProjectReference Include="../GuiShark.AppProtocol/GuiShark.AppProtocol.csproj" />
+  </ItemGroup>
+</Project>

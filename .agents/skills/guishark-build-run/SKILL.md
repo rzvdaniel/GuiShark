@@ -67,6 +67,14 @@ dotnet run --no-build --project src/demos/GuiShark.ThreadedHost -- --verify
 dotnet run --no-build --project src/demos/GuiShark.ProcessHost
 dotnet run --no-build --project src/demos/GuiShark.ProcessHost -- --verify
 
+# Graphical spaces/tabs/split-pane workspace with four independent app processes
+dotnet run --no-build --project src/demos/GuiShark.Workspace
+dotnet run --no-build --project src/demos/GuiShark.Workspace -- --verify
+# Isolated layout screenshot in artifacts/workspace.png
+dotnet run --no-build --project src/demos/GuiShark.Workspace -- --capture
+# A second standalone/hosted sample app
+dotnet run --no-build --project src/demos/GuiShark.PulseProcess
+
 # Aurora independently, in its own OpenGL window
 dotnet run --no-build --project src/demos/GuiShark.AuroraProcess
 dotnet run --no-build --project src/demos/GuiShark.AuroraProcess -- --verify-standalone

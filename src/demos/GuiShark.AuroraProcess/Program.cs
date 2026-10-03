@@ -1,3 +1,4 @@
+using GuiShark.ProcessHosting;
 using GuiShark.AuroraProcess;
 
 try
@@ -9,7 +10,7 @@ try
     }
     else if (args is ["--pipe", var pipeName] && !string.IsNullOrWhiteSpace(pipeName))
     {
-        using var client = new AuroraPipeClient();
+        using var client = new AppPipeClient();
         using var window = new AuroraWindow(false, embedded: true);
         client.Run(window, pipeName);
     }

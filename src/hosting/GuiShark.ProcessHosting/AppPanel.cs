@@ -2,10 +2,10 @@ using GuiShark.AppProtocol;
 using OpenTK.Graphics.OpenGL4;
 using SkiaSharp;
 
-namespace GuiShark.ProcessHost;
+namespace GuiShark.ProcessHosting;
 
 // Displays the app-owned frame and forwards coordinates in the app's logical space.
-internal sealed class AppPanel : IDisposable
+public sealed class AppPanel : IDisposable
 {
     private const int MaximumDimension = 8192;
     private const int MaximumPixels = 16 * 1024 * 1024;

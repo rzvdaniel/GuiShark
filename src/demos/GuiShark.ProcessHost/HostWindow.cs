@@ -1,3 +1,4 @@
+using GuiShark.ProcessHosting;
 using GuiShark.AppProtocol;
 using GuiShark.OpenGL;
 using OpenTK.Graphics.OpenGL4;
