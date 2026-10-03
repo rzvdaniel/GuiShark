@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO.Pipes;
 using System.Runtime.InteropServices;
@@ -13,14 +12,24 @@ internal sealed class AppProcess : IDisposable
     private readonly NamedPipeServerStream pipe;
     private readonly Process process;
     private readonly CancellationTokenSource stop = new();
-    private readonly Channel<AppMessage> outgoing = Channel.CreateUnbounded<AppMessage>();
-    private readonly ConcurrentQueue<AppMessage> incoming = new();
+    private readonly Channel<AppMessage> outgoing = Channel.CreateBounded<AppMessage>(new BoundedChannelOptions(256)
+    {
+        FullMode = BoundedChannelFullMode.DropOldest,
+        SingleReader = true,
+        SingleWriter = false
+    });
+    private readonly Channel<AppMessage> incoming = Channel.CreateBounded<AppMessage>(new BoundedChannelOptions(2)
+    {
+        FullMode = BoundedChannelFullMode.DropOldest,
+        SingleReader = true,
+        SingleWriter = true
+    });
 
     public int Id => process.Id;
     public bool HasExited => process.HasExited;
     public int ExitCode => process.ExitCode;
     public bool IsConnected => pipe.IsConnected;
-    public bool TryReceive(out AppMessage? message) => incoming.TryDequeue(out message);
+    public bool TryReceive(out AppMessage? message) => incoming.Reader.TryRead(out message);
     public void Send(AppMessage message) => outgoing.Writer.TryWrite(message);
 
     public AppProcess(AppPackage package)
@@ -41,6 +50,8 @@ internal sealed class AppProcess : IDisposable
         start.ArgumentList.Add(name);
         process = Process.Start(start) ?? throw new InvalidOperationException("Could not launch the app process.");
         _ = DrainErrors();
+        process.Exited += (_, _) => Console.Error.WriteLine($"Aurora process exited ({process.ExitCode}).");
+        process.EnableRaisingEvents = true;
         _ = RunPipe();
     }
 
@@ -53,22 +64,23 @@ internal sealed class AppProcess : IDisposable
             using var writer = new StreamWriter(pipe, new UTF8Encoding(false), 1024, true) { AutoFlush = true };
             var receive = Receive(reader);
             var send = Send(writer);
-            await Task.WhenAny(receive, send);
+            var ended = await Task.WhenAny(receive, send);
+            _ = ended.Exception;
         }
         catch (Exception error) when (error is IOException or OperationCanceledException or ObjectDisposedException)
         {
-            // EOF, process death, or host shutdown terminates the connection.
+            _ = Console.Error.WriteLineAsync($"Aurora pipe ended: {error}");
         }
         finally
         {
-            incoming.Enqueue(new AppMessage("disconnected"));
+            incoming.Writer.TryWrite(new AppMessage("disconnected"));
         }
     }
 
     private async Task Receive(StreamReader reader)
     {
         while (await reader.ReadLineAsync(stop.Token) is { } line)
-            incoming.Enqueue(AppMessage.Parse(line));
+            incoming.Writer.TryWrite(AppMessage.Parse(line));
     }
 
     private async Task Send(StreamWriter writer)

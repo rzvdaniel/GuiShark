@@ -8,7 +8,11 @@ try
         window.Run();
     }
     else if (args is ["--pipe", var pipeName] && !string.IsNullOrWhiteSpace(pipeName))
-        await new AuroraPipeClient().RunAsync(pipeName);
+    {
+        using var client = new AuroraPipeClient();
+        using var window = new AuroraWindow(false, embedded: true);
+        client.Run(window, pipeName);
+    }
     else
         throw new ArgumentException("Use no arguments to open Aurora, or launch it through GuiShark.ProcessHost.");
 }
