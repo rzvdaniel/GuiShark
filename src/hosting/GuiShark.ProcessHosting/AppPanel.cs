@@ -14,6 +14,7 @@ public sealed class AppPanel : IDisposable
     private int pixelWidth;
     private int pixelHeight;
     private long latestSequence;
+    private bool bottomUp;
     public bool HasFrame => latestSequence > 0 && texture != 0;
 
     public void Apply(AppMessage message)
@@ -37,6 +38,22 @@ public sealed class AppPanel : IDisposable
         GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, pixelWidth, pixelHeight,
             PixelFormat.Rgba, PixelType.UnsignedByte, rgba.GetPixels());
         latestSequence = message.Sequence;
+        bottomUp = false;
+    }
+
+    public bool Apply(AppMessage message, AppProcess source)
+    {
+        if (message.BufferSlot < 0) { Apply(message); return true; }
+        if (message.Sequence <= latestSequence) { source.ReleaseFrame(message); return false; }
+        var applied = source.ReadFrame(message, pointer =>
+        {
+            EnsureTarget(message.PixelWidth, message.PixelHeight);
+            GL.BindTexture(TextureTarget.Texture2D, texture);
+            GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, pixelWidth, pixelHeight,
+                PixelFormat.Rgba, PixelType.UnsignedByte, pointer);
+        });
+        if (applied) { latestSequence = message.Sequence; bottomUp = true; }
+        return applied;
     }
 
     public void Render(PanelViewport bounds, int screenHeight)
@@ -45,7 +62,7 @@ public sealed class AppPanel : IDisposable
         GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, framebuffer);
         GL.ReadBuffer(ReadBufferMode.ColorAttachment0);
         GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, 0);
-        GL.BlitFramebuffer(0, pixelHeight, pixelWidth, 0, bounds.Left, screenHeight - bounds.Bottom,
+        GL.BlitFramebuffer(0, bottomUp ? 0 : pixelHeight, pixelWidth, bottomUp ? pixelHeight : 0, bounds.Left, screenHeight - bounds.Bottom,
             bounds.Right, screenHeight - bounds.Top, ClearBufferMask.ColorBufferBit, BlitFramebufferFilter.Linear);
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
     }

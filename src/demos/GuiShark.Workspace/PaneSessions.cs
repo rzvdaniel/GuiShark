@@ -4,7 +4,7 @@ using OpenTK.Mathematics;
 
 namespace GuiShark.Workspace;
 
-internal sealed class PaneSessions : IDisposable
+internal sealed class PaneSessions(bool sharedFrames, int fps) : IDisposable
 {
     private readonly Dictionary<string, PaneSession> sessions = [];
     public IReadOnlyDictionary<string, PaneSession> Items => sessions;
@@ -21,12 +21,17 @@ internal sealed class PaneSessions : IDisposable
         foreach (var pane in panes.Values)
         {
             if (sessions.ContainsKey(pane.Id)) continue;
-            var session = new PaneSession(pane);
+            var session = new PaneSession(pane, sharedFrames, fps);
             sessions.Add(pane.Id, session);
             session.Start();
         }
     }
     private readonly Dictionary<string, bool> failures = [];
+    public void SetVisible(WorkspaceLayout layout)
+    {
+        var visible = layout.Panes.Select(placement => placement.Pane.Id).ToHashSet();
+        foreach (var (id, session) in sessions) session.SetVisible(visible.Contains(id));
+    }
     public bool Update()
     {
         var changed = false;
@@ -51,7 +56,7 @@ internal sealed class PaneSessions : IDisposable
         if (command == "restart") session.Start();
         else session.Send(new AppMessage(command));
     }
-    public bool AllHaveFrames => sessions.Values.All(session => session.Frames >= 3 && !session.HasFailure && !session.Unresponsive);
+    public bool AllHaveFrames => sessions.Values.Where(session => session.Visible).All(session => session.Ready && session.HasCurrentFrame && !session.HasFailure && !session.Unresponsive);
     public void Dispose()
     {
         foreach (var session in sessions.Values) session.Dispose();

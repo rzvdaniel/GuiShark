@@ -24,21 +24,33 @@ public sealed class AppProcess : IDisposable
     private readonly Channel<AppMessage> incoming = Channel.CreateUnbounded<AppMessage>(
         new UnboundedChannelOptions { SingleReader = true, SingleWriter = true });
     private AppMessage? latestFrame;
+    private readonly bool useSharedFrames;
+    private readonly SharedFrameHost sharedFrames = new();
+    private bool sharedSupported;
     public bool InputOverflow { get; private set; }
 
     public int Id => process.Id;
+    public double CpuMilliseconds => process.TotalProcessorTime.TotalMilliseconds;
     public bool HasExited => process.HasExited;
     public int ExitCode => process.ExitCode;
     public bool IsConnected => pipe.IsConnected;
     public bool TryReceive(out AppMessage? message)
     {
-        if (incoming.Reader.TryRead(out message)) return true;
+        if (incoming.Reader.TryRead(out message))
+        {
+            if (message.Type == "ready") sharedSupported = message.Key == "shared-frame-v1";
+            if (message.Type == "buffer-ready") sharedFrames.Confirm(message.Generation);
+            return true;
+        }
         message = Interlocked.Exchange(ref latestFrame, null);
         return message is not null;
     }
     public void Send(AppMessage message)
     {
-        if (disposed || stop.IsCancellationRequested || outgoing.Writer.TryWrite(message)) return;
+        if (disposed || stop.IsCancellationRequested) return;
+        if (message.Type == "resize" && useSharedFrames && sharedSupported)
+            Send(sharedFrames.Configure(message.PixelWidth, message.PixelHeight));
+        if (outgoing.Writer.TryWrite(message)) return;
         // Never discard a release or edit silently. Stop this session instead of leaving input stuck.
         InputOverflow = true;
         stop.Cancel();
@@ -46,8 +58,11 @@ public sealed class AppProcess : IDisposable
         catch (InvalidOperationException) { /* Already exited. */ }
     }
 
-    public AppProcess(AppPackage package)
+    public AppProcess(AppPackage package) : this(package, false) { }
+
+    public AppProcess(AppPackage package, bool useSharedFrames)
     {
+        this.useSharedFrames = useSharedFrames;
         var name = $"guishark-{Guid.NewGuid():N}";
         pipe = new NamedPipeServerStream(name, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
         var dotnetRoot = Directory.GetParent(RuntimeEnvironment.GetRuntimeDirectory())!.Parent!.Parent!.Parent!.FullName;
@@ -101,7 +116,11 @@ public sealed class AppProcess : IDisposable
         while (await reader.ReadLineAsync(stop.Token) is { } line)
         {
             var message = AppMessage.Parse(line);
-            if (message.Type == "frame") Interlocked.Exchange(ref latestFrame, message);
+            if (message.Type == "frame")
+            {
+                var dropped = Interlocked.Exchange(ref latestFrame, message);
+                if (dropped is { BufferSlot: >= 0 }) ReleaseFrame(dropped);
+            }
             else incoming.Writer.TryWrite(message);
         }
     }
@@ -123,6 +142,16 @@ public sealed class AppProcess : IDisposable
         { System.Diagnostics.Debug.WriteLine(error); }
     }
 
+    public bool ReadFrame(AppMessage message, Action<IntPtr> upload)
+    {
+        try { return sharedFrames.Read(message, upload); }
+        finally { ReleaseFrame(message); }
+    }
+    public void ReleaseFrame(AppMessage message)
+    {
+        if (message.BufferSlot >= 0) Send(new AppMessage("frame-release", BufferSlot: message.BufferSlot, Generation: message.Generation));
+    }
+
     public void Dispose()
     {
         if (disposed) return;
@@ -133,6 +162,7 @@ public sealed class AppProcess : IDisposable
         catch (InvalidOperationException) { /* The child exited between the check and kill. */ }
         pipe.Dispose();
         process.Dispose();
+        sharedFrames.Dispose();
         _ = FinishDisposalAsync();
     }
     private async Task FinishDisposalAsync()

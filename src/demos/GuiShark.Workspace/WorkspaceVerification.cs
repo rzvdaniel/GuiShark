@@ -15,21 +15,30 @@ internal sealed class WorkspaceVerification(WorkspaceController controller, Work
     private long peerAtFreeze;
     private double freezeAt;
     private int oldPid;
+    private long framesAtResize;
+    private double visibilityAt;
+    private string originalTab = "";
+    private Dictionary<string, long> hiddenFrames = [];
+    private Dictionary<string, long> hiddenPublished = [];
     public void Update(double elapsed, long hostFrames)
     {
         if (elapsed > 35) throw new InvalidOperationException($"VERIFY FAIL: timeout at step {step}");
-        if (step == 0 && sessions.Count == 4 && sessions.Values.All(session => session.Ready && session.Frames > 2))
+        if (step == 0 && sessions.Count == 4 && sessions.Values.All(session => session.Ready && session.Frames > 0))
         { if (ui.Update()) Begin(elapsed); }
         else if (step == 1 && sessions[target].SampleCount == 1)
         {
             Require(sessions.Values.Where(session => session.Id != sessions[target].Id).All(session => session.SampleCount == 0), "click leaked into another app");
             sessions[target].Send(new AppMessage("freeze"));
+            step = 2;
+        }
+        else if (step == 2 && sessions[target].FreezeStarted)
+        {
             hostAtFreeze = hostFrames;
             peerAtFreeze = sessions[peer].Frames;
             freezeAt = elapsed;
-            step = 2;
+            step = 12;
         }
-        else if (step == 2 && elapsed - freezeAt > 3)
+        else if (step == 12 && elapsed - freezeAt > 3)
         {
             Require(sessions[target].Unresponsive, "frozen child was not marked unresponsive");
             Require(hostFrames - hostAtFreeze > 30, "host stopped during freeze");
@@ -37,6 +46,7 @@ internal sealed class WorkspaceVerification(WorkspaceController controller, Work
             Console.WriteLine("VERIFY: host and peer continued while one app froze");
             step = 3;
         }
+        else if (step is >= 8 and <= 11) VerifyVisibility(elapsed);
         else VerifyRecovery(elapsed);
     }
     private void VerifyRecovery(double elapsed)
@@ -53,12 +63,52 @@ internal sealed class WorkspaceVerification(WorkspaceController controller, Work
             step = 7;
         }
         else if (step == 7) { ui.EndRestart(); step = 5; }
-        else if (step == 5 && sessions[target].Ready && sessions[target].Frames > 1)
+        else if (step == 5 && sessions[target].Ready && sessions[target].Frames > 0)
         {
             Require(sessions[target].Id != oldPid, "restart did not create a new process");
             Require(sessions[target].SampleCount == 0, "restart retained counter unexpectedly");
+            originalTab = controller.State.ActiveTab.Id;
+            var other = controller.State.ActiveSpace.Tabs.First(tab => tab.Id != originalTab);
+            controller.Change(() => controller.State.ActiveSpace.ActiveTabId = other.Id);
+            visibilityAt = elapsed;
+            step = 8;
+        }
+    }
+    private void VerifyVisibility(double elapsed)
+    {
+        if (step == 8 && elapsed - visibilityAt > 1)
+        {
+            hiddenFrames = sessions.ToDictionary(pair => pair.Key, pair => pair.Value.Frames);
+            hiddenPublished = sessions.ToDictionary(pair => pair.Key, pair => pair.Value.PublishedFrames);
+            visibilityAt = elapsed;
+            step = 9;
+        }
+        else if (step == 9 && elapsed - visibilityAt > 1)
+        {
+            Require(sessions.All(pair => pair.Value.Frames == hiddenFrames[pair.Key]), "hidden apps continued uploading frames");
+            Require(sessions.All(pair => pair.Value.PublishedFrames == hiddenPublished[pair.Key]), "hidden apps continued publishing frames");
+            Require(sessions.Values.All(session => !session.Unresponsive), "idle hidden app was marked unresponsive");
+            controller.Change(() => controller.State.ActiveSpace.ActiveTabId = originalTab);
+            step = 10;
+        }
+        else if (step == 10 && sessions[peer].Frames > hiddenFrames[peer])
+        {
+            framesAtResize = sessions[target].Frames;
+            var content = layout.Panes.First(placement => placement.Pane.Id == target).Content;
+            var size = new OpenTK.Mathematics.Vector2i(1440, 960);
+            for (var offset = 1; offset <= 20; offset++)
+            {
+                var bounds = new UiRect(content.X, content.Y, content.Width + offset, content.Height);
+                sessions[target].Render(GuiShark.ProcessHosting.PanelViewport.FromBounds(bounds, size, size), size.Y);
+            }
+            sessions[target].Render(GuiShark.ProcessHosting.PanelViewport.FromBounds(content, size, size), size.Y);
+            step = 11;
+        }
+        else if (step == 11 && sessions[target].Frames > framesAtResize && sessions[target].HasCurrentFrame)
+        {
+            Require(!sessions[target].HasFailure, "rapid resize failed the app");
             VerifyLayout();
-            Console.WriteLine("VERIFY PASS: four independent apps, routed click, freeze isolation, crash/restart, spaces/tabs/splits/zoom, saved layout");
+            Console.WriteLine("VERIFY PASS: four independent apps, routed click, freeze isolation, crash/restart, hidden-tab culling with live heartbeats, rapid resize generations, spaces/tabs/splits/zoom, saved layout");
             step = 6;
             close();
         }

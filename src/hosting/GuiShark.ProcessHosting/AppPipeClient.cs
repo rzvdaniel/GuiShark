@@ -34,7 +34,7 @@ public sealed class AppPipeClient : IDisposable
         using var writer = new StreamWriter(pipe, new UTF8Encoding(false), 1024, true) { AutoFlush = true };
         void Publish(AppMessage message)
         {
-            if (message.Type == "frame") frames.Writer.TryWrite(message);
+            if (message.Type == "frame" && message.BufferSlot < 0) frames.Writer.TryWrite(message);
             else controls.Writer.TryWrite(message);
             signal.Writer.TryWrite(0);
         }
