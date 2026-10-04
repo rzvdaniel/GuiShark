@@ -72,6 +72,9 @@ dotnet run --no-build --project src/demos/GuiShark.Workspace
 dotnet run --no-build --project src/demos/GuiShark.Workspace -- --verify
 # Isolated layout screenshot in artifacts/workspace.png
 dotnet run --no-build --project src/demos/GuiShark.Workspace -- --capture
+# Compare hosted transport at equal requested frame rates (run sequentially)
+dotnet run --no-build -c Release --project src/demos/GuiShark.Workspace -- --benchmark --png --fps 10
+dotnet run --no-build -c Release --project src/demos/GuiShark.Workspace -- --benchmark --fps 10
 # A second standalone/hosted sample app
 dotnet run --no-build --project src/demos/GuiShark.PulseProcess
 

@@ -27,11 +27,16 @@ public abstract class ProcessAppWindow : GameWindow
     private byte[] framePixels = [];
     private long frameSequence;
     private long lastFrameTicks;
+    private long lastHeartbeat;
+    private readonly SharedFramePublisher sharedFrames = new();
+    private bool visible = true;
+    private int requestedFps;
+    private bool frameRequested = true;
 
     protected ProcessAppWindow(string title, bool embedded = false) : base(new GameWindowSettings { UpdateFrequency = 60 }, new NativeWindowSettings
     {
         ClientSize = new Vector2i(730, 520),
-        Title = "Aurora Monitor · GuiShark standalone app",
+        Title = title,
         StartVisible = !embedded,
         APIVersion = new Version(3, 3),
         Profile = ContextProfile.Core,
@@ -57,12 +62,14 @@ public abstract class ProcessAppWindow : GameWindow
         view.Resize(ClientSize.X, ClientSize.Y);
         renderer = new OpenGlUiRenderer(view, fonts);
         OnAppLoaded(view);
-        Send(new AppMessage("ready", Value: "App UI is ready"));
+        Send(new AppMessage("ready", Value: "App UI is ready", Key: "shared-frame-v1"));
     }
 
     protected abstract void OnAppLoaded(UiView appView);
     protected virtual void OnAppUpdate(UiView appView, double seconds) { }
     protected virtual string? FrameValue => null;
+    protected virtual bool RenderContinuously => true;
+    protected void RequestFrame() => frameRequested = true;
     protected void Send(AppMessage message) => send?.Invoke(message);
 
     protected override void OnRenderFrame(FrameEventArgs args)
@@ -71,16 +78,21 @@ public abstract class ProcessAppWindow : GameWindow
         ProcessMessages();
         if (IsExiting) return;
         OnAppUpdate(view, args.Time);
+        SendHeartbeat();
+        if (embedded && !ShouldRender()) return;
         var width = embedded ? Math.Max(1, renderWidth) : FramebufferSize.X;
         var height = embedded ? Math.Max(1, renderHeight) : FramebufferSize.Y;
+        if (embedded && sharedFrames.Enabled && !sharedFrames.CanPublish(width, height)) return;
         if (embedded) EnsureTarget(width, height);
+        frameRequested = false;
+        MarkFrameRendered();
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, embedded ? framebuffer : 0);
         GL.Viewport(0, 0, width, height);
         GL.ClearColor(.08f, .24f, .38f, 1);
         GL.Clear(ClearBufferMask.ColorBufferBit);
         renderer.Render(width, height);
         if (embedded) PublishFrame(width, height);
-        SwapBuffers();
+        if (!embedded) SwapBuffers();
     }
 
     private void ProcessMessages()
@@ -88,6 +100,7 @@ public abstract class ProcessAppWindow : GameWindow
         while (incoming.TryDequeue(out var message))
         {
             if (HandleLifecycleMessage(message)) continue;
+            RequestFrame();
             switch (message.Type)
             {
                 case "resize" when message.Width > 0 && message.Height > 0 && message.PixelWidth > 0 && message.PixelHeight > 0:
@@ -111,9 +124,20 @@ public abstract class ProcessAppWindow : GameWindow
 
     private bool HandleLifecycleMessage(AppMessage message)
     {
+        if (message.Type == "frame-rate") { requestedFps = Math.Clamp(message.Width, 1, 60); return true; }
+        if (message.Type == "frame-release") { sharedFrames.Release(message); return true; }
+        if (message.Type == "shared-buffer")
+        {
+            sharedFrames.Configure(message);
+            Send(new AppMessage("buffer-ready", Generation: sharedFrames.Generation));
+            RequestFrame();
+            return true;
+        }
+        if (message.Type == "visibility") { visible = message.Value == "true"; RequestFrame(); return true; }
         if (message.Type == "stop") { Close(); return true; }
         if (message.Type == "freeze")
         {
+            Send(new AppMessage("freeze-started"));
             Thread.Sleep(5000);
             send?.Invoke(new AppMessage("status", Value: "App resumed after five seconds"));
             return true;
@@ -144,12 +168,40 @@ public abstract class ProcessAppWindow : GameWindow
 
     private void PublishFrame(int width, int height)
     {
-        if (Stopwatch.GetElapsedTime(lastFrameTicks) < TimeSpan.FromMilliseconds(100)) return;
-        lastFrameTicks = Stopwatch.GetTimestamp();
+        if (sharedFrames.Enabled)
+        {
+            Send(sharedFrames.Publish(width, height, ++frameSequence, FrameValue));
+            return;
+        }
         var requiredBytes = checked(width * height * 4);
         if (framePixels.Length != requiredBytes) framePixels = new byte[requiredBytes];
         GL.ReadPixels(0, 0, width, height, PixelFormat.Rgba, PixelType.UnsignedByte, framePixels);
         send?.Invoke(AppFrameEncoder.Encode(width, height, framePixels, FrameValue, ++frameSequence));
+    }
+
+    private int EffectiveFrameRate
+    {
+        get
+        {
+            var defaultFps = sharedFrames.Enabled ? 60 : 10;
+            return requestedFps > 0 ? requestedFps : defaultFps;
+        }
+    }
+    private bool ShouldRender() => visible && (RenderContinuously || frameRequested)
+        && Stopwatch.GetElapsedTime(lastFrameTicks).TotalSeconds >= 1.0 / EffectiveFrameRate;
+    private void MarkFrameRendered()
+    {
+        var now = Stopwatch.GetTimestamp();
+        var interval = Stopwatch.Frequency / EffectiveFrameRate;
+        // Keep the cadence stable despite small timer jitter; do not replay a backlog after a freeze.
+        lastFrameTicks = lastFrameTicks == 0 ? now : Math.Max(lastFrameTicks + interval, now - interval);
+    }
+
+    private void SendHeartbeat()
+    {
+        if (!embedded || Stopwatch.GetElapsedTime(lastHeartbeat).TotalSeconds < .5) return;
+        lastHeartbeat = Stopwatch.GetTimestamp();
+        Send(new AppMessage("heartbeat", Sequence: frameSequence));
     }
 
     private static bool TryMapKey(string? name, out UiKey key)
@@ -221,6 +273,7 @@ public abstract class ProcessAppWindow : GameWindow
     {
         if (framebuffer != 0) GL.DeleteFramebuffer(framebuffer);
         if (texture != 0) GL.DeleteTexture(texture);
+        sharedFrames.Dispose();
         renderer?.Dispose();
         view?.Dispose();
         fonts?.Dispose();

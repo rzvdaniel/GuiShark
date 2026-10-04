@@ -9,6 +9,7 @@ internal sealed class AuroraWindow(bool verify, bool embedded = false)
     private readonly AuroraCounter counter = new();
     private double elapsed;
     private bool clicked;
+    protected override bool RenderContinuously => false;
     protected override string? FrameValue => counter.Count.ToString();
 
     protected override void OnAppLoaded(UiView appView)
@@ -16,6 +17,7 @@ internal sealed class AuroraWindow(bool verify, bool embedded = false)
         appView.Document.GetElement("increment").Clicked += _ =>
         {
             counter.Increment();
+            RequestFrame();
             appView.Document.GetElement("count").Text = counter.Count.ToString();
             appView.Document.GetElement("message").Text = counter.Message;
             Send(new AppMessage("state", Value: counter.Count.ToString()));

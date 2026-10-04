@@ -18,7 +18,9 @@ public sealed record AppMessage(
     int Height = 0,
     int PixelWidth = 0,
     int PixelHeight = 0,
-    long Sequence = 0)
+    long Sequence = 0,
+    int BufferSlot = -1,
+    long Generation = 0)
 {
     public const int Version = 1;
 

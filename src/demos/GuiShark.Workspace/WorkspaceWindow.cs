@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using GuiShark.OpenGL;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
@@ -12,13 +13,14 @@ internal sealed class WorkspaceWindow(WorkspaceOptions options) : GameWindow(new
         Title = "GuiShark Workspace", APIVersion = new Version(3, 3), Profile = ContextProfile.Core, Flags = ContextFlags.ForwardCompatible })
 {
     private readonly WorkspaceLayout layout = new();
-    private readonly PaneSessions sessions = new();
+    private readonly PaneSessions sessions = new(options.SharedFrames, options.Fps);
     private FontBook fonts = null!;
     private WorkspaceChrome chrome = null!;
     private WorkspaceController controller = null!;
     private WorkspaceStore store = null!;
     private WorkspaceInput input = null!;
     private WorkspaceVerification? verification;
+    private WorkspaceBenchmark? benchmark;
     private double elapsed;
     private double lastSave;
     public long Frames { get; private set; }
@@ -37,6 +39,7 @@ internal sealed class WorkspaceWindow(WorkspaceOptions options) : GameWindow(new
         Rebuild();
         input = new WorkspaceInput(controller, layout, chrome, sessions.Items, SessionCommand);
         sessions.Synchronize(controller.State);
+        if (options.Benchmark) benchmark = new WorkspaceBenchmark(options.SharedFrames, options.Fps, Close);
         if (options.Verify) verification = new WorkspaceVerification(controller, layout, sessions.Items, store, input, chrome, Close);
         Console.WriteLine($"Workspace layout: {store.Path}. Close the window to stop its apps.");
     }
@@ -58,9 +61,11 @@ internal sealed class WorkspaceWindow(WorkspaceOptions options) : GameWindow(new
     protected override void OnRenderFrame(FrameEventArgs args)
     {
         base.OnRenderFrame(args);
+        var frameStarted = Stopwatch.GetTimestamp();
         elapsed += args.Time;
         Frames++;
         if (controller.Dirty) { sessions.Synchronize(controller.State); Rebuild(); }
+        sessions.SetVisible(layout);
         if (sessions.Update()) Rebuild();
         chrome.UpdateStatus(layout, sessions.Items, controller);
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
@@ -70,7 +75,9 @@ internal sealed class WorkspaceWindow(WorkspaceOptions options) : GameWindow(new
         chrome.Render(FramebufferSize.X, FramebufferSize.Y);
         sessions.Render(layout, ClientSize, FramebufferSize);
         chrome.RenderOverlay(FramebufferSize.X, FramebufferSize.Y);
+        var workMilliseconds = Stopwatch.GetElapsedTime(frameStarted).TotalMilliseconds;
         SwapBuffers();
+        benchmark?.Record(workMilliseconds, elapsed, sessions.Items);
         SaveIfNeeded();
         verification?.Update(elapsed, Frames);
         if (options.Capture && elapsed > 3 && sessions.AllHaveFrames)
@@ -109,7 +116,7 @@ internal sealed class WorkspaceWindow(WorkspaceOptions options) : GameWindow(new
         sessions.Dispose();
         chrome?.Dispose();
         fonts?.Dispose();
-        if (options.Verify || options.Capture) File.Delete(options.StatePath);
+        if (options.Verify || options.Capture || options.Benchmark) File.Delete(options.StatePath);
         base.OnUnload();
     }
 }

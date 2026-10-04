@@ -112,4 +112,4 @@ dotnet build Gui.Shark.sln -c Release
 dotnet run --no-build -c Release --project src/demos/GuiShark.Workspace
 ```
 
-This optional hosting experiment currently uses paced PNG frames (approximately 10 FPS), not shared GPU textures. The core SDK remains independent of it.
+The workspace uses file-backed shared frames for compatible apps, with visibility scheduling and an optional PNG comparison mode. The original ProcessHost retains PNG transport. Neither shares GPU textures; the core SDK remains independent. See the [workspace transport and benchmark commands](docs/workspace-demo.md#frame-transport-and-measurement).
