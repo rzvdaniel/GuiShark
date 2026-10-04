@@ -24,7 +24,12 @@ internal sealed class ChromeMarkup(WorkspaceController controller, WorkspaceLayo
         Toolbar();
         foreach (var pane in layout.Panes) Pane(pane);
         foreach (var split in layout.Splits) Box("div", "divider", split.Divider, "");
+#if DEBUG
+        Box("span", "label", new(214, height - 23, Math.Max(0, width - 390), 20), "", "notice");
+        Box("span", "label", new(width - 170, height - 23, 158, 20), "Host FPS: …", "debug-fps");
+#else
         Box("span", "label", new(214, height - 23, Math.Max(0, width - 230), 20), "", "notice");
+#endif
         html.Append("</body></html>");
         return html.ToString();
     }

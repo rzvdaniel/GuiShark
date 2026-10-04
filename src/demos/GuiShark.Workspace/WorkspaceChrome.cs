@@ -9,6 +9,14 @@ internal sealed class WorkspaceChrome(FontBook fonts, DirectoryAssetSource asset
     private UiView? mainView;
     private UiView? overlayView;
     public UiView View => overlayView ?? mainView!;
+#if DEBUG
+    private string debugFrameRate = "Host FPS: …";
+    public void SetDebugFrameRate(string label)
+    {
+        debugFrameRate = label;
+        mainView!.Document.GetElement("debug-fps").Text = label;
+    }
+#endif
     public void Rebuild(ChromeMarkup markup, float width, float height, WorkspaceController controller)
     {
         ReleaseViews();
@@ -28,6 +36,9 @@ internal sealed class WorkspaceChrome(FontBook fonts, DirectoryAssetSource asset
             input.TextInput!.Submitted += _ => controller.Accept(input.TextInput.Value);
             View.Input.Focus(input);
         }
+#if DEBUG
+        SetDebugFrameRate(debugFrameRate);
+#endif
         View.Update();
     }
     private UiView Create(string html, float width, float height)

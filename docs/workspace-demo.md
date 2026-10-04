@@ -13,6 +13,8 @@ dotnet build Gui.Shark.sln -c Release
 dotnet run --no-build -c Release --project src/demos/GuiShark.Workspace
 ```
 
+Debug builds display **Host FPS** in the bottom-right footer, refreshed once per second using completed host frames and wall-clock time. This measures workspace presentation, rather than any individual child app. Release builds omit the counter.
+
 The initial Studio space has an Overview tab with four panes: two Aurora counters and two Pulse signal monitors. Each instance has its own process and state. Experiments and Personal provide empty layouts to arrange more apps. Pulse uses generated demo data, not an external API, and can also run independently:
 
 ```powershell

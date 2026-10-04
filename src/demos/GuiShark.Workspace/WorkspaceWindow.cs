@@ -21,6 +21,13 @@ internal sealed class WorkspaceWindow(WorkspaceOptions options) : GameWindow(new
     private WorkspaceInput input = null!;
     private WorkspaceVerification? verification;
     private WorkspaceBenchmark? benchmark;
+#if DEBUG
+    private readonly DebugFrameRate debugFrameRate = new();
+    private void UpdateDebugFrameRate()
+    {
+        if (debugFrameRate.RecordFrame() is { } label) chrome.SetDebugFrameRate(label);
+    }
+#endif
     private double elapsed;
     private double lastSave;
     public long Frames { get; private set; }
@@ -77,6 +84,9 @@ internal sealed class WorkspaceWindow(WorkspaceOptions options) : GameWindow(new
         chrome.RenderOverlay(FramebufferSize.X, FramebufferSize.Y);
         var workMilliseconds = Stopwatch.GetElapsedTime(frameStarted).TotalMilliseconds;
         SwapBuffers();
+#if DEBUG
+        UpdateDebugFrameRate();
+#endif
         benchmark?.Record(workMilliseconds, elapsed, sessions.Items);
         SaveIfNeeded();
         verification?.Update(elapsed, Frames);
