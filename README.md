@@ -77,6 +77,9 @@ The HTML/CSS rendering foundation remains the core. Rich widgets and desktop hos
 | `GuiShark.Balloon` | Independent 3D balloon game, procedural landscape, mouse steering, HTML menus/HUD |
 | `GuiShark.ControlsDemo` | Interactive controls gallery, CSS skin examples and live state/event diagnostics |
 | `GuiShark.TextDemo` | Backend comparison, density simulation, pixel magnification and observed cache/draw statistics |
+| `GuiShark.Workspace` | Spaces, tabs, split panes, saved layouts and independent process sessions; [workspace guide](docs/workspace-demo.md) |
+| `GuiShark.ProcessHosting` | Optional experimental app process/pipe/frame runtime, independent of the core SDK |
+| `GuiShark.PulseProcess` | Independently runnable live signal app used alongside Aurora in the workspace |
 | `GuiShark.ThreadedHost` | Shared-context, separate-thread graphical app hosted in a GuiShark panel; [prototype and limits](docs/threaded-host-prototype.md) |
 
 The SDK does not own a window, swap buffers, clear the host framebuffer, or run a game loop. It can be used with another window/input library. See [embedding in your game](docs/embedding.md) and [the CSS subset](docs/css-subset.md).
@@ -100,4 +103,13 @@ The **Journal & chat** gallery tab demonstrates wrapped textareas, multiline sel
 
 # Separate-process application hosting
 
-The [process workspace prototype](docs/process-host-prototype.md) loads a published GuiShark app by manifest path. The app runs in its own process while the host renders its HTML/CSS panel and exchanges events and state over a named pipe.
+The [process host prototype](docs/process-host-prototype.md) loads a published GuiShark app by manifest path. The child renders its own UI and the host displays its frames while forwarding generic input over a named pipe.
+
+The new [GuiShark Workspace](docs/workspace-demo.md) adds spaces, tabs, draggable split panes, zoom, local app loading, saved layouts and independent failure/restart handling. Its initial layout runs two Aurora counters and two Pulse signal monitors in four separate processes. The shell itself uses GuiShark HTML/CSS.
+
+```powershell
+dotnet build Gui.Shark.sln -c Release
+dotnet run --no-build -c Release --project src/demos/GuiShark.Workspace
+```
+
+This optional hosting experiment currently uses paced PNG frames (approximately 10 FPS), not shared GPU textures. The core SDK remains independent of it.
